@@ -114,10 +114,10 @@ cline with deepseek?
 -- when we update the url we aren't editing the navigation history and we should be making a new navigation history entry every time we write the url so that e.g. back properly goes back
 -- remove the `Fetch by Wikidata QID` and `Fetch Info` search/button. the e.g. `Pearl (Q111669794)` and `2022 film directed by Ti West` should be the primary sectioning on the page and if you have a qid you can always plug it into the ?id in the url. also we should delete the `Identifiers` header since it doesn't really add any value
 -- we should make the entire series/sequencing information parts section be collapsible (but default to not collapsed always)
+-- improve caching of requests because we care way more about responsiveness than live changing data. cache of all wikidata requests should probably live at least 30 mins
 
 - fix broken links to properties on wikidata. we are currently linking to e.g. https://www.wikidata.org/wiki/Property/P4908 which should be https://www.wikidata.org/wiki/Property:P4908
 - should link to [sqid] in addition to [wikidata] and should link to ourselves via ?id= as the primary link for all wikidata links
-- improve caching of requests because we care way more about responsiveness than live changing data. cache of all wikidata requests should probably live at least 30 mins
 
 - there are tons of exceptions in the console:
     index.html?id=Q210311:209 

@@ -78,6 +78,94 @@
   </section>
 
   <script>
+    /********* INDEXEDDB PERSISTENT CACHING LAYER *********/
+    // Cache expiry: 30 minutes in milliseconds
+    const CACHE_EXPIRY = 30 * 60 * 1000;
+    const DB_NAME = "wikidataCache";
+    const STORE_NAME = "cache";
+    let dbPromise = null;
+
+    // Open (or create) the IndexedDB database and create an index on "timestamp".
+    function openCacheDB() {
+      if (dbPromise) return dbPromise;
+      dbPromise = new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onerror = (e) => reject(e.target.error);
+        request.onsuccess = (e) => resolve(e.target.result);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            const store = db.createObjectStore(STORE_NAME, { keyPath: "url" });
+            // Create an index on the "timestamp" property.
+            store.createIndex("timestamp", "timestamp");
+          }
+        };
+      });
+      return dbPromise;
+    }
+
+    // Prune expired entries using the "timestamp" index for efficiency.
+    function pruneCacheEntries(db) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        const index = store.index("timestamp");
+        const now = Date.now();
+        const keyRange = IDBKeyRange.upperBound(now - CACHE_EXPIRY);
+        const request = index.openCursor(keyRange);
+        request.onsuccess = (e) => {
+          const cursor = e.target.result;
+          if (cursor) {
+            store.delete(cursor.primaryKey);
+            cursor.continue();
+          } else {
+            resolve();
+          }
+        };
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    // persistentCachedJSONFetch using IndexedDB.
+    function persistentCachedJSONFetch(url) {
+      return openCacheDB().then(db => {
+        return pruneCacheEntries(db).then(() => {
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readonly");
+            const store = tx.objectStore(STORE_NAME);
+            const getRequest = store.get(url);
+            getRequest.onsuccess = (e) => {
+              const entry = e.target.result;
+              const now = Date.now();
+              if (entry && (now - entry.timestamp < CACHE_EXPIRY)) {
+                // Cached data is fresh.
+                resolve(entry.data);
+              } else {
+                // No valid cache entry; fetch and store.
+                fetch(url)
+                  .then(response => {
+                    if (!response.ok) {
+                      throw new Error("Network response was not ok: " + response.statusText);
+                    }
+                    return response.json();
+                  })
+                  .then(data => {
+                    const newEntry = { url, timestamp: now, data };
+                    const txWrite = db.transaction(STORE_NAME, "readwrite");
+                    txWrite.objectStore(STORE_NAME).put(newEntry);
+                    resolve(data);
+                  })
+                  .catch(err => {
+                    reject(err);
+                  });
+              }
+            };
+            getRequest.onerror = (e) => reject(e.target.error);
+          });
+        });
+      });
+    }
+
     /********* UTILITY FUNCTIONS *********/
     function getQueryParams() {
       return new URLSearchParams(window.location.search);
@@ -111,8 +199,7 @@
         const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" +
                     chunk.join("|") +
                     "&languages=en&props=labels&format=json&origin=*";
-        return fetch(url)
-          .then(response => response.json())
+        return persistentCachedJSONFetch(url)
           .then(data => {
             const mapping = {};
             if (data.entities) {
@@ -136,8 +223,7 @@
       if (itemIds.length === 0) return Promise.resolve({});
       const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" +
                   itemIds.join("|") + "&languages=en&props=labels|descriptions&format=json&origin=*";
-      return fetch(url)
-        .then(response => response.json())
+      return persistentCachedJSONFetch(url)
         .then(data => {
           const mapping = {};
           if (data.entities) {
@@ -172,8 +258,7 @@
       const requests = chunks.map(chunk => {
         const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" +
                     chunk.join("|") + "&languages=en&props=labels|claims&format=json&origin=*";
-        return fetch(url)
-          .then(response => response.json())
+        return persistentCachedJSONFetch(url)
           .then(data => {
             const mapping = {};
             if (data.entities) {
@@ -206,8 +291,7 @@
         ORDER BY ?ordinal
       `;
       const url = "https://query.wikidata.org/sparql?query=" + encodeURIComponent(query) + "&format=json";
-      return fetch(url)
-        .then(response => response.json())
+      return persistentCachedJSONFetch(url)
         .then(data => {
           const parts = data.results.bindings.map(binding => {
             const partId = binding.part.value.split("/").pop();
@@ -271,8 +355,7 @@
         } LIMIT 1
       `;
       const url = "https://query.wikidata.org/sparql?query=" + encodeURIComponent(query) + "&format=json";
-      return fetch(url)
-        .then(response => response.json())
+      return persistentCachedJSONFetch(url)
         .then(data => {
           if (data.results.bindings.length > 0) {
             return data.results.bindings[0].series.value.split("/").pop();
@@ -295,8 +378,7 @@
         }
       `;
       const url = "https://query.wikidata.org/sparql?query=" + encodeURIComponent(query) + "&format=json";
-      return fetch(url)
-        .then(response => response.json())
+      return persistentCachedJSONFetch(url)
         .then(data => {
           const closure = {};
           data.results.bindings.forEach(binding => {
@@ -349,12 +431,11 @@
     }
 
     /********* FETCH ENTITY DATA *********/
-    // updateHistory defaults to true; when false, we do not push a new state.
+    // updateHistory defaults to true; when false, we do not push a new history entry.
     function fetchEntity(qid, updateHistory = true) {
       const url = "https://www.wikidata.org/wiki/Special:EntityData/" + qid + ".json";
       document.getElementById('infoDisplay').innerHTML = "<p>Loading...</p>";
-      fetch(url)
-        .then(response => response.json())
+      persistentCachedJSONFetch(url)
         .then(data => {
           console.log("Fetched entity data:", data);
           const keys = Object.keys(data.entities);
@@ -368,7 +449,7 @@
             document.getElementById('infoDisplay').innerHTML = "<p>No entity found.</p>";
             return;
           }
-          // When fetching an entity, collapse the search section.
+          // Collapse the search section when fetching an entity.
           document.getElementById("searchDetails").removeAttribute("open");
           renderEntity(entity, actualQid, updateHistory);
         })
@@ -448,7 +529,7 @@
             }
             // Close the series details element.
             seriesSectionHtml += `</details>`;
-            // Now render the properties table first and then append the series section.
+            // Now render the properties table and append the series section.
             renderIdentifiers(entity, qid).then(propertiesHtml => {
               document.getElementById('infoDisplay').innerHTML = headerHtml + propertiesHtml + seriesSectionHtml;
             });
@@ -458,8 +539,7 @@
     }
 
     /********* RENDER IDENTIFIERS (PROPERTY GROUPS) *********/
-    // This function now returns a Promise that resolves to the HTML string for the properties table.
-    // The collapsible details for each property group are now collapsed by default.
+    // Returns a Promise that resolves to the HTML string for the properties table.
     function renderIdentifiers(entity, qid) {
       return new Promise((resolve, reject) => {
         const propIDs = Object.keys(entity.claims);
@@ -563,8 +643,7 @@
       const url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=" +
                   encodeURIComponent(term) + "&language=en&format=json&origin=*&limit=" + searchLimit + "&continue=" + continueParam;
       document.getElementById('searchResults').innerHTML = "<p>Loading search results...</p>";
-      fetch(url)
-        .then(response => response.json())
+      persistentCachedJSONFetch(url)
         .then(data => {
           if (!data.search || data.search.length === 0) {
             document.getElementById('searchResults').innerHTML = "<p>No results found.</p>";
@@ -580,7 +659,7 @@
           html += "</ul>";
           document.getElementById('searchResults').innerHTML = html;
 
-          // Always render both Previous and Next buttons, disabled when appropriate.
+          // Render Previous and Next buttons (disabled when appropriate)
           let prevDisabled = (continueParam <= 0) ? "disabled" : "";
           let nextDisabled = (data.search.length < searchLimit) ? "disabled" : "";
           let paginationHtml = `<button onclick="performSearch('${term}', ${Number(continueParam) - searchLimit})" ${prevDisabled}>Previous</button>`;
