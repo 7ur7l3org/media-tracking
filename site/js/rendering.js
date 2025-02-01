@@ -61,20 +61,22 @@ function renderIdentifiers(entity, qid) {
       function renderGroup(groupId, groupTitle, refQid) {
         if (!grouped[groupId] || grouped[groupId].length === 0) return "";
         let headerLine = refQid
-          ? `${groupTitle} (<a href="index.html?id=${refQid}">${refQid}</a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${refQid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${refQid}" target="_blank">wikidata</a>]</span>)`
+          ? `${groupTitle} (<span class="small-id">${refQid} <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${refQid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${refQid}" target="_blank">wikidata</a>]</span></span>)`
           : groupTitle;
-        let html = `<tr class="group-header"><td colspan="2"><details class="group-details"><summary>${headerLine}</summary>`;
+        let html = `<tr class="group-header"><td colspan="2">
+            <details class="group-details">
+              <summary>${headerLine}</summary>`;
         html += `<table>`;
         grouped[groupId].forEach(row => {
           const propDef = propDefinitions[row.prop];
           const humanName = propDef ? propDef.label : row.prop;
           const propIdDisplay = row.prop;
-          const propIdLinks = `${propIdDisplay} <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${row.prop}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/Property:${row.prop}" target="_blank">wikidata</a>]</span>`;
+          const propIdLinks = `<span class="small-id">${propIdDisplay} <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${row.prop}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/Property:${row.prop}" target="_blank">wikidata</a>]</span></span>`;
           let cellContent = "";
           row.values.forEach(val => {
             if (val.type === "wikidata") {
               const itemLabel = itemLabels[val.qid] || val.qid;
-              cellContent += `<a href="index.html?id=${val.qid}">${itemLabel} <span class="small-id">(${val.qid})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${val.qid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${val.qid}" target="_blank">wikidata</a>]</span>, `;
+              cellContent += `<a href="index.html?id=${val.qid}">${itemLabel}</a> <span class="small-id">(${val.qid} <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${val.qid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${val.qid}" target="_blank">wikidata</a>]</span>)</span>, `;
             } else {
               if (val.hyperlink) {
                 cellContent += `<a href="${val.hyperlink}" target="_blank">${val.display}</a>, `;
@@ -95,11 +97,11 @@ function renderIdentifiers(entity, qid) {
       tableHtml += `</tbody></table>`;
       return tableHtml;
     });
-}
-  
-function renderEntity(entity, qid, updateHistory = true) {
+  }
+    
+  function renderEntity(entity, qid, updateHistory = true) {
     const label = (entity.labels && entity.labels.en) ? entity.labels.en.value : qid;
-    let headerHtml = `<h3><a href="index.html?id=${qid}">${label} <span class="small-id">(${qid})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${qid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${qid}" target="_blank">wikidata</a>]</span></h3>`;
+    let headerHtml = `<h3><a href="index.html?id=${qid}">${label}</a> <span class="small-id">(${qid})</span> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${qid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${qid}" target="_blank">wikidata</a>]</span></h3>`;
     if (entity.descriptions && entity.descriptions.en) {
       headerHtml += `<p>${entity.descriptions.en.value}</p>`;
     }
@@ -108,20 +110,26 @@ function renderEntity(entity, qid, updateHistory = true) {
     }
     document.title = label + " (" + qid + ") - Wikidata Media Tracker";
   
-    // SERIES/SEQUENCING INFORMATION
+    // Gather sequencing info (for direct statements)
     const sequencing = extractSequencingInfo(entity);
-    let seriesQid = null;
+  
+    // Gather all series the entity is a part of via P179.
+    let seriesQids = [];
     if (entity.claims && entity.claims.P179 && entity.claims.P179.length > 0) {
-      seriesQid = entity.claims.P179[0].mainsnak.datavalue.value.id;
+      seriesQids = entity.claims.P179
+                      .map(claim => claim.mainsnak && claim.mainsnak.datavalue && claim.mainsnak.datavalue.value.id)
+                      .filter(Boolean);
     } else if (entity.claims && entity.claims.P31) {
       const instanceIds = entity.claims.P31.map(claim => claim.mainsnak.datavalue.value.id).filter(Boolean);
+      // For some film types, we consider the entity to be its own series.
       if (instanceIds.includes("Q7725310") || instanceIds.includes("Q24856")) {
-        seriesQid = qid;
+        seriesQids.push(qid);
       }
     }
-    if (!seriesQid) {
+    // If no series found, try to fetch a parent series.
+    if (seriesQids.length === 0) {
       getParentSeries(qid).then(parent => {
-        seriesQid = parent || qid;
+        seriesQids = parent ? [parent] : [qid];
         continueRendering();
       });
     } else {
@@ -129,71 +137,90 @@ function renderEntity(entity, qid, updateHistory = true) {
     }
     
     function continueRendering() {
-      fetchWikidataEntities([seriesQid]).then(seriesData => {
-        const seriesInfo = seriesData[seriesQid];
-        let p179Link = `P179 <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=P179" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/Property:P179" target="_blank">wikidata</a>]</span>`;
-        let seriesLink = `<a href="index.html?id=${seriesQid}">${seriesInfo.label} <span class="small-id">(${seriesQid})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${seriesQid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">wikidata</a>]</span>`;
-        let seriesSectionHtml = `<details id="seriesDetails" open><summary>Series/Sequencing Information</summary>`;
-        seriesSectionHtml += `<p>Part of the series (${p179Link}): ${seriesLink}</p>`;
+      // Remove the search section when displaying an entity.
+      document.getElementById("searchDetails").removeAttribute("open");
   
-        // Try to render the parts tree via P527
-        renderPartsTree(seriesQid, qid).then(partsTreeHtml => {
-          if (partsTreeHtml && partsTreeHtml.trim()) {
-            seriesSectionHtml += `<p>Parts (sorted by series ordinal):</p>` + partsTreeHtml;
-            addDirectSequencingAndRender(seriesSectionHtml);
-          } else {
-            // Fallback: fetch all entities that are "part of" this series (P179)
-            fetchSeriesPartsFallback(seriesQid).then(fallbackParts => {
-              if (fallbackParts.length > 0) {
-                let fallbackHtml = "<ul class='parts-tree'>";
-                fallbackParts.forEach(part => {
-                  let partLine = "";
-                  if (part.ordinal !== null) {
-                    partLine += part.ordinal + ". ";
-                  }
-                  partLine += `<a href="index.html?id=${part.id}">${part.label} <span class="small-id">(${part.id})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${part.id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">wikidata</a>]</span>`;
-                  fallbackHtml += `<li>${partLine}</li>`;
-                });
-                fallbackHtml += "</ul>";
-                seriesSectionHtml += `<p>Parts (sorted by series ordinal):</p>` + fallbackHtml;
-              } else {
-                seriesSectionHtml += `<p>No parts found for this series.</p>`;
-              }
-              addDirectSequencingAndRender(seriesSectionHtml);
-            });
-          }
-        });
-      
-        function addDirectSequencingAndRender(seriesSectionHtml) {
-          const directIds = Array.from(new Set([...sequencing.follows, ...sequencing.followedBy, ...sequencing.hasParts]));
-          fetchWikidataEntities(directIds).then(seqEntities => {
-            let directSeqHtml = "";
-            if (sequencing.follows.length > 0) {
-              directSeqHtml += `<p>Follows: ${sequencing.follows.map(id => {
-                const ent = seqEntities[id] || { label: id, description: "" };
-                return `<a href="index.html?id=${id}">${ent.label} <span class="small-id">(${id})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${id}" target="_blank">wikidata</a>]</span>`;
-              }).join(", ")}</p>`;
+      // For each series QID, create a collapsible row (default expanded).
+      Promise.all(seriesQids.map(seriesQid => {
+        return fetchWikidataEntities([seriesQid]).then(seriesData => {
+          const seriesInfo = seriesData[seriesQid];
+          // Build summary text with only the extra bits in small font.
+          let leftText = `Part of the series <span class="small-id">(P179 <span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=P179" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/Property:P179" target="_blank">wikidata</a>]</span>)</span>`;
+          let rightText = `<a href="index.html?id=${seriesQid}">${seriesInfo.label}</a> <span class="small-id">(${seriesQid} <span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${seriesQid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">wikidata</a>]</span>)</span>`;
+          let summaryText = leftText + " : " + rightText;
+          // Get parts tree (or fallback).
+          return renderPartsTree(seriesQid, qid).then(partsTreeHtml => {
+            let partsContentPromise;
+            if (partsTreeHtml && partsTreeHtml.trim()) {
+              partsContentPromise = Promise.resolve(partsTreeHtml);
+            } else {
+              partsContentPromise = fetchSeriesParts(seriesQid).then(fallbackParts => {
+                if (fallbackParts.length > 0) {
+                  let fallbackHtml = "<ul class='parts-tree'>";
+                  fallbackParts.forEach(part => {
+                    let partLine = "";
+                    if (part.ordinal !== null) {
+                      partLine += part.ordinal + ". ";
+                    }
+                    partLine += `<a href="index.html?id=${part.id}">${part.label}</a> <span class="small-id">(${part.id} <span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${part.id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">wikidata</a>]</span>)</span>`;
+                    fallbackHtml += `<li>${partLine}</li>`;
+                  });
+                  fallbackHtml += "</ul>";
+                  return fallbackHtml;
+                }
+                return "";
+              });
             }
-            if (sequencing.followedBy.length > 0) {
-              directSeqHtml += `<p>Followed by: ${sequencing.followedBy.map(id => {
-                const ent = seqEntities[id] || { label: id, description: "" };
-                return `<a href="index.html?id=${id}">${ent.label} <span class="small-id">(${id})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${id}" target="_blank">wikidata</a>]</span>`;
-              }).join(", ")}</p>`;
-            }
-            if (directSeqHtml) {
-              seriesSectionHtml += `<h5>Direct sequencing statements</h5>${directSeqHtml}`;
-            }
-            seriesSectionHtml += `</details>`;
-            renderIdentifiers(entity, qid).then(propertiesHtml => {
-              document.getElementById('infoDisplay').innerHTML = headerHtml + propertiesHtml + seriesSectionHtml;
+            return partsContentPromise.then(partsContent => {
+              // Get direct sequencing statements.
+              const directIds = Array.from(new Set([...sequencing.follows, ...sequencing.followedBy, ...sequencing.hasParts]));
+              return fetchWikidataEntities(directIds).then(seqEntities => {
+                let directSeqHtml = "";
+                if (sequencing.follows.length > 0) {
+                  directSeqHtml += `<p>Follows: ${sequencing.follows.map(id => {
+                    const ent = seqEntities[id] || { label: id };
+                    return `<a href="index.html?id=${id}">${ent.label}</a> <span class="small-id">(${id} <span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${id}" target="_blank">wikidata</a>]</span>)</span>`;
+                  }).join(", ")}</p>`;
+                }
+                if (sequencing.followedBy.length > 0) {
+                  directSeqHtml += `<p>Followed by: ${sequencing.followedBy.map(id => {
+                    const ent = seqEntities[id] || { label: id };
+                    return `<a href="index.html?id=${id}">${ent.label}</a> <span class="small-id">(${id} <span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${id}" target="_blank">wikidata</a>]</span>)</span>`;
+                  }).join(", ")}</p>`;
+                }
+                let detailsContent = partsContent + directSeqHtml;
+                return `<tr><td>
+                          <details class="series-details" open>
+                            <summary>${summaryText}</summary>
+                            ${detailsContent}
+                          </details>
+                        </td></tr>`;
+              });
             });
           });
-        }
+        });
+      })).then(seriesRowsArray => {
+        // Build the full series table (single-column).
+        let seriesTableHtml = `<table class="series-table">
+          <thead>
+            <tr>
+              <th>Series/Sequencing Information</th>
+            </tr>
+          </thead>
+          <tbody>`;
+        seriesRowsArray.forEach(rowHtml => {
+          seriesTableHtml += rowHtml;
+        });
+        seriesTableHtml += `</tbody></table>`;
+        // Finally render the properties section and series table.
+        renderIdentifiers(entity, qid).then(propertiesHtml => {
+          document.getElementById('infoDisplay').innerHTML = headerHtml + propertiesHtml + seriesTableHtml;
+        });
       });
     }
-}
-  
-function fetchEntity(qid, updateHistory = true) {
+  }
+    
+  function fetchEntity(qid, updateHistory = true) {
     const url = "https://www.wikidata.org/wiki/Special:EntityData/" + qid + ".json";
     document.getElementById('infoDisplay').innerHTML = "<p>Loading...</p>";
     persistentCachedJSONFetch(url)
@@ -216,4 +243,5 @@ function fetchEntity(qid, updateHistory = true) {
         console.error("Error in fetchEntity:", error);
         document.getElementById('infoDisplay').innerHTML = "<p>Error fetching entity data.</p>";
       });
-}
+  }
+  

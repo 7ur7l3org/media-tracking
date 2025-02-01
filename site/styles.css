@@ -33,18 +33,13 @@ th {
     background-color: #f0f0f0;
 }
 
-a {
-    color: #1a0dab;
-    text-decoration: none;
-}
-
 /* Widen the first column in the property table */
 .properties-table th:first-child,
 .properties-table td:first-child {
     width: 30%;
 }
 
-/* Additional styles for search results, pagination, collapsible sections, extra links, and small IDs */
+/* Additional styles for search results, pagination, and collapsible sections */
 .search-result-item {
   display: flex;
   flex-direction: row;
@@ -77,8 +72,17 @@ a {
   border: 1px solid #ccc;
   margin-bottom: 5px;
 }
-/* Collapsible series/sequencing section */
-#seriesDetails summary {
+/* Collapsible property groups */
+.group-details summary {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 4px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  margin-bottom: 5px;
+}
+/* Details element for series rows */
+.series-details summary {
   cursor: pointer;
   font-weight: bold;
   padding: 4px;
@@ -90,7 +94,11 @@ a {
 .extra-link {
   font-size: 0.8em;
 }
-/* QID (including parentheses) in a smaller font */
+/* QID and property IDs in a smaller font */
 .small-id {
+  font-size: 0.8em;
+}
+/* A helper class to ensure extra link elements inside small sections remain small */
+.small-extra {
   font-size: 0.8em;
 }
