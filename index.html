@@ -49,25 +49,31 @@
     /********* FETCH WIKIDATA ENTITIES *********/
     function fetchWikidataItemLabels(itemIds) {
       if (itemIds.length === 0) return Promise.resolve({});
-      const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" +
-                  itemIds.join("|") + "&languages=en&props=labels&format=json&origin=*";
-      return fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          const mapping = {};
-          if (data.entities) {
-            for (let id in data.entities) {
-              if (data.entities[id].labels && data.entities[id].labels.en) {
-                mapping[id] = data.entities[id].labels.en.value;
+      const chunks = chunkArray(itemIds, 50);
+      const requests = chunks.map(chunk => {
+        const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" +
+                    chunk.join("|") +
+                    "&languages=en&props=labels&format=json&origin=*";
+        return fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            const mapping = {};
+            if (data.entities) {
+              for (let id in data.entities) {
+                if (data.entities[id].labels && data.entities[id].labels.en) {
+                  mapping[id] = data.entities[id].labels.en.value;
+                }
               }
             }
-          }
-          return mapping;
-        })
-        .catch(err => {
-          console.error("Error fetching item labels:", err);
-          return {};
-        });
+            return mapping;
+          });
+      });
+      return Promise.all(requests).then(results => {
+        return results.reduce((acc, curr) => Object.assign(acc, curr), {});
+      }).catch(err => {
+        console.error("Error in fetchWikidataItemLabels:", err);
+        return {};
+      });
     }
     function fetchWikidataEntities(itemIds) {
       if (itemIds.length === 0) return Promise.resolve({});
@@ -132,7 +138,7 @@
     }
 
     /********* SPARQL: FETCH SERIES PARTS *********/
-    // Use the p:P527 namespace to retrieve parts and the series ordinal from qualifier (pq:P1545)
+    // Use the p:P527 namespace with pq:P1545 to get the ordinal
     function fetchSeriesParts(seriesQid) {
       const query = `
         SELECT ?part ?partLabel ?partDescription ?ordinal WHERE {
@@ -170,7 +176,7 @@
 
     /********* RECURSIVE RENDERING OF PARTS TREE *********/
     // Recursively render the parts tree for a given QID.
-    // currentQid is the work we are viewing (to highlight and auto-expand that branch).
+    // currentQid is the QID of the work being viewed.
     function renderPartsTree(qid, currentQid) {
       return fetchSeriesParts(qid).then(parts => {
         if (parts.length === 0) return "";
@@ -291,7 +297,6 @@
     /********* FETCH ENTITY DATA *********/
     function fetchEntity(qid) {
       const url = "https://www.wikidata.org/wiki/Special:EntityData/" + qid + ".json";
-      // Show a loading message
       document.getElementById('infoDisplay').innerHTML = "<p>Loading...</p>";
       fetch(url)
         .then(response => response.json())
@@ -323,16 +328,13 @@
       if (entity.descriptions && entity.descriptions.en) {
         headerHtml += `<p>${entity.descriptions.en.value}</p>`;
       }
-      // Update browser history
       window.history.pushState({}, '', "?id=" + qid);
-      // Update the document title
       document.title = label + " (" + qid + ") - Wikidata Media Tracker";
 
       /***** SERIES/SEQUENCING INFORMATION *****/
       const sequencing = extractSequencingInfo(entity);
       let seriesSectionHtml = "";
       let seriesQid = null;
-      // Prefer the P179 claim if available.
       if (entity.claims && entity.claims.P179 && entity.claims.P179.length > 0) {
         seriesQid = entity.claims.P179[0].mainsnak.datavalue.value.id;
       } else if (entity.claims && entity.claims.P31) {
@@ -356,7 +358,6 @@
           seriesSectionHtml += `<h4>Series/Sequencing Information</h4>`;
           seriesSectionHtml += `<p>Series: <a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">${seriesInfo.label} (${seriesQid})</a> <a href="https://www.wikidata.org/wiki/Property:P179" target="_blank">(part of series, P179)</a></p>`;
           
-          // Render the recursive parts tree.
           renderPartsTree(seriesQid, qid).then(partsTreeHtml => {
             if (partsTreeHtml) {
               seriesSectionHtml += `<p>Parts (sorted by series ordinal):</p>` + partsTreeHtml;

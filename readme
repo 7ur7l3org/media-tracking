@@ -57,6 +57,8 @@ this might be possible to be ran entirely client side... esp if it has proper gi
 
 <future>
 
+also make it archive/cache the dynamicially generated htmls with all the information and just update whenever it visits and re-renders. just for posterity would be interesting how much wikidata information is updated
+
 then integrate subtitle databases and stremio search stuff on top of custom descriptions for links temporarily. tho possibly autogen search links for thepiratebay etc with the multiple names reported by wikidata idk, there's probably a solution for that already though. tho also just links to streaming stuff maintained would be nice too. some kinda prototype page info data thing that is always there
 
 then set up or integrate maloja/pano-scrobbler for music too to start capturing that data, esp with lyrics database for search
@@ -103,8 +105,8 @@ cline with deepseek?
     - on a tv season (or on an episode), sees that it's `Series: House (Q23558) (part of series, P179)` but then renders `Parts of this series (via P179)` all episodes and seasons all together in one big list instead of properly rendering like it does when we're on the tv series itself. all series rendering should render equivalently no matter which element of the sequencing tree we are on. also the `Direct sequencing statements` don't get rendered for the seasons even though they have e.g. `part of the series: House (series ordinal 1, follows no value, followed by House, season 2)`
     - also i notice there are `series ordinal (P1545)`s for each of the `has part(s) (P527)` of the seasons, so we can probably directly render and use those for sorting if they exist (otherwise falling back to topological sorting is probably fine)
 -- we stopped loading styles.css at some point
+-- the property value names broke in a lot of cases for some reason e.g. it renders `Q6371282 (Q6371282)` instead of `House (TV series) (Q6371282)`
 
-- the property value names broke in a lot of cases for some reason e.g. it renders `Q6371282 (Q6371282)` instead of `House (TV series) (Q6371282)`
 - need to make the search paginated so we can search more results or next/previous 7 etc. should probably search 10 results at a time for now
 - should display (loading) or something in the Fetch results section if it is currently loading or doing the fetch
 - should make the search section collapsable and default to collapsed unless we aren't doing a fetch (like ?id= isn't triggering a direct fetch) and the search is the first thing we are doing. should collapse when fetching

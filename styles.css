@@ -2,38 +2,37 @@
 /* Use a monospace font for everything */
 body, input, button, h1, h2, h3, p, td, th, pre, a {
     font-family: monospace;
-  }
+}
   
-  /* Basic styling for layout */
-  body {
+/* Basic styling for layout */
+body {
     margin: 20px;
     background-color: #f9f9f9;
     color: #333;
-  }
+}
   
-  .result {
+.result {
     background-color: #fff;
     padding: 15px;
     border: 1px solid #ccc;
     margin-bottom: 20px;
-  }
+}
   
-  table {
+table {
     border-collapse: collapse;
     margin-bottom: 20px;
-  }
+}
   
-  table, th, td {
+table, th, td {
     border: 1px solid #ddd;
     padding: 8px;
-  }
+}
   
-  th {
+th {
     background-color: #f0f0f0;
-  }
+}
   
-  a {
+a {
     color: #1a0dab;
     text-decoration: none;
-  }
-  
+}
