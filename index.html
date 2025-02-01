@@ -5,7 +5,7 @@
   <title>Wikidata Media Tracker</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* Additional CSS for search results, pagination, and collapsible search */
+    /* Additional CSS for search results, pagination, and collapsible sections */
     .search-result-item {
       display: flex;
       flex-direction: row;
@@ -34,8 +34,17 @@
     #pageInfo {
       margin-left: 20px;
     }
-    /* Make search section collapsible */
+    /* Collapsible search section */
     #searchDetails summary {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 4px;
+      background-color: #eee;
+      border: 1px solid #ccc;
+      margin-bottom: 5px;
+    }
+    /* Collapsible series/sequencing section */
+    #seriesDetails summary {
       cursor: pointer;
       font-weight: bold;
       padding: 4px;
@@ -62,11 +71,9 @@
     </section>
   </details>
 
-  <!-- Fetch Section -->
+  <!-- Info Section -->
   <section id="fetchSection" class="result">
-    <h2>Fetch by Wikidata QID</h2>
-    <input type="text" id="qidInput" placeholder="Enter Wikidata QID (e.g. Q42)">
-    <button id="fetchButton">Fetch Info</button>
+    <!-- This section will display the fetched entity along with its properties and series/sequencing information -->
     <div id="infoDisplay"></div>
   </section>
 
@@ -90,7 +97,6 @@
       });
     }
     enableEnterSubmit("searchInput", "searchButton");
-    enableEnterSubmit("qidInput", "fetchButton");
 
     /********* GLOBAL VARIABLES FOR SEARCH PAGINATION *********/
     let searchContinue = 0;
@@ -372,7 +378,7 @@
         });
     }
 
-    /********* RENDER ENTITY, SERIES, & GROUP PROPERTIES *********/
+    /********* RENDER ENTITY, PROPERTIES, & SERIES/SEQUENCING INFORMATION *********/
     // updateHistory defaults to true.
     function renderEntity(entity, qid, updateHistory = true) {
       const label = (entity.labels && entity.labels.en) ? entity.labels.en.value : qid;
@@ -387,7 +393,6 @@
 
       /***** SERIES/SEQUENCING INFORMATION *****/
       const sequencing = extractSequencingInfo(entity);
-      let seriesSectionHtml = "";
       let seriesQid = null;
       if (entity.claims && entity.claims.P179 && entity.claims.P179.length > 0) {
         seriesQid = entity.claims.P179[0].mainsnak.datavalue.value.id;
@@ -409,20 +414,20 @@
       function continueRendering() {
         fetchWikidataEntities([seriesQid]).then(seriesData => {
           const seriesInfo = seriesData[seriesQid];
-          seriesSectionHtml += `<h4>Series/Sequencing Information</h4>`;
+          // Build the series/sequencing section (expanded by default)
+          let seriesSectionHtml = `<details id="seriesDetails" open><summary>Series/Sequencing Information</summary>`;
           seriesSectionHtml += `<p>Series: <a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">${seriesInfo.label} (${seriesQid})</a> <a href="https://www.wikidata.org/wiki/Property:P179" target="_blank">(part of series, P179)</a></p>`;
-          
           renderPartsTree(seriesQid, qid).then(partsTreeHtml => {
             if (partsTreeHtml) {
               seriesSectionHtml += `<p>Parts (sorted by series ordinal):</p>` + partsTreeHtml;
             } else {
               seriesSectionHtml += `<p>No parts found for this series.</p>`;
             }
-            addDirectSequencingAndRender();
+            addDirectSequencingAndRender(seriesSectionHtml);
           });
         });
         
-        function addDirectSequencingAndRender() {
+        function addDirectSequencingAndRender(seriesSectionHtml) {
           const directIds = Array.from(new Set([...sequencing.follows, ...sequencing.followedBy, ...sequencing.hasParts]));
           fetchWikidataEntities(directIds).then(seqEntities => {
             let directSeqHtml = "";
@@ -441,61 +446,68 @@
             if (directSeqHtml) {
               seriesSectionHtml += `<h5>Direct sequencing statements</h5>${directSeqHtml}`;
             }
-            renderIdentifiers(headerHtml + seriesSectionHtml, entity, qid);
+            // Close the series details element.
+            seriesSectionHtml += `</details>`;
+            // Now render the properties table first and then append the series section.
+            renderIdentifiers(entity, qid).then(propertiesHtml => {
+              document.getElementById('infoDisplay').innerHTML = headerHtml + propertiesHtml + seriesSectionHtml;
+            });
           });
         }
       }
     }
 
     /********* RENDER IDENTIFIERS (PROPERTY GROUPS) *********/
-    function renderIdentifiers(headerHtml, entity, qid) {
-      const propIDs = Object.keys(entity.claims);
-      fetchPropertyDefinitions(propIDs).then(propDefinitions => {
-        const propertyRows = [];
-        const wikidataItemIds = new Set();
-        for (let prop in entity.claims) {
-          const row = { prop, values: [] };
-          entity.claims[prop].forEach(claim => {
-            if (claim.mainsnak && claim.mainsnak.datavalue) {
-              let rawValue = claim.mainsnak.datavalue.value;
-              const valueData = {};
-              if (typeof rawValue === "object" && rawValue["entity-type"] === "item" && rawValue.id) {
-                valueData.type = "wikidata";
-                valueData.qid = rawValue.id;
-                wikidataItemIds.add(rawValue.id);
-                valueData.display = rawValue.id;
-                valueData.hyperlink = "https://www.wikidata.org/wiki/" + rawValue.id;
-              } else {
-                valueData.type = "text";
-                valueData.display = (typeof rawValue === "string") ? rawValue : JSON.stringify(rawValue);
-                valueData.hyperlink = null;
+    // This function now returns a Promise that resolves to the HTML string for the properties table.
+    // The collapsible details for each property group are now collapsed by default.
+    function renderIdentifiers(entity, qid) {
+      return new Promise((resolve, reject) => {
+        const propIDs = Object.keys(entity.claims);
+        fetchPropertyDefinitions(propIDs).then(propDefinitions => {
+          const propertyRows = [];
+          const wikidataItemIds = new Set();
+          for (let prop in entity.claims) {
+            const row = { prop, values: [] };
+            entity.claims[prop].forEach(claim => {
+              if (claim.mainsnak && claim.mainsnak.datavalue) {
+                let rawValue = claim.mainsnak.datavalue.value;
+                const valueData = {};
+                if (typeof rawValue === "object" && rawValue["entity-type"] === "item" && rawValue.id) {
+                  valueData.type = "wikidata";
+                  valueData.qid = rawValue.id;
+                  wikidataItemIds.add(rawValue.id);
+                  valueData.display = rawValue.id;
+                  valueData.hyperlink = "https://www.wikidata.org/wiki/" + rawValue.id;
+                } else {
+                  valueData.type = "text";
+                  valueData.display = (typeof rawValue === "string") ? rawValue : JSON.stringify(rawValue);
+                  valueData.hyperlink = null;
+                }
+                const propDef = propDefinitions[prop];
+                if (propDef && propDef.formatter) {
+                  valueData.hyperlink = propDef.formatter.replace("$1", valueData.display);
+                }
+                row.values.push(valueData);
               }
-              const propDef = propDefinitions[prop];
-              if (propDef && propDef.formatter) {
-                valueData.hyperlink = propDef.formatter.replace("$1", valueData.display);
-              }
-              row.values.push(valueData);
+            });
+            if (row.values.length) {
+              propertyRows.push(row);
             }
-          });
-          if (row.values.length) {
-            propertyRows.push(row);
           }
-        }
-        getPropertyClosure(propertyRows.map(r => r.prop)).then(closureMapping => {
-          const grouped = { creative: [], authority: [], misc: [] };
-          propertyRows.forEach(row => {
-            const closure = closureMapping[row.prop] || [];
-            let group = "misc";
-            if (closure.includes("Q18614948")) {
-              group = "authority";
-            } else if (closure.includes("Q18618644")) {
-              group = "creative";
-            }
-            grouped[group].push(row);
-          });
-          fetchWikidataItemLabels(Array.from(wikidataItemIds)).then(itemLabels => {
-            let tableHtml = `<h4>Identifiers</h4>
-              <table>
+          getPropertyClosure(propertyRows.map(r => r.prop)).then(closureMapping => {
+            const grouped = { creative: [], authority: [], misc: [] };
+            propertyRows.forEach(row => {
+              const closure = closureMapping[row.prop] || [];
+              let group = "misc";
+              if (closure.includes("Q18614948")) {
+                group = "authority";
+              } else if (closure.includes("Q18618644")) {
+                group = "creative";
+              }
+              grouped[group].push(row);
+            });
+            fetchWikidataItemLabels(Array.from(wikidataItemIds)).then(itemLabels => {
+              let tableHtml = `<table>
                 <thead>
                   <tr>
                     <th>Property (ID)</th>
@@ -503,41 +515,42 @@
                   </tr>
                 </thead>
                 <tbody>`;
-            function renderGroup(groupId, groupTitle, refQid) {
-              if (!grouped[groupId] || grouped[groupId].length === 0) return "";
-              let headerLine = refQid
-                ? `${groupTitle} (<a href="https://www.wikidata.org/wiki/${refQid}" target="_blank">${refQid}</a>)`
-                : groupTitle;
-              let html = `<tr class="group-header"><td colspan="2"><details class="group-details"><summary>${headerLine}</summary>`;
-              html += `<table>`;
-              grouped[groupId].forEach(row => {
-                const propDef = propDefinitions[row.prop];
-                const humanName = propDef ? propDef.label : row.prop;
-                const propIdLink = `<a href="https://www.wikidata.org/wiki/Property/${row.prop}" target="_blank">${row.prop}</a>`;
-                let cellContent = "";
-                row.values.forEach(val => {
-                  if (val.type === "wikidata") {
-                    const itemLabel = itemLabels[val.qid] || val.qid;
-                    cellContent += `<a href="https://www.wikidata.org/wiki/${val.qid}" target="_blank">${itemLabel} (${val.qid})</a>, `;
-                  } else {
-                    if (val.hyperlink) {
-                      cellContent += `<a href="${val.hyperlink}" target="_blank">${val.display}</a>, `;
+              function renderGroup(groupId, groupTitle, refQid) {
+                if (!grouped[groupId] || grouped[groupId].length === 0) return "";
+                let headerLine = refQid
+                  ? `${groupTitle} (<a href="https://www.wikidata.org/wiki/${refQid}" target="_blank">${refQid}</a>)`
+                  : groupTitle;
+                let html = `<tr class="group-header"><td colspan="2"><details class="group-details"><summary>${headerLine}</summary>`;
+                html += `<table>`;
+                grouped[groupId].forEach(row => {
+                  const propDef = propDefinitions[row.prop];
+                  const humanName = propDef ? propDef.label : row.prop;
+                  const propIdLink = `<a href="https://www.wikidata.org/wiki/Property/${row.prop}" target="_blank">${row.prop}</a>`;
+                  let cellContent = "";
+                  row.values.forEach(val => {
+                    if (val.type === "wikidata") {
+                      const itemLabel = itemLabels[val.qid] || val.qid;
+                      cellContent += `<a href="https://www.wikidata.org/wiki/${val.qid}" target="_blank">${itemLabel} (${val.qid})</a>, `;
                     } else {
-                      cellContent += `${val.display}, `;
+                      if (val.hyperlink) {
+                        cellContent += `<a href="${val.hyperlink}" target="_blank">${val.display}</a>, `;
+                      } else {
+                        cellContent += `${val.display}, `;
+                      }
                     }
-                  }
+                  });
+                  cellContent = cellContent.replace(/, $/, "");
+                  html += `<tr><td>${humanName} (${propIdLink})</td><td>${cellContent}</td></tr>`;
                 });
-                cellContent = cellContent.replace(/, $/, "");
-                html += `<tr><td>${humanName} (${propIdLink})</td><td>${cellContent}</td></tr>`;
-              });
-              html += `</table></details></tr>`;
-              return html;
-            }
-            tableHtml += renderGroup("creative", "Wikidata property related to creative works", "Q18618644");
-            tableHtml += renderGroup("authority", "Authority control properties", "Q18614948");
-            tableHtml += renderGroup("misc", "Miscellaneous Properties");
-            tableHtml += `</tbody></table>`;
-            document.getElementById('infoDisplay').innerHTML = headerHtml + tableHtml;
+                html += `</table></details></td></tr>`;
+                return html;
+              }
+              tableHtml += renderGroup("creative", "Wikidata property related to creative works", "Q18618644");
+              tableHtml += renderGroup("authority", "Authority control properties", "Q18614948");
+              tableHtml += renderGroup("misc", "Miscellaneous Properties");
+              tableHtml += `</tbody></table>`;
+              resolve(tableHtml);
+            });
           });
         });
       });
@@ -567,7 +580,7 @@
           html += "</ul>";
           document.getElementById('searchResults').innerHTML = html;
 
-          // Render both Previous and Next buttons, always visible, disabling when appropriate.
+          // Always render both Previous and Next buttons, disabled when appropriate.
           let prevDisabled = (continueParam <= 0) ? "disabled" : "";
           let nextDisabled = (data.search.length < searchLimit) ? "disabled" : "";
           let paginationHtml = `<button onclick="performSearch('${term}', ${Number(continueParam) - searchLimit})" ${prevDisabled}>Previous</button>`;
@@ -589,28 +602,17 @@
       performSearch(document.getElementById('searchInput').value.trim(), 0);
     });
 
-    /********* FETCH BUTTON HANDLER *********/
-    document.getElementById('fetchButton').addEventListener('click', function() {
-      const qid = document.getElementById('qidInput').value.trim();
-      if (!qid) { alert('Please enter a Wikidata QID.'); return; }
-      window.history.pushState({}, '', "?id=" + qid);
-      fetchEntity(qid, true);
-    });
-
     /********* HANDLE NAVIGATION HISTORY (popstate) *********/
     window.addEventListener('popstate', function(event) {
       const params = getQueryParams();
       // Do not push a new history entry when handling popstate.
       if (params.has("id")) {
         const qid = params.get("id");
-        document.getElementById('qidInput').value = qid;
         fetchEntity(qid, false);
       } else if (params.has("q")) {
         const term = params.get("q");
-        document.getElementById('searchInput').value = term;
         performSearch(term, 0);
       } else {
-        // If no id or q, clear the fetch section.
         document.getElementById('infoDisplay').innerHTML = "";
       }
     });
@@ -618,7 +620,6 @@
     /********* AUTO-EXECUTE BASED ON URL PARAMETERS *********/
     window.addEventListener('load', function() {
       const params = getQueryParams();
-      // If no id parameter exists, open the search section; otherwise collapse it.
       if (!params.has("id")) {
         document.getElementById("searchDetails").setAttribute("open", "");
       } else {
@@ -631,7 +632,6 @@
       }
       if (params.has("id")) {
         const qid = params.get("id");
-        document.getElementById('qidInput').value = qid;
         fetchEntity(qid, false);
       }
     });

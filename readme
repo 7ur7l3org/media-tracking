@@ -74,6 +74,7 @@ then add custom bookmarks/wiki pages for stuff like anime summer 2025 and such m
 <now>
 
 thanks https://chatgpt.com/c/679d3064-16b0-800c-9e35-89509164697b (trying o3-mini)
+thanks https://chatgpt.com/c/679d8f5e-ad78-800c-ac21-cba9c0ffbd01 (o3-mini is good!)
 
 first make website that links to wikidata and can pull wikidata given wikidata url/id
 then make it render all the id links of the content and maybe preview the images and save to media
@@ -111,17 +112,32 @@ cline with deepseek?
 -- should make the entire search section collapsable and default to collapsed unless we aren't doing a fetch (like ?id= isn't triggering a direct fetch) and the search is the first thing we are doing. should collapse when fetching
 -- we should also put the title and qid in the page title whenever we fetch so that the navigation history shows what pages we were on
 -- when we update the url we aren't editing the navigation history and we should be making a new navigation history entry every time we write the url so that e.g. back properly goes back
+-- remove the `Fetch by Wikidata QID` and `Fetch Info` search/button. the e.g. `Pearl (Q111669794)` and `2022 film directed by Ti West` should be the primary sectioning on the page and if you have a qid you can always plug it into the ?id in the url. also we should delete the `Identifiers` header since it doesn't really add any value
+-- we should make the entire series/sequencing information parts section be collapsible (but default to not collapsed always)
 
-- we should make the entire series/sequencing information parts section be collapsible (but default to not collapsed always)
+- fix broken links to properties on wikidata. we are currently linking to e.g. https://www.wikidata.org/wiki/Property/P4908 which should be https://www.wikidata.org/wiki/Property:P4908
 - should link to [sqid] in addition to [wikidata] and should link to ourselves via ?id= as the primary link for all wikidata links
 - improve caching of requests because we care way more about responsiveness than live changing data. cache of all wikidata requests should probably live at least 30 mins
-- currently things that aren't series and aren't part of any series display as Series: <themselves> and No parts found for this series. really it should just omit the Series/Sequencing Information when not applicable. i wonder if the fallback is to itself if it isn't part of a series and isn't "is a" series itself
-- remove the `Fetch by Wikidata QID` and `Fetch Info` search/button. the e.g. `Pearl (Q111669794)` and `2022 film directed by Ti West` should be the primary sectioning on the page and if you have a qid you can always plug it into the ?id in the url. also we should rename the `Identifiers` header to say `Properties` or even just delete that header entirely since it doesn't really ad any value
-- bold or otherwise emphasize all search results that "is a" creative work (Q17537576) as that is mostly what we are looking for
+
+- there are tons of exceptions in the console:
+    index.html?id=Q210311:209 
+    GET https://query.wikidata.org/sparql?query=%0A%20%20%20%20%20%20%20%20SELECT%2…%20%20%20%20%20%20ORDER%20BY%20%3Fordinal%0A%20%20%20%20%20%20&format=json net::ERR_FAILED 429 (Too Many Requests)
+    index.html?id=Q210311:228 Error fetching series parts: TypeError: Failed to fetch
+        at fetchSeriesParts (index.html?id=Q210311:209:14)
+        at renderPartsTree (index.html?id=Q210311:235:14)
+        at index.html?id=Q210311:249:18
+        at Array.map (<anonymous>)
+        at index.html?id=Q210311:238:36
+        at async Promise.all (/C:/Users/7UR7L3/dev…a-tracking/index 14)
+    index.html:1 Access to fetch at 'https://query.wikidata.org/sparql?query=%0A%20%20%20%20%20%20%20%20SELECT%2…%20%20%20%20%20%20ORDER%20BY%20%3Fordinal%0A%20%20%20%20%20%20&format=json' from origin 'null' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
 
 - refactor into files that are more maintainable separation of concerns so that we can update smaller files instead of updating one huge file
 
+- bold or otherwise emphasize all search results that "is a" creative work (Q17537576) as that is mostly what we are looking for
+- fix rendering of e.g. `{"amount":"+8","unit":"1"}`, `{"text":"House","language":"en"}, {"text":"House, M.D.","language":"en"}`, durations `{"amount":"+43","unit":"http://www.wikidata.org/entity/Q7727"}`, times `{"time":"+2006-11-21T00:00:00Z","timezone":0,"before":0,"after":0,"precision":11,"calendarmodel":"http://www.wikidata.org/entity/Q1985727"}`
+
 - series/sequencing information things:
+    - currently things that aren't series and aren't part of any series display as Series: <themselves> and No parts found for this series. really it should just omit the Series/Sequencing Information when not applicable. i wonder if the fallback is to itself if it isn't part of a series and isn't "is a" series itself
     - we should e.g. expand season 2 if we're fetching the information for season 2 in the series/sequencing information parts tree. currently it underlines itself in the tree but doesn't expand it to show the episodes in it
     - there are some `series of creative works (Q7725310)` which give `No parts found for this series.` but we can pull everything that is `part of the series (P179)` part of that series, and those things do still have their series ordinal. e.g. a missing `has part(s) (P527)` forward reference should not imply the lack of existing series/ordinal back-linkages
     - make sure the series/sequencing display can handle when something is a part of multiple series, it should render each series that it's a part of
