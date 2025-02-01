@@ -513,12 +513,14 @@
       function continueRendering() {
         fetchWikidataEntities([seriesQid]).then(seriesData => {
           const seriesInfo = seriesData[seriesQid];
-          // Updated series link: primary link via index.html?id=..., with QID (and parentheses) wrapped in .small-id.
-          let seriesLink = `<a href="index.html?id=${seriesQid}">${seriesInfo.label} <span class="small-id">(${seriesQid})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${seriesQid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">wikidata</a>]</span>`;
-          // Updated property P179 display (properties omit self-link and remove "Property:" from the SQID URL).
+          // Updated series line:
+          // Instead of "Series: American Dad! (Q210311) [sqid] [wikidata] [P179 [sqid] [wikidata]]"
+          // we now output: "Series (P179 [sqid] [wikidata]): American Dad! (Q210311) [sqid] [wikidata]"
           let p179Link = `P179 <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=P179" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/Property:P179" target="_blank">wikidata</a>]</span>`;
+          let seriesLink = `<a href="index.html?id=${seriesQid}">${seriesInfo.label} <span class="small-id">(${seriesQid})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${seriesQid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">wikidata</a>]</span>`;
           let seriesSectionHtml = `<details id="seriesDetails" open><summary>Series/Sequencing Information</summary>`;
-          seriesSectionHtml += `<p>Series: ${seriesLink} [${p179Link}]</p>`;
+          // New series line formatting:
+          seriesSectionHtml += `<p>Part of the series (${p179Link}): ${seriesLink}</p>`;
           renderPartsTree(seriesQid, qid).then(partsTreeHtml => {
             if (partsTreeHtml) {
               seriesSectionHtml += `<p>Parts (sorted by series ordinal):</p>` + partsTreeHtml;
@@ -689,7 +691,7 @@
               "Q105543609": 4, // Musical work/composition
               "Q58483083": 4,  // Dramatico-musical work
               "Q55850593": 4,  // Music track with vocals
-              "Q24856": 4     // Musical work
+              "Q24856": 4      // Musical work
             };
 
             // For each search result, compute a priority (lowest number = highest priority).
@@ -720,7 +722,6 @@
             data.search.forEach(item => {
               // For items with priority 1 or 2 (movies, animated films, TV series), bold the whole line.
               const wrapWithStrong = item.priority <= 2;
-              // Build the list item accordingly.
               let line;
               if (wrapWithStrong) {
                 line = `<li class="search-result-item"><strong><span>
