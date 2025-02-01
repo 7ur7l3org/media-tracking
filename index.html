@@ -4,6 +4,37 @@
   <meta charset="utf-8">
   <title>Wikidata Media Tracker</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Additional CSS for search results and pagination */
+    .search-result-item {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      border-bottom: 1px solid #ddd;
+      padding: 4px 0;
+    }
+    .search-result-item button {
+      margin-right: 10px;
+    }
+    .search-result-item span {
+      flex: 1;
+      text-align: left;
+    }
+    /* Place pagination controls inline with the search controls */
+    #searchControls {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 10px;
+    }
+    #paginationControls {
+      margin-left: 20px;
+    }
+    #pageInfo {
+      margin-left: 20px;
+    }
+  </style>
 </head>
 <body>
   <h1>Wikidata Media Tracker</h1>
@@ -11,8 +42,12 @@
   <!-- Search Section -->
   <section id="searchSection" class="result">
     <h2>Search Wikidata Entities</h2>
-    <input type="text" id="searchInput" placeholder="Search Wikidata...">
-    <button id="searchButton">Search</button>
+    <div id="searchControls">
+      <input type="text" id="searchInput" placeholder="Search Wikidata...">
+      <button id="searchButton">Search</button>
+      <div id="paginationControls"></div>
+      <div id="pageInfo"></div>
+    </div>
     <div id="searchResults"></div>
   </section>
 
@@ -45,6 +80,11 @@
     }
     enableEnterSubmit("searchInput", "searchButton");
     enableEnterSubmit("qidInput", "fetchButton");
+
+    /********* GLOBAL VARIABLES FOR SEARCH PAGINATION *********/
+    let searchContinue = 0;
+    const searchLimit = 20;
+    let currentSearchTerm = "";
 
     /********* FETCH WIKIDATA ENTITIES *********/
     function fetchWikidataItemLabels(itemIds) {
@@ -138,7 +178,6 @@
     }
 
     /********* SPARQL: FETCH SERIES PARTS *********/
-    // Use the p:P527 namespace with pq:P1545 to get the ordinal
     function fetchSeriesParts(seriesQid) {
       const query = `
         SELECT ?part ?partLabel ?partDescription ?ordinal WHERE {
@@ -175,8 +214,6 @@
     }
 
     /********* RECURSIVE RENDERING OF PARTS TREE *********/
-    // Recursively render the parts tree for a given QID.
-    // currentQid is the QID of the work being viewed.
     function renderPartsTree(qid, currentQid) {
       return fetchSeriesParts(qid).then(parts => {
         if (parts.length === 0) return "";
@@ -489,48 +526,68 @@
       });
     }
 
-    /********* SEARCH FUNCTIONALITY *********/
-    document.getElementById('searchButton').addEventListener('click', function() {
-      const query = document.getElementById('searchInput').value.trim();
-      if (!query) { alert('Please enter a search term.'); return; }
+    /********* SEARCH FUNCTIONALITY WITH PAGINATION *********/
+    function performSearch(term, cont) {
+      currentSearchTerm = term;
+      // Use "continue" parameter; if undefined, treat as 0.
+      const continueParam = cont ? cont : 0;
       const url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=" +
-                  encodeURIComponent(query) + "&language=en&format=json&origin=*";
+                  encodeURIComponent(term) + "&language=en&format=json&origin=*&limit=" + searchLimit + "&continue=" + continueParam;
+      document.getElementById('searchResults').innerHTML = "<p>Loading search results...</p>";
       fetch(url)
         .then(response => response.json())
         .then(data => {
-          const results = data.search;
-          if (!results || results.length === 0) {
+          if (!data.search || data.search.length === 0) {
             document.getElementById('searchResults').innerHTML = "<p>No results found.</p>";
             return;
           }
           let html = "<ul>";
-          results.forEach(item => {
-            html += `
-              <li>
-                <a href="https://www.wikidata.org/wiki/${item.id}" target="_blank">${item.label} (${item.id})</a>
-                <p>${item.description ? item.description : ''}</p>
-                <button onclick="fetchEntity('${item.id}'); document.getElementById('qidInput').value='${item.id}'; window.history.pushState({}, '', '?id=${item.id}')">Fetch</button>
-              </li>`;
+          data.search.forEach(item => {
+            html += `<li class="search-result-item">
+                      <button onclick="fetchEntity('${item.id}'); document.getElementById('qidInput').value='${item.id}'; window.history.pushState({}, '', '?id=${item.id}')">Fetch</button>
+                      <span><a href="https://www.wikidata.org/wiki/${item.id}" target="_blank">${item.label} (${item.id})</a> – ${item.description || ""}</span>
+                     </li>`;
           });
           html += "</ul>";
           document.getElementById('searchResults').innerHTML = html;
+
+          // Always render both Previous and Next buttons, disabling them if not applicable.
+          let prevDisabled = (continueParam <= 0) ? "disabled" : "";
+          let nextDisabled = (data.search.length < searchLimit) ? "disabled" : "";
+          let paginationHtml = `<button onclick="performSearch('${term}', ${Number(continueParam) - searchLimit})" ${prevDisabled}>Previous</button>`;
+          paginationHtml += `<button onclick="performSearch('${term}', ${Number(continueParam) + searchLimit})" ${nextDisabled}>Next</button>`;
+          document.getElementById('paginationControls').innerHTML = paginationHtml;
+
+          // Show page information
+          let start = Number(continueParam) + 1;
+          let end = Number(continueParam) + data.search.length;
+          document.getElementById('pageInfo').innerHTML = `<span>Results ${start}–${end}</span>`;
         })
         .catch(error => {
           document.getElementById('searchResults').innerHTML = "<p>Error searching data.</p>";
+          console.error("Search error:", error);
         });
+    }
+
+    document.getElementById('searchButton').addEventListener('click', function() {
+      performSearch(document.getElementById('searchInput').value.trim(), 0);
     });
+
+    /********* FETCH BUTTON HANDLER *********/
     document.getElementById('fetchButton').addEventListener('click', function() {
       const qid = document.getElementById('qidInput').value.trim();
       if (!qid) { alert('Please enter a Wikidata QID.'); return; }
       window.history.pushState({}, '', "?id=" + qid);
       fetchEntity(qid);
     });
+
+    /********* AUTO-EXECUTE BASED ON URL PARAMETERS *********/
     window.addEventListener('load', function() {
       const params = getQueryParams();
       if (params.has("q")) {
         const term = params.get("q");
         document.getElementById('searchInput').value = term;
-        document.getElementById('searchButton').click();
+        performSearch(term, 0);
       }
       if (params.has("id")) {
         const qid = params.get("id");
