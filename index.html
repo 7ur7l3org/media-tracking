@@ -605,7 +605,8 @@
                 grouped[groupId].forEach(row => {
                   const propDef = propDefinitions[row.prop];
                   const humanName = propDef ? propDef.label : row.prop;
-                  const propIdLink = `<a href="https://www.wikidata.org/wiki/Property/${row.prop}" target="_blank">${row.prop}</a>`;
+                  // Updated property link with colon between "Property" and the property ID.
+                  const propIdLink = `<a href="https://www.wikidata.org/wiki/Property:${row.prop}" target="_blank">${row.prop}</a>`;
                   let cellContent = "";
                   row.values.forEach(val => {
                     if (val.type === "wikidata") {
