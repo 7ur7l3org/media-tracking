@@ -39,16 +39,25 @@ function fetchSeriesParts(seriesQid) {
       if (parts.length === 0) return "";
       let html = "<ul class='parts-tree'>";
       const partPromises = parts.map(part => {
-        const markerStart = (part.id === currentQid) ? "<strong class='current-entry'>" : "";
-        const markerEnd = (part.id === currentQid) ? "</strong>" : "";
+        // Define arrow for the current entry.
+        const arrow = " ⟵";
+        let markerStart = "";
+        let markerEnd = "";
+        if (part.id === currentQid) {
+          markerStart = "<strong class='current-entry'>";
+          markerEnd = arrow + "</strong>";
+        }
+  
         let partLine = "";
         if (part.ordinal !== null) {
           partLine += part.ordinal + ". ";
         }
         partLine += `<a href="index.html?id=${part.id}">${part.label} <span class="small-id">(${part.id})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${part.id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">wikidata</a>]</span>`;
+  
         return renderPartsTree(part.id, currentQid).then(childHtml => {
           if (childHtml) {
-            const openAttr = childHtml.indexOf(currentQid) !== -1 ? " open" : "";
+            // Expand the details element if this part is the current entity or if any child branch contains the current entity.
+            const openAttr = (part.id === currentQid || childHtml.indexOf(currentQid) !== -1) ? " open" : "";
             return `<details class="parts-tree"${openAttr}><summary>${markerStart}${partLine}${markerEnd}</summary>${childHtml}</details>`;
           } else {
             return `<li>${markerStart}${partLine}${markerEnd}</li>`;
