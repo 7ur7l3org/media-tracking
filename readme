@@ -119,13 +119,16 @@ cline with deepseek?
 -- fix broken links to properties on wikidata. we are currently linking to e.g. https://www.wikidata.org/wiki/Property/P4908 which should be https://www.wikidata.org/wiki/Property:P4908
 -- should link to [sqid] in addition to [wikidata] and should link to ourselves via ?id= as the primary link for all wikidata links
 -- Property (ID) keys should be wider in the property table
+-- should make the search input/button be in the collapsible search header so that you don't have to uncollapse just to do a search, and doing a search should automatically expand the search section
+-- should remove the Fetch button from the search results because the results already hyperlink to ?id=<result id> which is equivalent to what the button does
 
 
 - refactor into files that are more maintainable separation of concerns so that we can update smaller files instead of updating one huge file
 
-- should make the search input/button be in the collapsible search header so that you don't have to uncollapse just to do a search, and doing a search should automatically expand the search section
+- change `Series: American Dad! (Q210311) [sqid] [wikidata] [P179 [sqid] [wikidata]]` to be `Series (P179 [sqid] [wikidata]): American Dad! (Q210311) [sqid] [wikidata]`
+
 - bold or otherwise emphasize all search results that "is a" creative work (Q17537576) as that is mostly what we are looking for
-- should remove the Fetch button from the search results because the results already hyperlink to ?id=<result id> which is equivalent to what the button does
+
 - fix rendering of e.g. `{"amount":"+8","unit":"1"}`, `{"text":"House","language":"en"}, {"text":"House, M.D.","language":"en"}`, durations `{"amount":"+43","unit":"http://www.wikidata.org/entity/Q7727"}`, times `{"time":"+2006-11-21T00:00:00Z","timezone":0,"before":0,"after":0,"precision":11,"calendarmodel":"http://www.wikidata.org/entity/Q1985727"}`
 
 - series/sequencing information things:
@@ -135,6 +138,7 @@ cline with deepseek?
     - make sure the series/sequencing display can handle when something is a part of multiple series, it should render each series that it's a part of
     - update series/sequencing css to align the bullets with the collapsible sections. currently the collapsible sections are double indented and not in line with the other adjacent bullets that don't have sub-parts
     - somehow make copy paste on the series/sequencing information section retain the section/subsection indentation
+    - somehow make copy paste copy hyperlinks too in addition to text content
     - interesting duplication issue in the recursive parts series/sequencing view. not sure what to do about this lol
     6. House, season 6 (Q169042) – season of television series
         1. Broken (Q2504180) – joint title for the first and second episodes of the sixth season of the television series House

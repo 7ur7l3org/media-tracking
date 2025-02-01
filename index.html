@@ -14,19 +14,15 @@
       border-bottom: 1px solid #ddd;
       padding: 4px 0;
     }
-    .search-result-item button {
-      margin-right: 10px;
-    }
     .search-result-item span {
       flex: 1;
       text-align: left;
     }
-    /* Place search controls in one line */
-    #searchControls {
+    /* Place search controls in one line in the summary header */
+    #searchSummary {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
-      margin-bottom: 10px;
+      gap: 10px;
     }
     #paginationControls {
       margin-left: 20px;
@@ -67,14 +63,14 @@
 
   <!-- Search Section (wrapped in a collapsible details element) -->
   <details id="searchDetails" open>
-    <summary>Search</summary>
+    <summary id="searchSummary">
+      Search:
+      <input type="text" id="searchInput" placeholder="Search Wikidata...">
+      <button id="searchButton">Search</button>
+    </summary>
     <section id="searchSection" class="result">
-      <div id="searchControls">
-        <input type="text" id="searchInput" placeholder="Search Wikidata...">
-        <button id="searchButton">Search</button>
-        <div id="paginationControls"></div>
-        <div id="pageInfo"></div>
-      </div>
+      <div id="paginationControls"></div>
+      <div id="pageInfo"></div>
       <div id="searchResults"></div>
     </section>
   </details>
@@ -247,6 +243,21 @@
         })
         .catch(err => {
           console.error("Error fetching entities:", err);
+          return {};
+        });
+    }
+
+    // New helper: fetch entities with their claims (used to check if a result is a creative work)
+    function fetchEntitiesClaims(itemIds) {
+      if (itemIds.length === 0) return Promise.resolve({});
+      const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" +
+                  itemIds.join("|") + "&props=claims&format=json&origin=*";
+      return persistentCachedJSONFetch(url)
+        .then(data => {
+          return data.entities || {};
+        })
+        .catch(err => {
+          console.error("Error fetching entities claims:", err);
           return {};
         });
     }
@@ -650,6 +661,8 @@
 
     /********* SEARCH FUNCTIONALITY WITH PAGINATION *********/
     function performSearch(term, cont) {
+      // Automatically expand the search section when a search is initiated.
+      document.getElementById("searchDetails").setAttribute("open", "");
       currentSearchTerm = term;
       const continueParam = cont ? cont : 0;
       const url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=" +
@@ -661,30 +674,47 @@
             document.getElementById('searchResults').innerHTML = "<p>No results found.</p>";
             return;
           }
-          let html = "<ul>";
-          data.search.forEach(item => {
-            html += `<li class="search-result-item">
-                      <button onclick="fetchEntity('${item.id}', true); document.getElementById('qidInput').value='${item.id}'; window.history.pushState({}, '', '?id=${item.id}'); document.getElementById('searchDetails').removeAttribute('open')">Fetch</button>
-                      <span>
-                        <a href="index.html?id=${item.id}">${item.label} <span class="small-id">(${item.id})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${item.id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${item.id}" target="_blank">wikidata</a>]</span>
-                        – ${item.description || ""}
-                      </span>
-                     </li>`;
-          });
-          html += "</ul>";
-          document.getElementById('searchResults').innerHTML = html;
+          const ids = data.search.map(item => item.id);
+          // Fetch claims for search results so we can determine if the entity is a creative work.
+          fetchEntitiesClaims(ids).then(entitiesClaims => {
+            let html = "<ul>";
+            data.search.forEach(item => {
+              let isCreative = false;
+              if (entitiesClaims[item.id] && entitiesClaims[item.id].claims && entitiesClaims[item.id].claims.P31) {
+                const claims = entitiesClaims[item.id].claims.P31;
+                for (let claim of claims) {
+                  if (claim.mainsnak && claim.mainsnak.datavalue && claim.mainsnak.datavalue.value && claim.mainsnak.datavalue.value.id === "Q17537576") {
+                    isCreative = true;
+                    break;
+                  }
+                }
+              }
+              let labelHtml = item.label;
+              if (isCreative) {
+                labelHtml = "<strong>" + labelHtml + "</strong>";
+              }
+              html += `<li class="search-result-item">
+                         <span>
+                           <a href="index.html?id=${item.id}">${labelHtml} <span class="small-id">(${item.id})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${item.id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${item.id}" target="_blank">wikidata</a>]</span>
+                           – ${item.description || ""}
+                         </span>
+                       </li>`;
+            });
+            html += "</ul>";
+            document.getElementById('searchResults').innerHTML = html;
 
-          // Render Previous and Next buttons (disabled when appropriate)
-          let prevDisabled = (continueParam <= 0) ? "disabled" : "";
-          let nextDisabled = (data.search.length < searchLimit) ? "disabled" : "";
-          let paginationHtml = `<button onclick="performSearch('${term}', ${Number(continueParam) - searchLimit})" ${prevDisabled}>Previous</button>`;
-          paginationHtml += `<button onclick="performSearch('${term}', ${Number(continueParam) + searchLimit})" ${nextDisabled}>Next</button>`;
-          document.getElementById('paginationControls').innerHTML = paginationHtml;
-          
-          // Show page information, e.g. "Results 1–20"
-          let start = Number(continueParam) + 1;
-          let end = Number(continueParam) + data.search.length;
-          document.getElementById('pageInfo').innerHTML = `<span>Results ${start}–${end}</span>`;
+            // Render Previous and Next buttons (disabled when appropriate)
+            let prevDisabled = (continueParam <= 0) ? "disabled" : "";
+            let nextDisabled = (data.search.length < searchLimit) ? "disabled" : "";
+            let paginationHtml = `<button onclick="performSearch('${term}', ${Number(continueParam) - searchLimit})" ${prevDisabled}>Previous</button>`;
+            paginationHtml += `<button onclick="performSearch('${term}', ${Number(continueParam) + searchLimit})" ${nextDisabled}>Next</button>`;
+            document.getElementById('paginationControls').innerHTML = paginationHtml;
+            
+            // Show page information, e.g. "Results 1–20"
+            let start = Number(continueParam) + 1;
+            let end = Number(continueParam) + data.search.length;
+            document.getElementById('pageInfo').innerHTML = `<span>Results ${start}–${end}</span>`;
+          });
         })
         .catch(error => {
           document.getElementById('searchResults').innerHTML = "<p>Error searching data.</p>";
