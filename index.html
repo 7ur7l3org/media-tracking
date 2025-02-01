@@ -190,6 +190,79 @@
     }
     enableEnterSubmit("searchInput", "searchButton");
 
+    /********* ASYNCHRONOUS VALUE FORMATTING FUNCTIONS *********/
+    // Fetch the unit symbol (P5061) for a given unit QID.
+    async function fetchUnitSymbol(unitQid) {
+      try {
+        const url = "https://www.wikidata.org/wiki/Special:EntityData/" + unitQid + ".json";
+        const data = await persistentCachedJSONFetch(url);
+        const entity = data.entities[unitQid];
+        if (entity && entity.claims && entity.claims.P5061 && entity.claims.P5061.length > 0) {
+          const symbolClaim = entity.claims.P5061[0];
+          if (symbolClaim.mainsnak && symbolClaim.mainsnak.datavalue) {
+            let symbol = symbolClaim.mainsnak.datavalue.value;
+            // If symbol is an object (monolingual text), extract its text.
+            if (typeof symbol === "object" && symbol.text) {
+              return symbol.text;
+            }
+            return symbol;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      return null;
+    }
+
+    // Format quantity values (e.g. durations)
+    async function formatQuantityValue(value) {
+      let amount = value.amount;
+      if (amount.startsWith("+")) amount = amount.slice(1);
+      let unit = value.unit;
+      if (unit === "1") {
+        return amount;
+      } else {
+        // Extract QID from URL, e.g. "http://www.wikidata.org/entity/Q7727"
+        let unitQid = unit.split("/").pop();
+        let unitSymbol = await fetchUnitSymbol(unitQid);
+        if (unitSymbol) {
+          return amount + " " + `<a href="https://www.wikidata.org/wiki/${unitQid}" target="_blank">${unitSymbol}</a>`;
+        } else {
+          return amount + " " + `<a href="https://www.wikidata.org/wiki/${unitQid}" target="_blank">${unitQid}</a>`;
+        }
+      }
+    }
+
+    // Format time values, preserving timezone, precision, and calendarmodel.
+    async function formatTimeValue(value) {
+      let timeStr = value.time;
+      if (timeStr.startsWith("+")) timeStr = timeStr.slice(1);
+      let timezone = value.timezone;
+      let precision = value.precision;
+      let calendarModel = value.calendarmodel;
+      let calendarQid = calendarModel.split("/").pop();
+      return `${timeStr} <span class="small-id">(tz: ${timezone}, precision: ${precision}, calendar: <a href="https://www.wikidata.org/wiki/${calendarQid}" target="_blank">${calendarQid}</a>)</span>`;
+    }
+
+    // Main asynchronous formatter that detects the type of value.
+    async function formatWikidataValue(value) {
+      if (typeof value !== "object") return String(value);
+      // Quantity values, e.g. {"amount":"+8","unit":"1"} or durations
+      if ("amount" in value && "unit" in value) {
+        return await formatQuantityValue(value);
+      }
+      // Monolingual text, e.g. {"text":"House","language":"en"}
+      if ("text" in value && "language" in value) {
+        return value.text;
+      }
+      // Time values, e.g. {"time":"+2010-07-25T00:00:00Z", ...}
+      if ("time" in value) {
+        return await formatTimeValue(value);
+      }
+      // Fallback: pretty-print the JSON
+      return JSON.stringify(value);
+    }
+
     /********* GLOBAL VARIABLES FOR SEARCH PAGINATION *********/
     let searchContinue = 0;
     const searchLimit = 20;
@@ -513,13 +586,10 @@
       function continueRendering() {
         fetchWikidataEntities([seriesQid]).then(seriesData => {
           const seriesInfo = seriesData[seriesQid];
-          // Updated series line:
-          // Instead of "Series: American Dad! (Q210311) [sqid] [wikidata] [P179 [sqid] [wikidata]]"
-          // we now output: "Series (P179 [sqid] [wikidata]): American Dad! (Q210311) [sqid] [wikidata]"
+          // Updated series line formatting:
           let p179Link = `P179 <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=P179" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/Property:P179" target="_blank">wikidata</a>]</span>`;
           let seriesLink = `<a href="index.html?id=${seriesQid}">${seriesInfo.label} <span class="small-id">(${seriesQid})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${seriesQid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">wikidata</a>]</span>`;
           let seriesSectionHtml = `<details id="seriesDetails" open><summary>Series/Sequencing Information</summary>`;
-          // New series line formatting:
           seriesSectionHtml += `<p>Part of the series (${p179Link}): ${seriesLink}</p>`;
           renderPartsTree(seriesQid, qid).then(partsTreeHtml => {
             if (partsTreeHtml) {
@@ -550,9 +620,7 @@
             if (directSeqHtml) {
               seriesSectionHtml += `<h5>Direct sequencing statements</h5>${directSeqHtml}`;
             }
-            // Close the series details element.
             seriesSectionHtml += `</details>`;
-            // Now render the properties table and append the series section.
             renderIdentifiers(entity, qid).then(propertiesHtml => {
               document.getElementById('infoDisplay').innerHTML = headerHtml + propertiesHtml + seriesSectionHtml;
             });
@@ -562,103 +630,102 @@
     }
 
     /********* RENDER IDENTIFIERS (PROPERTY GROUPS) *********/
-    // Returns a Promise that resolves to the HTML string for the properties table.
-    function renderIdentifiers(entity, qid) {
-      return new Promise((resolve, reject) => {
-        const propIDs = Object.keys(entity.claims);
-        fetchPropertyDefinitions(propIDs).then(propDefinitions => {
-          const propertyRows = [];
-          const wikidataItemIds = new Set();
-          for (let prop in entity.claims) {
-            const row = { prop, values: [] };
-            entity.claims[prop].forEach(claim => {
-              if (claim.mainsnak && claim.mainsnak.datavalue) {
-                let rawValue = claim.mainsnak.datavalue.value;
-                const valueData = {};
-                if (typeof rawValue === "object" && rawValue["entity-type"] === "item" && rawValue.id) {
-                  valueData.type = "wikidata";
-                  valueData.qid = rawValue.id;
-                  wikidataItemIds.add(rawValue.id);
-                  valueData.display = rawValue.id;
-                  valueData.hyperlink = rawValue.id;
-                } else {
-                  valueData.type = "text";
-                  valueData.display = (typeof rawValue === "string") ? rawValue : JSON.stringify(rawValue);
-                  valueData.hyperlink = null;
-                }
-                const propDef = propDefinitions[prop];
-                if (propDef && propDef.formatter) {
-                  valueData.hyperlink = propDef.formatter.replace("$1", valueData.display);
-                }
-                row.values.push(valueData);
-              }
-            });
-            if (row.values.length) {
-              propertyRows.push(row);
+    // Updated to be an async function so that we can await asynchronous formatting.
+    async function renderIdentifiers(entity, qid) {
+      const propIDs = Object.keys(entity.claims);
+      const propDefinitions = await fetchPropertyDefinitions(propIDs);
+      const propertyRows = [];
+      const wikidataItemIds = new Set();
+      for (const prop in entity.claims) {
+        const row = { prop, values: [] };
+        for (const claim of entity.claims[prop]) {
+          if (claim.mainsnak && claim.mainsnak.datavalue) {
+            let rawValue = claim.mainsnak.datavalue.value;
+            const valueData = {};
+            if (typeof rawValue === "object" && rawValue["entity-type"] === "item" && rawValue.id) {
+              valueData.type = "wikidata";
+              valueData.qid = rawValue.id;
+              wikidataItemIds.add(rawValue.id);
+              valueData.display = rawValue.id;
+              valueData.hyperlink = rawValue.id;
+            } else {
+              valueData.type = "text";
+              valueData.display = (typeof rawValue === "string") ? rawValue : await formatWikidataValue(rawValue);
+              valueData.hyperlink = null;
             }
+            const propDef = propDefinitions[prop];
+            if (propDef && propDef.formatter) {
+              valueData.hyperlink = propDef.formatter.replace("$1", valueData.display);
+            }
+            // If the value is a string that looks like a URL, automatically set hyperlink.
+            if (valueData.type === "text" && !valueData.hyperlink && typeof rawValue === "string" &&
+                rawValue.match(/^https?:\/\//)) {
+              valueData.hyperlink = rawValue;
+            }
+            row.values.push(valueData);
           }
-          getPropertyClosure(propertyRows.map(r => r.prop)).then(closureMapping => {
-            const grouped = { creative: [], authority: [], misc: [] };
-            propertyRows.forEach(row => {
-              const closure = closureMapping[row.prop] || [];
-              let group = "misc";
-              if (closure.includes("Q18614948")) {
-                group = "authority";
-              } else if (closure.includes("Q18618644")) {
-                group = "creative";
-              }
-              grouped[group].push(row);
-            });
-            fetchWikidataItemLabels(Array.from(wikidataItemIds)).then(itemLabels => {
-              let tableHtml = `<table class="properties-table">
-                <thead>
-                  <tr>
-                    <th>Property (ID)</th>
-                    <th>Value(s)</th>
-                  </tr>
-                </thead>
-                <tbody>`;
-              function renderGroup(groupId, groupTitle, refQid) {
-                if (!grouped[groupId] || grouped[groupId].length === 0) return "";
-                let headerLine = refQid
-                  ? `${groupTitle} (<a href="index.html?id=${refQid}">${refQid}</a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${refQid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${refQid}" target="_blank">wikidata</a>]</span>)`
-                  : groupTitle;
-                let html = `<tr class="group-header"><td colspan="2"><details class="group-details"><summary>${headerLine}</summary>`;
-                html += `<table>`;
-                grouped[groupId].forEach(row => {
-                  const propDef = propDefinitions[row.prop];
-                  const humanName = propDef ? propDef.label : row.prop;
-                  // For properties, we omit the self-link and only include extra links.
-                  const propIdDisplay = row.prop;
-                  const propIdLinks = `${propIdDisplay} <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${row.prop}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/Property:${row.prop}" target="_blank">wikidata</a>]</span>`;
-                  let cellContent = "";
-                  row.values.forEach(val => {
-                    if (val.type === "wikidata") {
-                      const itemLabel = itemLabels[val.qid] || val.qid;
-                      cellContent += `<a href="index.html?id=${val.qid}">${itemLabel} <span class="small-id">(${val.qid})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${val.qid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${val.qid}" target="_blank">wikidata</a>]</span>, `;
-                    } else {
-                      if (val.hyperlink) {
-                        cellContent += `<a href="${val.hyperlink}" target="_blank">${val.display}</a>, `;
-                      } else {
-                        cellContent += `${val.display}, `;
-                      }
-                    }
-                  });
-                  cellContent = cellContent.replace(/, $/, "");
-                  html += `<tr><td>${humanName} (${propIdLinks})</td><td>${cellContent}</td></tr>`;
-                });
-                html += `</table></details></td></tr>`;
-                return html;
-              }
-              tableHtml += renderGroup("creative", "Wikidata property related to creative works", "Q18618644");
-              tableHtml += renderGroup("authority", "Authority control properties", "Q18614948");
-              tableHtml += renderGroup("misc", "Miscellaneous Properties");
-              tableHtml += `</tbody></table>`;
-              resolve(tableHtml);
-            });
-          });
-        });
+        }
+        if (row.values.length) {
+          propertyRows.push(row);
+        }
+      }
+      const closureMapping = await getPropertyClosure(propertyRows.map(r => r.prop));
+      const grouped = { creative: [], authority: [], misc: [] };
+      propertyRows.forEach(row => {
+        const closure = closureMapping[row.prop] || [];
+        let group = "misc";
+        if (closure.includes("Q18614948")) {
+          group = "authority";
+        } else if (closure.includes("Q18618644")) {
+          group = "creative";
+        }
+        grouped[group].push(row);
       });
+      const itemLabels = await fetchWikidataItemLabels(Array.from(wikidataItemIds));
+      let tableHtml = `<table class="properties-table">
+        <thead>
+          <tr>
+            <th>Property (ID)</th>
+            <th>Value(s)</th>
+          </tr>
+        </thead>
+        <tbody>`;
+      function renderGroup(groupId, groupTitle, refQid) {
+        if (!grouped[groupId] || grouped[groupId].length === 0) return "";
+        let headerLine = refQid
+          ? `${groupTitle} (<a href="index.html?id=${refQid}">${refQid}</a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${refQid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${refQid}" target="_blank">wikidata</a>]</span>)`
+          : groupTitle;
+        let html = `<tr class="group-header"><td colspan="2"><details class="group-details"><summary>${headerLine}</summary>`;
+        html += `<table>`;
+        grouped[groupId].forEach(row => {
+          const propDef = propDefinitions[row.prop];
+          const humanName = propDef ? propDef.label : row.prop;
+          const propIdDisplay = row.prop;
+          const propIdLinks = `${propIdDisplay} <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${row.prop}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/Property:${row.prop}" target="_blank">wikidata</a>]</span>`;
+          let cellContent = "";
+          row.values.forEach(val => {
+            if (val.type === "wikidata") {
+              const itemLabel = itemLabels[val.qid] || val.qid;
+              cellContent += `<a href="index.html?id=${val.qid}">${itemLabel} <span class="small-id">(${val.qid})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${val.qid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${val.qid}" target="_blank">wikidata</a>]</span>, `;
+            } else {
+              if (val.hyperlink) {
+                cellContent += `<a href="${val.hyperlink}" target="_blank">${val.display}</a>, `;
+              } else {
+                cellContent += `${val.display}, `;
+              }
+            }
+          });
+          cellContent = cellContent.replace(/, $/, "");
+          html += `<tr><td>${humanName} (${propIdLinks})</td><td>${cellContent}</td></tr>`;
+        });
+        html += `</table></details></td></tr>`;
+        return html;
+      }
+      tableHtml += renderGroup("creative", "Wikidata property related to creative works", "Q18618644");
+      tableHtml += renderGroup("authority", "Authority control properties", "Q18614948");
+      tableHtml += renderGroup("misc", "Miscellaneous Properties");
+      tableHtml += `</tbody></table>`;
+      return tableHtml;
     }
 
     /********* SEARCH FUNCTIONALITY WITH PAGINATION *********/
