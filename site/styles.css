@@ -102,3 +102,8 @@ th {
 .small-extra {
   font-size: 0.8em;
 }
+
+/* align details with li in parts-tree ul's */
+ul > details {
+    margin-left: -17px;
+}
