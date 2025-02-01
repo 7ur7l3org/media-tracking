@@ -5,7 +5,7 @@
   <title>Wikidata Media Tracker</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* Additional CSS for search results, pagination, and collapsible sections */
+    /* Additional CSS for search results, pagination, collapsible sections, extra links, and small IDs */
     .search-result-item {
       display: flex;
       flex-direction: row;
@@ -51,6 +51,14 @@
       background-color: #eee;
       border: 1px solid #ccc;
       margin-bottom: 5px;
+    }
+    /* Extra links (sqid and wikidata) in a smaller font */
+    .extra-link {
+      font-size: 0.8em;
+    }
+    /* QID (including parentheses) in a smaller font */
+    .small-id {
+      font-size: 0.8em;
     }
   </style>
 </head>
@@ -326,10 +334,8 @@
           if (part.ordinal !== null) {
             partLine += part.ordinal + ". ";
           }
-          partLine += `<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">${part.label} (${part.id})</a>`;
-          if (part.description) {
-            partLine += " – " + part.description;
-          }
+          // Updated part link: primary link uses index.html?id=..., with QID (and parentheses) wrapped in .small-id.
+          partLine += `<a href="index.html?id=${part.id}">${part.label} <span class="small-id">(${part.id})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${part.id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">wikidata</a>]</span>`;
           return renderPartsTree(part.id, currentQid).then(childHtml => {
             if (childHtml) {
               const openAttr = childHtml.indexOf(currentQid) !== -1 ? " open" : "";
@@ -463,7 +469,8 @@
     // updateHistory defaults to true.
     function renderEntity(entity, qid, updateHistory = true) {
       const label = (entity.labels && entity.labels.en) ? entity.labels.en.value : qid;
-      let headerHtml = `<h3><a href="https://www.wikidata.org/wiki/${qid}" target="_blank">${label} (${qid})</a></h3>`;
+      // Updated entity header: primary link via index.html?id=..., with QID (and parentheses) in .small-id.
+      let headerHtml = `<h3><a href="index.html?id=${qid}">${label} <span class="small-id">(${qid})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${qid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${qid}" target="_blank">wikidata</a>]</span></h3>`;
       if (entity.descriptions && entity.descriptions.en) {
         headerHtml += `<p>${entity.descriptions.en.value}</p>`;
       }
@@ -495,9 +502,12 @@
       function continueRendering() {
         fetchWikidataEntities([seriesQid]).then(seriesData => {
           const seriesInfo = seriesData[seriesQid];
-          // Build the series/sequencing section (expanded by default)
+          // Updated series link: primary link via index.html?id=..., with QID (and parentheses) wrapped in .small-id.
+          let seriesLink = `<a href="index.html?id=${seriesQid}">${seriesInfo.label} <span class="small-id">(${seriesQid})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${seriesQid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">wikidata</a>]</span>`;
+          // Updated property P179 display (properties omit self-link and remove "Property:" from the SQID URL).
+          let p179Link = `P179 <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=P179" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/Property:P179" target="_blank">wikidata</a>]</span>`;
           let seriesSectionHtml = `<details id="seriesDetails" open><summary>Series/Sequencing Information</summary>`;
-          seriesSectionHtml += `<p>Series: <a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">${seriesInfo.label} (${seriesQid})</a> <a href="https://www.wikidata.org/wiki/Property:P179" target="_blank">(part of series, P179)</a></p>`;
+          seriesSectionHtml += `<p>Series: ${seriesLink} [${p179Link}]</p>`;
           renderPartsTree(seriesQid, qid).then(partsTreeHtml => {
             if (partsTreeHtml) {
               seriesSectionHtml += `<p>Parts (sorted by series ordinal):</p>` + partsTreeHtml;
@@ -515,13 +525,13 @@
             if (sequencing.follows.length > 0) {
               directSeqHtml += `<p>Follows: ${sequencing.follows.map(id => {
                 const ent = seqEntities[id] || { label: id, description: "" };
-                return `<a href="https://www.wikidata.org/wiki/${id}" target="_blank">${ent.label} (${id})${ent.description ? ": " + ent.description : ""}</a>`;
+                return `<a href="index.html?id=${id}">${ent.label} <span class="small-id">(${id})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${id}" target="_blank">wikidata</a>]</span>`;
               }).join(", ")}</p>`;
             }
             if (sequencing.followedBy.length > 0) {
               directSeqHtml += `<p>Followed by: ${sequencing.followedBy.map(id => {
                 const ent = seqEntities[id] || { label: id, description: "" };
-                return `<a href="https://www.wikidata.org/wiki/${id}" target="_blank">${ent.label} (${id})${ent.description ? ": " + ent.description : ""}</a>`;
+                return `<a href="index.html?id=${id}">${ent.label} <span class="small-id">(${id})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${id}" target="_blank">wikidata</a>]</span>`;
               }).join(", ")}</p>`;
             }
             if (directSeqHtml) {
@@ -557,7 +567,7 @@
                   valueData.qid = rawValue.id;
                   wikidataItemIds.add(rawValue.id);
                   valueData.display = rawValue.id;
-                  valueData.hyperlink = "https://www.wikidata.org/wiki/" + rawValue.id;
+                  valueData.hyperlink = rawValue.id;
                 } else {
                   valueData.type = "text";
                   valueData.display = (typeof rawValue === "string") ? rawValue : JSON.stringify(rawValue);
@@ -598,20 +608,21 @@
               function renderGroup(groupId, groupTitle, refQid) {
                 if (!grouped[groupId] || grouped[groupId].length === 0) return "";
                 let headerLine = refQid
-                  ? `${groupTitle} (<a href="https://www.wikidata.org/wiki/${refQid}" target="_blank">${refQid}</a>)`
+                  ? `${groupTitle} (<a href="index.html?id=${refQid}">${refQid}</a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${refQid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${refQid}" target="_blank">wikidata</a>]</span>)`
                   : groupTitle;
                 let html = `<tr class="group-header"><td colspan="2"><details class="group-details"><summary>${headerLine}</summary>`;
                 html += `<table>`;
                 grouped[groupId].forEach(row => {
                   const propDef = propDefinitions[row.prop];
                   const humanName = propDef ? propDef.label : row.prop;
-                  // Updated property link with colon between "Property" and the property ID.
-                  const propIdLink = `<a href="https://www.wikidata.org/wiki/Property:${row.prop}" target="_blank">${row.prop}</a>`;
+                  // For properties, we omit the self-link and only include extra links.
+                  const propIdDisplay = row.prop;
+                  const propIdLinks = `${propIdDisplay} <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${row.prop}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/Property:${row.prop}" target="_blank">wikidata</a>]</span>`;
                   let cellContent = "";
                   row.values.forEach(val => {
                     if (val.type === "wikidata") {
                       const itemLabel = itemLabels[val.qid] || val.qid;
-                      cellContent += `<a href="https://www.wikidata.org/wiki/${val.qid}" target="_blank">${itemLabel} (${val.qid})</a>, `;
+                      cellContent += `<a href="index.html?id=${val.qid}">${itemLabel} <span class="small-id">(${val.qid})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${val.qid}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${val.qid}" target="_blank">wikidata</a>]</span>, `;
                     } else {
                       if (val.hyperlink) {
                         cellContent += `<a href="${val.hyperlink}" target="_blank">${val.display}</a>, `;
@@ -621,7 +632,7 @@
                     }
                   });
                   cellContent = cellContent.replace(/, $/, "");
-                  html += `<tr><td>${humanName} (${propIdLink})</td><td>${cellContent}</td></tr>`;
+                  html += `<tr><td>${humanName} (${propIdLinks})</td><td>${cellContent}</td></tr>`;
                 });
                 html += `</table></details></td></tr>`;
                 return html;
@@ -654,7 +665,10 @@
           data.search.forEach(item => {
             html += `<li class="search-result-item">
                       <button onclick="fetchEntity('${item.id}', true); document.getElementById('qidInput').value='${item.id}'; window.history.pushState({}, '', '?id=${item.id}'); document.getElementById('searchDetails').removeAttribute('open')">Fetch</button>
-                      <span><a href="https://www.wikidata.org/wiki/${item.id}" target="_blank">${item.label} (${item.id})</a> – ${item.description || ""}</span>
+                      <span>
+                        <a href="index.html?id=${item.id}">${item.label} <span class="small-id">(${item.id})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${item.id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${item.id}" target="_blank">wikidata</a>]</span>
+                        – ${item.description || ""}
+                      </span>
                      </li>`;
           });
           html += "</ul>";

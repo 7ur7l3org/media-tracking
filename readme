@@ -117,8 +117,9 @@ cline with deepseek?
 -- improve caching of requests because we care way more about responsiveness than live changing data. cache of all wikidata requests should probably live at least 30 mins
 -- there are tons of exceptions in the console (probably fixed by caching)
 -- fix broken links to properties on wikidata. we are currently linking to e.g. https://www.wikidata.org/wiki/Property/P4908 which should be https://www.wikidata.org/wiki/Property:P4908
+-- should link to [sqid] in addition to [wikidata] and should link to ourselves via ?id= as the primary link for all wikidata links
 
-- should link to [sqid] in addition to [wikidata] and should link to ourselves via ?id= as the primary link for all wikidata links
+- Property (ID) keys should be wider in the table
 
 - refactor into files that are more maintainable separation of concerns so that we can update smaller files instead of updating one huge file
 
