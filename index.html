@@ -3,20 +3,13 @@
 <head>
   <meta charset="utf-8">
   <title>Wikidata Media Tracker</title>
-  <style>
-    /* Basic styling */
-    body { font-family: monospace; }
-    details.group-details { margin-bottom: 1em; }
-    details.group-details summary { cursor: pointer; font-weight: bold; }
-    ul.parts-tree { list-style-type: none; padding-left: 1em; }
-    .current-entry { font-weight: bold; text-decoration: underline; }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <h1>Wikidata Media Tracker</h1>
 
   <!-- Search Section -->
-  <section id="searchSection">
+  <section id="searchSection" class="result">
     <h2>Search Wikidata Entities</h2>
     <input type="text" id="searchInput" placeholder="Search Wikidata...">
     <button id="searchButton">Search</button>
@@ -24,7 +17,7 @@
   </section>
 
   <!-- Fetch Section -->
-  <section id="fetchSection">
+  <section id="fetchSection" class="result">
     <h2>Fetch by Wikidata QID</h2>
     <input type="text" id="qidInput" placeholder="Enter Wikidata QID (e.g. Q42)">
     <button id="fetchButton">Fetch Info</button>
@@ -56,7 +49,7 @@
     /********* FETCH WIKIDATA ENTITIES *********/
     function fetchWikidataItemLabels(itemIds) {
       if (itemIds.length === 0) return Promise.resolve({});
-      const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + 
+      const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" +
                   itemIds.join("|") + "&languages=en&props=labels&format=json&origin=*";
       return fetch(url)
         .then(response => response.json())
@@ -71,7 +64,10 @@
           }
           return mapping;
         })
-        .catch(err => { console.error("Error fetching item labels:", err); return {}; });
+        .catch(err => {
+          console.error("Error fetching item labels:", err);
+          return {};
+        });
     }
     function fetchWikidataEntities(itemIds) {
       if (itemIds.length === 0) return Promise.resolve({});
@@ -92,7 +88,10 @@
           }
           return mapping;
         })
-        .catch(err => { console.error("Error fetching entities:", err); return {}; });
+        .catch(err => {
+          console.error("Error fetching entities:", err);
+          return {};
+        });
     }
 
     /********* PROPERTY LABELS & FORMATTERS *********/
@@ -108,7 +107,7 @@
     function fetchPropertyDefinitions(propIDs) {
       const chunks = chunkArray(propIDs, 20);
       const requests = chunks.map(chunk => {
-        const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + 
+        const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" +
                     chunk.join("|") + "&languages=en&props=labels|claims&format=json&origin=*";
         return fetch(url)
           .then(response => response.json())
@@ -124,13 +123,16 @@
             }
             return mapping;
           })
-          .catch(error => { console.error("Error fetching property definitions:", error); return {}; });
+          .catch(error => {
+            console.error("Error fetching property definitions:", error);
+            return {};
+          });
       });
       return Promise.all(requests).then(results => results.reduce((acc, curr) => Object.assign(acc, curr), {}));
     }
 
     /********* SPARQL: FETCH SERIES PARTS *********/
-    // Use the p: namespace to retrieve parts and their qualifier for series ordinal (P1545)
+    // Use the p:P527 namespace to retrieve parts and the series ordinal from qualifier (pq:P1545)
     function fetchSeriesParts(seriesQid) {
       const query = `
         SELECT ?part ?partLabel ?partDescription ?ordinal WHERE {
@@ -160,12 +162,15 @@
           });
           return parts;
         })
-        .catch(err => { console.error("Error fetching series parts:", err); return []; });
+        .catch(err => {
+          console.error("Error fetching series parts:", err);
+          return [];
+        });
     }
 
     /********* RECURSIVE RENDERING OF PARTS TREE *********/
     // Recursively render the parts tree for a given QID.
-    // currentQid is the work we are viewing.
+    // currentQid is the work we are viewing (to highlight and auto-expand that branch).
     function renderPartsTree(qid, currentQid) {
       return fetchSeriesParts(qid).then(parts => {
         if (parts.length === 0) return "";
@@ -183,7 +188,6 @@
           }
           return renderPartsTree(part.id, currentQid).then(childHtml => {
             if (childHtml) {
-              // Auto-expand if the child branch contains the currentQid.
               const openAttr = childHtml.indexOf(currentQid) !== -1 ? " open" : "";
               return `<details class="parts-tree"${openAttr}><summary>${markerStart}${partLine}${markerEnd}</summary>${childHtml}</details>`;
             } else {
@@ -215,7 +219,10 @@
           }
           return null;
         })
-        .catch(err => { console.error("Error fetching parent series:", err); return null; });
+        .catch(err => {
+          console.error("Error fetching parent series:", err);
+          return null;
+        });
     }
 
     /********* SPARQL: GET TRANSITIVE "IS A" CLOSURE *********/
@@ -284,6 +291,8 @@
     /********* FETCH ENTITY DATA *********/
     function fetchEntity(qid) {
       const url = "https://www.wikidata.org/wiki/Special:EntityData/" + qid + ".json";
+      // Show a loading message
+      document.getElementById('infoDisplay').innerHTML = "<p>Loading...</p>";
       fetch(url)
         .then(response => response.json())
         .then(data => {
@@ -314,7 +323,10 @@
       if (entity.descriptions && entity.descriptions.en) {
         headerHtml += `<p>${entity.descriptions.en.value}</p>`;
       }
-      window.history.replaceState({}, '', "?id=" + qid);
+      // Update browser history
+      window.history.pushState({}, '', "?id=" + qid);
+      // Update the document title
+      document.title = label + " (" + qid + ") - Wikidata Media Tracker";
 
       /***** SERIES/SEQUENCING INFORMATION *****/
       const sequencing = extractSequencingInfo(entity);
@@ -343,6 +355,7 @@
           const seriesInfo = seriesData[seriesQid];
           seriesSectionHtml += `<h4>Series/Sequencing Information</h4>`;
           seriesSectionHtml += `<p>Series: <a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">${seriesInfo.label} (${seriesQid})</a> <a href="https://www.wikidata.org/wiki/Property:P179" target="_blank">(part of series, P179)</a></p>`;
+          
           // Render the recursive parts tree.
           renderPartsTree(seriesQid, qid).then(partsTreeHtml => {
             if (partsTreeHtml) {
@@ -396,7 +409,7 @@
                 valueData.qid = rawValue.id;
                 wikidataItemIds.add(rawValue.id);
                 valueData.display = rawValue.id;
-                valueData.hyperlink = `https://www.wikidata.org/wiki/${rawValue.id}`;
+                valueData.hyperlink = "https://www.wikidata.org/wiki/" + rawValue.id;
               } else {
                 valueData.type = "text";
                 valueData.display = (typeof rawValue === "string") ? rawValue : JSON.stringify(rawValue);
@@ -445,7 +458,7 @@
               grouped[groupId].forEach(row => {
                 const propDef = propDefinitions[row.prop];
                 const humanName = propDef ? propDef.label : row.prop;
-                const propIdLink = `<a href="https://www.wikidata.org/wiki/Property:${row.prop}" target="_blank">${row.prop}</a>`;
+                const propIdLink = `<a href="https://www.wikidata.org/wiki/Property/${row.prop}" target="_blank">${row.prop}</a>`;
                 let cellContent = "";
                 row.values.forEach(val => {
                   if (val.type === "wikidata") {
@@ -479,7 +492,8 @@
     document.getElementById('searchButton').addEventListener('click', function() {
       const query = document.getElementById('searchInput').value.trim();
       if (!query) { alert('Please enter a search term.'); return; }
-      const url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=" + encodeURIComponent(query) + "&language=en&format=json&origin=*";
+      const url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=" +
+                  encodeURIComponent(query) + "&language=en&format=json&origin=*";
       fetch(url)
         .then(response => response.json())
         .then(data => {
@@ -494,7 +508,7 @@
               <li>
                 <a href="https://www.wikidata.org/wiki/${item.id}" target="_blank">${item.label} (${item.id})</a>
                 <p>${item.description ? item.description : ''}</p>
-                <button onclick="fetchEntity('${item.id}'); document.getElementById('qidInput').value='${item.id}'; window.history.replaceState({}, '', '?id=${item.id}')">Fetch</button>
+                <button onclick="fetchEntity('${item.id}'); document.getElementById('qidInput').value='${item.id}'; window.history.pushState({}, '', '?id=${item.id}')">Fetch</button>
               </li>`;
           });
           html += "</ul>";
@@ -507,7 +521,7 @@
     document.getElementById('fetchButton').addEventListener('click', function() {
       const qid = document.getElementById('qidInput').value.trim();
       if (!qid) { alert('Please enter a Wikidata QID.'); return; }
-      window.history.replaceState({}, '', "?id=" + qid);
+      window.history.pushState({}, '', "?id=" + qid);
       fetchEntity(qid);
     });
     window.addEventListener('load', function() {
