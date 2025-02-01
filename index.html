@@ -597,7 +597,7 @@
               grouped[group].push(row);
             });
             fetchWikidataItemLabels(Array.from(wikidataItemIds)).then(itemLabels => {
-              let tableHtml = `<table>
+              let tableHtml = `<table class="properties-table">
                 <thead>
                   <tr>
                     <th>Property (ID)</th>

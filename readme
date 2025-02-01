@@ -118,12 +118,14 @@ cline with deepseek?
 -- there are tons of exceptions in the console (probably fixed by caching)
 -- fix broken links to properties on wikidata. we are currently linking to e.g. https://www.wikidata.org/wiki/Property/P4908 which should be https://www.wikidata.org/wiki/Property:P4908
 -- should link to [sqid] in addition to [wikidata] and should link to ourselves via ?id= as the primary link for all wikidata links
+-- Property (ID) keys should be wider in the property table
 
-- Property (ID) keys should be wider in the table
 
 - refactor into files that are more maintainable separation of concerns so that we can update smaller files instead of updating one huge file
 
+- should make the search input/button be in the collapsible search header so that you don't have to uncollapse just to do a search, and doing a search should automatically expand the search section
 - bold or otherwise emphasize all search results that "is a" creative work (Q17537576) as that is mostly what we are looking for
+- should remove the Fetch button from the search results because the results already hyperlink to ?id=<result id> which is equivalent to what the button does
 - fix rendering of e.g. `{"amount":"+8","unit":"1"}`, `{"text":"House","language":"en"}, {"text":"House, M.D.","language":"en"}`, durations `{"amount":"+43","unit":"http://www.wikidata.org/entity/Q7727"}`, times `{"time":"+2006-11-21T00:00:00Z","timezone":0,"before":0,"after":0,"precision":11,"calendarmodel":"http://www.wikidata.org/entity/Q1985727"}`
 
 - series/sequencing information things:
@@ -144,3 +146,7 @@ cline with deepseek?
             2. Broken (Part Two) (Q29415041) – episode of House (S6 E2)
         2. Broken (Part Two) (Q29415041) – episode of House (S6 E2)
         3. Epic Fail (Q13479269) – episode of House (S6 E3)
+
+- expand all buttons should exist for the properties and for the series/sequencing information parts
+- prioritize some properties over others
+- let's load some images!

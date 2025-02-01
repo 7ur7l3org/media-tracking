@@ -21,11 +21,12 @@ body {
 table {
     border-collapse: collapse;
     margin-bottom: 20px;
+    width: 100%;
 }
   
 table, th, td {
     border: 1px solid #ddd;
-    padding: 8px;
+    padding: 5px;
 }
   
 th {
@@ -35,4 +36,10 @@ th {
 a {
     color: #1a0dab;
     text-decoration: none;
+}
+
+/* New styling: widen the first column in the property table */
+.properties-table th:first-child,
+.properties-table td:first-child {
+    width: 30%;
 }
