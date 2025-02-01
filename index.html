@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Wikidata Media Tracker</title>
+  <style>
+    /* Basic styling */
+    body { font-family: monospace; }
+    details.group-details { margin-bottom: 1em; }
+    details.group-details summary { cursor: pointer; font-weight: bold; }
+    ul.parts-tree { list-style-type: none; padding-left: 1em; }
+    .current-entry { font-weight: bold; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Wikidata Media Tracker</h1>
+
+  <!-- Search Section -->
+  <section id="searchSection">
+    <h2>Search Wikidata Entities</h2>
+    <input type="text" id="searchInput" placeholder="Search Wikidata...">
+    <button id="searchButton">Search</button>
+    <div id="searchResults"></div>
+  </section>
+
+  <!-- Fetch Section -->
+  <section id="fetchSection">
+    <h2>Fetch by Wikidata QID</h2>
+    <input type="text" id="qidInput" placeholder="Enter Wikidata QID (e.g. Q42)">
+    <button id="fetchButton">Fetch Info</button>
+    <div id="infoDisplay"></div>
+  </section>
+
+  <script>
+    /********* UTILITY FUNCTIONS *********/
+    function getQueryParams() {
+      return new URLSearchParams(window.location.search);
+    }
+    function chunkArray(arr, chunkSize) {
+      const chunks = [];
+      for (let i = 0; i < arr.length; i += chunkSize) {
+        chunks.push(arr.slice(i, i + chunkSize));
+      }
+      return chunks;
+    }
+    function enableEnterSubmit(inputId, buttonId) {
+      document.getElementById(inputId).addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          document.getElementById(buttonId).click();
+        }
+      });
+    }
+    enableEnterSubmit("searchInput", "searchButton");
+    enableEnterSubmit("qidInput", "fetchButton");
+
+    /********* FETCH WIKIDATA ENTITIES *********/
+    function fetchWikidataItemLabels(itemIds) {
+      if (itemIds.length === 0) return Promise.resolve({});
+      const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + 
+                  itemIds.join("|") + "&languages=en&props=labels&format=json&origin=*";
+      return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const mapping = {};
+          if (data.entities) {
+            for (let id in data.entities) {
+              if (data.entities[id].labels && data.entities[id].labels.en) {
+                mapping[id] = data.entities[id].labels.en.value;
+              }
+            }
+          }
+          return mapping;
+        })
+        .catch(err => { console.error("Error fetching item labels:", err); return {}; });
+    }
+    function fetchWikidataEntities(itemIds) {
+      if (itemIds.length === 0) return Promise.resolve({});
+      const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" +
+                  itemIds.join("|") + "&languages=en&props=labels|descriptions&format=json&origin=*";
+      return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const mapping = {};
+          if (data.entities) {
+            for (let id in data.entities) {
+              const ent = data.entities[id];
+              mapping[id] = {
+                label: (ent.labels && ent.labels.en) ? ent.labels.en.value : id,
+                description: (ent.descriptions && ent.descriptions.en) ? ent.descriptions.en.value : ""
+              };
+            }
+          }
+          return mapping;
+        })
+        .catch(err => { console.error("Error fetching entities:", err); return {}; });
+    }
+
+    /********* PROPERTY LABELS & FORMATTERS *********/
+    function getPropertyFormatter(propDef) {
+      if (propDef.claims && propDef.claims.P1630 && propDef.claims.P1630.length > 0) {
+        const formatterClaim = propDef.claims.P1630[0];
+        if (formatterClaim.mainsnak && formatterClaim.mainsnak.datavalue) {
+          return formatterClaim.mainsnak.datavalue.value;
+        }
+      }
+      return null;
+    }
+    function fetchPropertyDefinitions(propIDs) {
+      const chunks = chunkArray(propIDs, 20);
+      const requests = chunks.map(chunk => {
+        const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + 
+                    chunk.join("|") + "&languages=en&props=labels|claims&format=json&origin=*";
+        return fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            const mapping = {};
+            if (data.entities) {
+              for (let id in data.entities) {
+                const ent = data.entities[id];
+                const label = (ent.labels && ent.labels.en) ? ent.labels.en.value : id;
+                const formatter = getPropertyFormatter(ent);
+                mapping[id] = { label, formatter, claims: ent.claims };
+              }
+            }
+            return mapping;
+          })
+          .catch(error => { console.error("Error fetching property definitions:", error); return {}; });
+      });
+      return Promise.all(requests).then(results => results.reduce((acc, curr) => Object.assign(acc, curr), {}));
+    }
+
+    /********* SPARQL: FETCH SERIES PARTS *********/
+    // Use the p: namespace to retrieve parts and their qualifier for series ordinal (P1545)
+    function fetchSeriesParts(seriesQid) {
+      const query = `
+        SELECT ?part ?partLabel ?partDescription ?ordinal WHERE {
+          wd:${seriesQid} p:P527 ?stmt.
+          ?stmt ps:P527 ?part.
+          OPTIONAL { ?stmt pq:P1545 ?ordinal. }
+          SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+        }
+        ORDER BY ?ordinal
+      `;
+      const url = "https://query.wikidata.org/sparql?query=" + encodeURIComponent(query) + "&format=json";
+      return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const parts = data.results.bindings.map(binding => {
+            const partId = binding.part.value.split("/").pop();
+            return {
+              id: partId,
+              label: binding.partLabel ? binding.partLabel.value : partId,
+              description: binding.partDescription ? binding.partDescription.value : "",
+              ordinal: binding.ordinal ? parseInt(binding.ordinal.value, 10) : null
+            };
+          });
+          parts.sort((a, b) => {
+            if (a.ordinal !== null && b.ordinal !== null) return a.ordinal - b.ordinal;
+            return a.label.localeCompare(b.label);
+          });
+          return parts;
+        })
+        .catch(err => { console.error("Error fetching series parts:", err); return []; });
+    }
+
+    /********* RECURSIVE RENDERING OF PARTS TREE *********/
+    // Recursively render the parts tree for a given QID.
+    // currentQid is the work we are viewing.
+    function renderPartsTree(qid, currentQid) {
+      return fetchSeriesParts(qid).then(parts => {
+        if (parts.length === 0) return "";
+        let html = "<ul class='parts-tree'>";
+        const partPromises = parts.map(part => {
+          const markerStart = (part.id === currentQid) ? "<strong class='current-entry'>" : "";
+          const markerEnd = (part.id === currentQid) ? "</strong>" : "";
+          let partLine = "";
+          if (part.ordinal !== null) {
+            partLine += part.ordinal + ". ";
+          }
+          partLine += `<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">${part.label} (${part.id})</a>`;
+          if (part.description) {
+            partLine += " – " + part.description;
+          }
+          return renderPartsTree(part.id, currentQid).then(childHtml => {
+            if (childHtml) {
+              // Auto-expand if the child branch contains the currentQid.
+              const openAttr = childHtml.indexOf(currentQid) !== -1 ? " open" : "";
+              return `<details class="parts-tree"${openAttr}><summary>${markerStart}${partLine}${markerEnd}</summary>${childHtml}</details>`;
+            } else {
+              return `<li>${markerStart}${partLine}${markerEnd}</li>`;
+            }
+          });
+        });
+        return Promise.all(partPromises).then(results => {
+          html += results.join("");
+          html += "</ul>";
+          return html;
+        });
+      });
+    }
+
+    /********* HELPER: GET PARENT SERIES VIA SPARQL *********/
+    function getParentSeries(qid) {
+      const query = `
+        SELECT ?series WHERE {
+          ?series wdt:P527 wd:${qid}.
+        } LIMIT 1
+      `;
+      const url = "https://query.wikidata.org/sparql?query=" + encodeURIComponent(query) + "&format=json";
+      return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data.results.bindings.length > 0) {
+            return data.results.bindings[0].series.value.split("/").pop();
+          }
+          return null;
+        })
+        .catch(err => { console.error("Error fetching parent series:", err); return null; });
+    }
+
+    /********* SPARQL: GET TRANSITIVE "IS A" CLOSURE *********/
+    function getPropertyClosure(propertyIds) {
+      const valuesStr = propertyIds.map(id => "wd:" + id).join(" ");
+      const query = `
+        SELECT ?property ?parent WHERE {
+          VALUES ?property { ${valuesStr} }
+          ?property wdt:P31/wdt:P279* ?parent .
+        }
+      `;
+      const url = "https://query.wikidata.org/sparql?query=" + encodeURIComponent(query) + "&format=json";
+      return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const closure = {};
+          data.results.bindings.forEach(binding => {
+            const propId = binding.property.value.split("/").pop();
+            const parentId = binding.parent.value.split("/").pop();
+            if (!closure[propId]) closure[propId] = new Set();
+            closure[propId].add(parentId);
+          });
+          for (let prop in closure) {
+            closure[prop] = Array.from(closure[prop]);
+          }
+          return closure;
+        });
+    }
+
+    /********* DETERMINE SEQUENCING INFORMATION *********/
+    function extractSequencingInfo(entity) {
+      const sequencing = { follows: [], followedBy: [], hasParts: [], partOf: [] };
+      if (entity.claims) {
+        if (entity.claims.P155) {
+          entity.claims.P155.forEach(claim => {
+            if (claim.mainsnak && claim.mainsnak.datavalue && claim.mainsnak.datavalue.value.id) {
+              sequencing.follows.push(claim.mainsnak.datavalue.value.id);
+            }
+          });
+        }
+        if (entity.claims.P156) {
+          entity.claims.P156.forEach(claim => {
+            if (claim.mainsnak && claim.mainsnak.datavalue && claim.mainsnak.datavalue.value.id) {
+              sequencing.followedBy.push(claim.mainsnak.datavalue.value.id);
+            }
+          });
+        }
+        if (entity.claims.P527) {
+          entity.claims.P527.forEach(claim => {
+            if (claim.mainsnak && claim.mainsnak.datavalue && claim.mainsnak.datavalue.value.id) {
+              sequencing.hasParts.push(claim.mainsnak.datavalue.value.id);
+            }
+          });
+        }
+        if (entity.claims.P179) {
+          entity.claims.P179.forEach(claim => {
+            if (claim.mainsnak && claim.mainsnak.datavalue && claim.mainsnak.datavalue.value.id) {
+              sequencing.partOf.push(claim.mainsnak.datavalue.value.id);
+            }
+          });
+        }
+      }
+      return sequencing;
+    }
+
+    /********* FETCH ENTITY DATA *********/
+    function fetchEntity(qid) {
+      const url = "https://www.wikidata.org/wiki/Special:EntityData/" + qid + ".json";
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          console.log("Fetched entity data:", data);
+          const keys = Object.keys(data.entities);
+          if (keys.length === 0) {
+            document.getElementById('infoDisplay').innerHTML = "<p>No entity found.</p>";
+            return;
+          }
+          const actualQid = keys[0];
+          const entity = data.entities[actualQid];
+          if (!entity) {
+            document.getElementById('infoDisplay').innerHTML = "<p>No entity found.</p>";
+            return;
+          }
+          renderEntity(entity, actualQid);
+        })
+        .catch(error => {
+          console.error("Error in fetchEntity:", error);
+          document.getElementById('infoDisplay').innerHTML = "<p>Error fetching entity data.</p>";
+        });
+    }
+
+    /********* RENDER ENTITY, SERIES, & GROUP PROPERTIES *********/
+    function renderEntity(entity, qid) {
+      const label = (entity.labels && entity.labels.en) ? entity.labels.en.value : qid;
+      let headerHtml = `<h3><a href="https://www.wikidata.org/wiki/${qid}" target="_blank">${label} (${qid})</a></h3>`;
+      if (entity.descriptions && entity.descriptions.en) {
+        headerHtml += `<p>${entity.descriptions.en.value}</p>`;
+      }
+      window.history.replaceState({}, '', "?id=" + qid);
+
+      /***** SERIES/SEQUENCING INFORMATION *****/
+      const sequencing = extractSequencingInfo(entity);
+      let seriesSectionHtml = "";
+      let seriesQid = null;
+      // Prefer the P179 claim if available.
+      if (entity.claims && entity.claims.P179 && entity.claims.P179.length > 0) {
+        seriesQid = entity.claims.P179[0].mainsnak.datavalue.value.id;
+      } else if (entity.claims && entity.claims.P31) {
+        const instanceIds = entity.claims.P31.map(claim => claim.mainsnak.datavalue.value.id).filter(Boolean);
+        if (instanceIds.includes("Q7725310") || instanceIds.includes("Q24856")) {
+          seriesQid = qid;
+        }
+      }
+      if (!seriesQid) {
+        getParentSeries(qid).then(parent => {
+          seriesQid = parent || qid;
+          continueRendering();
+        });
+      } else {
+        continueRendering();
+      }
+      
+      function continueRendering() {
+        fetchWikidataEntities([seriesQid]).then(seriesData => {
+          const seriesInfo = seriesData[seriesQid];
+          seriesSectionHtml += `<h4>Series/Sequencing Information</h4>`;
+          seriesSectionHtml += `<p>Series: <a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">${seriesInfo.label} (${seriesQid})</a> <a href="https://www.wikidata.org/wiki/Property:P179" target="_blank">(part of series, P179)</a></p>`;
+          // Render the recursive parts tree.
+          renderPartsTree(seriesQid, qid).then(partsTreeHtml => {
+            if (partsTreeHtml) {
+              seriesSectionHtml += `<p>Parts (sorted by series ordinal):</p>` + partsTreeHtml;
+            } else {
+              seriesSectionHtml += `<p>No parts found for this series.</p>`;
+            }
+            addDirectSequencingAndRender();
+          });
+        });
+        
+        function addDirectSequencingAndRender() {
+          const directIds = Array.from(new Set([...sequencing.follows, ...sequencing.followedBy, ...sequencing.hasParts]));
+          fetchWikidataEntities(directIds).then(seqEntities => {
+            let directSeqHtml = "";
+            if (sequencing.follows.length > 0) {
+              directSeqHtml += `<p>Follows: ${sequencing.follows.map(id => {
+                const ent = seqEntities[id] || { label: id, description: "" };
+                return `<a href="https://www.wikidata.org/wiki/${id}" target="_blank">${ent.label} (${id})${ent.description ? ": " + ent.description : ""}</a>`;
+              }).join(", ")}</p>`;
+            }
+            if (sequencing.followedBy.length > 0) {
+              directSeqHtml += `<p>Followed by: ${sequencing.followedBy.map(id => {
+                const ent = seqEntities[id] || { label: id, description: "" };
+                return `<a href="https://www.wikidata.org/wiki/${id}" target="_blank">${ent.label} (${id})${ent.description ? ": " + ent.description : ""}</a>`;
+              }).join(", ")}</p>`;
+            }
+            if (directSeqHtml) {
+              seriesSectionHtml += `<h5>Direct sequencing statements</h5>${directSeqHtml}`;
+            }
+            renderIdentifiers(headerHtml + seriesSectionHtml, entity, qid);
+          });
+        }
+      }
+    }
+
+    /********* RENDER IDENTIFIERS (PROPERTY GROUPS) *********/
+    function renderIdentifiers(headerHtml, entity, qid) {
+      const propIDs = Object.keys(entity.claims);
+      fetchPropertyDefinitions(propIDs).then(propDefinitions => {
+        const propertyRows = [];
+        const wikidataItemIds = new Set();
+        for (let prop in entity.claims) {
+          const row = { prop, values: [] };
+          entity.claims[prop].forEach(claim => {
+            if (claim.mainsnak && claim.mainsnak.datavalue) {
+              let rawValue = claim.mainsnak.datavalue.value;
+              const valueData = {};
+              if (typeof rawValue === "object" && rawValue["entity-type"] === "item" && rawValue.id) {
+                valueData.type = "wikidata";
+                valueData.qid = rawValue.id;
+                wikidataItemIds.add(rawValue.id);
+                valueData.display = rawValue.id;
+                valueData.hyperlink = `https://www.wikidata.org/wiki/${rawValue.id}`;
+              } else {
+                valueData.type = "text";
+                valueData.display = (typeof rawValue === "string") ? rawValue : JSON.stringify(rawValue);
+                valueData.hyperlink = null;
+              }
+              const propDef = propDefinitions[prop];
+              if (propDef && propDef.formatter) {
+                valueData.hyperlink = propDef.formatter.replace("$1", valueData.display);
+              }
+              row.values.push(valueData);
+            }
+          });
+          if (row.values.length) {
+            propertyRows.push(row);
+          }
+        }
+        getPropertyClosure(propertyRows.map(r => r.prop)).then(closureMapping => {
+          const grouped = { creative: [], authority: [], misc: [] };
+          propertyRows.forEach(row => {
+            const closure = closureMapping[row.prop] || [];
+            let group = "misc";
+            if (closure.includes("Q18614948")) {
+              group = "authority";
+            } else if (closure.includes("Q18618644")) {
+              group = "creative";
+            }
+            grouped[group].push(row);
+          });
+          fetchWikidataItemLabels(Array.from(wikidataItemIds)).then(itemLabels => {
+            let tableHtml = `<h4>Identifiers</h4>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Property (ID)</th>
+                    <th>Value(s)</th>
+                  </tr>
+                </thead>
+                <tbody>`;
+            function renderGroup(groupId, groupTitle, refQid) {
+              if (!grouped[groupId] || grouped[groupId].length === 0) return "";
+              let headerLine = refQid
+                ? `${groupTitle} (<a href="https://www.wikidata.org/wiki/${refQid}" target="_blank">${refQid}</a>)`
+                : groupTitle;
+              let html = `<tr class="group-header"><td colspan="2"><details class="group-details"><summary>${headerLine}</summary>`;
+              html += `<table>`;
+              grouped[groupId].forEach(row => {
+                const propDef = propDefinitions[row.prop];
+                const humanName = propDef ? propDef.label : row.prop;
+                const propIdLink = `<a href="https://www.wikidata.org/wiki/Property:${row.prop}" target="_blank">${row.prop}</a>`;
+                let cellContent = "";
+                row.values.forEach(val => {
+                  if (val.type === "wikidata") {
+                    const itemLabel = itemLabels[val.qid] || val.qid;
+                    cellContent += `<a href="https://www.wikidata.org/wiki/${val.qid}" target="_blank">${itemLabel} (${val.qid})</a>, `;
+                  } else {
+                    if (val.hyperlink) {
+                      cellContent += `<a href="${val.hyperlink}" target="_blank">${val.display}</a>, `;
+                    } else {
+                      cellContent += `${val.display}, `;
+                    }
+                  }
+                });
+                cellContent = cellContent.replace(/, $/, "");
+                html += `<tr><td>${humanName} (${propIdLink})</td><td>${cellContent}</td></tr>`;
+              });
+              html += `</table></details></tr>`;
+              return html;
+            }
+            tableHtml += renderGroup("creative", "Wikidata property related to creative works", "Q18618644");
+            tableHtml += renderGroup("authority", "Authority control properties", "Q18614948");
+            tableHtml += renderGroup("misc", "Miscellaneous Properties");
+            tableHtml += `</tbody></table>`;
+            document.getElementById('infoDisplay').innerHTML = headerHtml + tableHtml;
+          });
+        });
+      });
+    }
+
+    /********* SEARCH FUNCTIONALITY *********/
+    document.getElementById('searchButton').addEventListener('click', function() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) { alert('Please enter a search term.'); return; }
+      const url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=" + encodeURIComponent(query) + "&language=en&format=json&origin=*";
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const results = data.search;
+          if (!results || results.length === 0) {
+            document.getElementById('searchResults').innerHTML = "<p>No results found.</p>";
+            return;
+          }
+          let html = "<ul>";
+          results.forEach(item => {
+            html += `
+              <li>
+                <a href="https://www.wikidata.org/wiki/${item.id}" target="_blank">${item.label} (${item.id})</a>
+                <p>${item.description ? item.description : ''}</p>
+                <button onclick="fetchEntity('${item.id}'); document.getElementById('qidInput').value='${item.id}'; window.history.replaceState({}, '', '?id=${item.id}')">Fetch</button>
+              </li>`;
+          });
+          html += "</ul>";
+          document.getElementById('searchResults').innerHTML = html;
+        })
+        .catch(error => {
+          document.getElementById('searchResults').innerHTML = "<p>Error searching data.</p>";
+        });
+    });
+    document.getElementById('fetchButton').addEventListener('click', function() {
+      const qid = document.getElementById('qidInput').value.trim();
+      if (!qid) { alert('Please enter a Wikidata QID.'); return; }
+      window.history.replaceState({}, '', "?id=" + qid);
+      fetchEntity(qid);
+    });
+    window.addEventListener('load', function() {
+      const params = getQueryParams();
+      if (params.has("q")) {
+        const term = params.get("q");
+        document.getElementById('searchInput').value = term;
+        document.getElementById('searchButton').click();
+      }
+      if (params.has("id")) {
+        const qid = params.get("id");
+        document.getElementById('qidInput').value = qid;
+        fetchEntity(qid);
+      }
+    });
+  </script>
+</body>
+</html>
