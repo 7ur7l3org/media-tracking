@@ -5,7 +5,7 @@
   <title>Wikidata Media Tracker</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* Additional CSS for search results and pagination */
+    /* Additional CSS for search results, pagination, and collapsible search */
     .search-result-item {
       display: flex;
       flex-direction: row;
@@ -21,7 +21,7 @@
       flex: 1;
       text-align: left;
     }
-    /* Place pagination controls inline with the search controls */
+    /* Place search controls in one line */
     #searchControls {
       display: flex;
       align-items: center;
@@ -34,22 +34,33 @@
     #pageInfo {
       margin-left: 20px;
     }
+    /* Make search section collapsible */
+    #searchDetails summary {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 4px;
+      background-color: #eee;
+      border: 1px solid #ccc;
+      margin-bottom: 5px;
+    }
   </style>
 </head>
 <body>
   <h1>Wikidata Media Tracker</h1>
 
-  <!-- Search Section -->
-  <section id="searchSection" class="result">
-    <h2>Search Wikidata Entities</h2>
-    <div id="searchControls">
-      <input type="text" id="searchInput" placeholder="Search Wikidata...">
-      <button id="searchButton">Search</button>
-      <div id="paginationControls"></div>
-      <div id="pageInfo"></div>
-    </div>
-    <div id="searchResults"></div>
-  </section>
+  <!-- Search Section (wrapped in a collapsible details element) -->
+  <details id="searchDetails" open>
+    <summary>Search</summary>
+    <section id="searchSection" class="result">
+      <div id="searchControls">
+        <input type="text" id="searchInput" placeholder="Search Wikidata...">
+        <button id="searchButton">Search</button>
+        <div id="paginationControls"></div>
+        <div id="pageInfo"></div>
+      </div>
+      <div id="searchResults"></div>
+    </section>
+  </details>
 
   <!-- Fetch Section -->
   <section id="fetchSection" class="result">
@@ -332,7 +343,8 @@
     }
 
     /********* FETCH ENTITY DATA *********/
-    function fetchEntity(qid) {
+    // updateHistory defaults to true; when false, we do not push a new state.
+    function fetchEntity(qid, updateHistory = true) {
       const url = "https://www.wikidata.org/wiki/Special:EntityData/" + qid + ".json";
       document.getElementById('infoDisplay').innerHTML = "<p>Loading...</p>";
       fetch(url)
@@ -350,7 +362,9 @@
             document.getElementById('infoDisplay').innerHTML = "<p>No entity found.</p>";
             return;
           }
-          renderEntity(entity, actualQid);
+          // When fetching an entity, collapse the search section.
+          document.getElementById("searchDetails").removeAttribute("open");
+          renderEntity(entity, actualQid, updateHistory);
         })
         .catch(error => {
           console.error("Error in fetchEntity:", error);
@@ -359,13 +373,16 @@
     }
 
     /********* RENDER ENTITY, SERIES, & GROUP PROPERTIES *********/
-    function renderEntity(entity, qid) {
+    // updateHistory defaults to true.
+    function renderEntity(entity, qid, updateHistory = true) {
       const label = (entity.labels && entity.labels.en) ? entity.labels.en.value : qid;
       let headerHtml = `<h3><a href="https://www.wikidata.org/wiki/${qid}" target="_blank">${label} (${qid})</a></h3>`;
       if (entity.descriptions && entity.descriptions.en) {
         headerHtml += `<p>${entity.descriptions.en.value}</p>`;
       }
-      window.history.pushState({}, '', "?id=" + qid);
+      if (updateHistory) {
+        window.history.pushState({}, '', "?id=" + qid);
+      }
       document.title = label + " (" + qid + ") - Wikidata Media Tracker";
 
       /***** SERIES/SEQUENCING INFORMATION *****/
@@ -529,7 +546,6 @@
     /********* SEARCH FUNCTIONALITY WITH PAGINATION *********/
     function performSearch(term, cont) {
       currentSearchTerm = term;
-      // Use "continue" parameter; if undefined, treat as 0.
       const continueParam = cont ? cont : 0;
       const url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=" +
                   encodeURIComponent(term) + "&language=en&format=json&origin=*&limit=" + searchLimit + "&continue=" + continueParam;
@@ -544,21 +560,21 @@
           let html = "<ul>";
           data.search.forEach(item => {
             html += `<li class="search-result-item">
-                      <button onclick="fetchEntity('${item.id}'); document.getElementById('qidInput').value='${item.id}'; window.history.pushState({}, '', '?id=${item.id}')">Fetch</button>
+                      <button onclick="fetchEntity('${item.id}', true); document.getElementById('qidInput').value='${item.id}'; window.history.pushState({}, '', '?id=${item.id}'); document.getElementById('searchDetails').removeAttribute('open')">Fetch</button>
                       <span><a href="https://www.wikidata.org/wiki/${item.id}" target="_blank">${item.label} (${item.id})</a> – ${item.description || ""}</span>
                      </li>`;
           });
           html += "</ul>";
           document.getElementById('searchResults').innerHTML = html;
 
-          // Always render both Previous and Next buttons, disabling them if not applicable.
+          // Render both Previous and Next buttons, always visible, disabling when appropriate.
           let prevDisabled = (continueParam <= 0) ? "disabled" : "";
           let nextDisabled = (data.search.length < searchLimit) ? "disabled" : "";
           let paginationHtml = `<button onclick="performSearch('${term}', ${Number(continueParam) - searchLimit})" ${prevDisabled}>Previous</button>`;
           paginationHtml += `<button onclick="performSearch('${term}', ${Number(continueParam) + searchLimit})" ${nextDisabled}>Next</button>`;
           document.getElementById('paginationControls').innerHTML = paginationHtml;
-
-          // Show page information
+          
+          // Show page information, e.g. "Results 1–20"
           let start = Number(continueParam) + 1;
           let end = Number(continueParam) + data.search.length;
           document.getElementById('pageInfo').innerHTML = `<span>Results ${start}–${end}</span>`;
@@ -578,12 +594,36 @@
       const qid = document.getElementById('qidInput').value.trim();
       if (!qid) { alert('Please enter a Wikidata QID.'); return; }
       window.history.pushState({}, '', "?id=" + qid);
-      fetchEntity(qid);
+      fetchEntity(qid, true);
+    });
+
+    /********* HANDLE NAVIGATION HISTORY (popstate) *********/
+    window.addEventListener('popstate', function(event) {
+      const params = getQueryParams();
+      // Do not push a new history entry when handling popstate.
+      if (params.has("id")) {
+        const qid = params.get("id");
+        document.getElementById('qidInput').value = qid;
+        fetchEntity(qid, false);
+      } else if (params.has("q")) {
+        const term = params.get("q");
+        document.getElementById('searchInput').value = term;
+        performSearch(term, 0);
+      } else {
+        // If no id or q, clear the fetch section.
+        document.getElementById('infoDisplay').innerHTML = "";
+      }
     });
 
     /********* AUTO-EXECUTE BASED ON URL PARAMETERS *********/
     window.addEventListener('load', function() {
       const params = getQueryParams();
+      // If no id parameter exists, open the search section; otherwise collapse it.
+      if (!params.has("id")) {
+        document.getElementById("searchDetails").setAttribute("open", "");
+      } else {
+        document.getElementById("searchDetails").removeAttribute("open");
+      }
       if (params.has("q")) {
         const term = params.get("q");
         document.getElementById('searchInput').value = term;
@@ -592,7 +632,7 @@
       if (params.has("id")) {
         const qid = params.get("id");
         document.getElementById('qidInput').value = qid;
-        fetchEntity(qid);
+        fetchEntity(qid, false);
       }
     });
   </script>

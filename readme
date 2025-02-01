@@ -107,45 +107,34 @@ cline with deepseek?
 -- we stopped loading styles.css at some point
 -- the property value names broke in a lot of cases for some reason e.g. it renders `Q6371282 (Q6371282)` instead of `House (TV series) (Q6371282)`
 -- need to make the search paginated so we can search more results or next/previous 7 etc. should probably search 10 results at a time for now
+-- should display (loading) or something in the Fetch results section if it is currently loading or doing the fetch
+-- should make the entire search section collapsable and default to collapsed unless we aren't doing a fetch (like ?id= isn't triggering a direct fetch) and the search is the first thing we are doing. should collapse when fetching
+-- we should also put the title and qid in the page title whenever we fetch so that the navigation history shows what pages we were on
+-- when we update the url we aren't editing the navigation history and we should be making a new navigation history entry every time we write the url so that e.g. back properly goes back
 
-- should display (loading) or something in the Fetch results section if it is currently loading or doing the fetch
-- should make the search section collapsable and default to collapsed unless we aren't doing a fetch (like ?id= isn't triggering a direct fetch) and the search is the first thing we are doing. should collapse when fetching
-- when we update the url we aren't editing the navigation history and we should be making a new navigation history entry every time we write the url so that e.g. back properly goes back
-- we should also put the title and qid in the page title whenever we fetch so that the navigation history shows what pages we were on
-- should link to [sqid] in addition to [wikidata] and should link to ourselves via ?id= as the primary link for all wikidata links
-- refactor into files that are more maintainable separation of concerns so that we can update smaller files instead of updating one huge file
-- we should e.g. expand season 2 if we're fetching the information for season 2 in the series/sequencing information parts tree. currently it underlines itself in the tree but doesn't expand it to show the episodes in it
 - we should make the entire series/sequencing information parts section be collapsible (but default to not collapsed always)
-- there are some `series of creative works (Q7725310)` which give `No parts found for this series.` but we can pull everything that is `part of the series (P179)` part of that series, and those things do still have their series ordinal. e.g. a missing `has part(s) (P527)` forward reference should not imply the lack of existing series/ordinal back-linkages
-- make sure the series/sequencing display can handle when something is a part of multiple series, it should render each series that it's a part of
-- somehow make copy paste on the series/sequencing information section retain the section/subsection indentation
-- update series/sequencing css to align the bullets with the collapsible sections. currently the collapsible sections are double indented and not in line with the other adjacent bullets that don't have sub-parts
+- should link to [sqid] in addition to [wikidata] and should link to ourselves via ?id= as the primary link for all wikidata links
+- improve caching of requests because we care way more about responsiveness than live changing data. cache of all wikidata requests should probably live at least 30 mins
 - currently things that aren't series and aren't part of any series display as Series: <themselves> and No parts found for this series. really it should just omit the Series/Sequencing Information when not applicable. i wonder if the fallback is to itself if it isn't part of a series and isn't "is a" series itself
+- remove the `Fetch by Wikidata QID` and `Fetch Info` search/button. the e.g. `Pearl (Q111669794)` and `2022 film directed by Ti West` should be the primary sectioning on the page and if you have a qid you can always plug it into the ?id in the url. also we should rename the `Identifiers` header to say `Properties` or even just delete that header entirely since it doesn't really ad any value
+- bold or otherwise emphasize all search results that "is a" creative work (Q17537576) as that is mostly what we are looking for
 
+- refactor into files that are more maintainable separation of concerns so that we can update smaller files instead of updating one huge file
 
-
-- interesting duplication issue in the recursive parts series/sequencing view. not sure what to do about this lol
-6. House, season 6 (Q169042) – season of television series
-    1. Broken (Q2504180) – joint title for the first and second episodes of the sixth season of the television series House
+- series/sequencing information things:
+    - we should e.g. expand season 2 if we're fetching the information for season 2 in the series/sequencing information parts tree. currently it underlines itself in the tree but doesn't expand it to show the episodes in it
+    - there are some `series of creative works (Q7725310)` which give `No parts found for this series.` but we can pull everything that is `part of the series (P179)` part of that series, and those things do still have their series ordinal. e.g. a missing `has part(s) (P527)` forward reference should not imply the lack of existing series/ordinal back-linkages
+    - make sure the series/sequencing display can handle when something is a part of multiple series, it should render each series that it's a part of
+    - update series/sequencing css to align the bullets with the collapsible sections. currently the collapsible sections are double indented and not in line with the other adjacent bullets that don't have sub-parts
+    - somehow make copy paste on the series/sequencing information section retain the section/subsection indentation
+    - interesting duplication issue in the recursive parts series/sequencing view. not sure what to do about this lol
+    6. House, season 6 (Q169042) – season of television series
+        1. Broken (Q2504180) – joint title for the first and second episodes of the sixth season of the television series House
+            1. Broken (Part One) (Q6094328) – episode of House (S6 E1)
+            2. Broken (Part Two) (Q29415041) – episode of House (S6 E2)
         1. Broken (Part One) (Q6094328) – episode of House (S6 E1)
+        2. Broken (Q2504180) – joint title for the first and second episodes of the sixth season of the television series House
+            1. Broken (Part One) (Q6094328) – episode of House (S6 E1)
+            2. Broken (Part Two) (Q29415041) – episode of House (S6 E2)
         2. Broken (Part Two) (Q29415041) – episode of House (S6 E2)
-    1. Broken (Part One) (Q6094328) – episode of House (S6 E1)
-    2. Broken (Q2504180) – joint title for the first and second episodes of the sixth season of the television series House
-        1. Broken (Part One) (Q6094328) – episode of House (S6 E1)
-        2. Broken (Part Two) (Q29415041) – episode of House (S6 E2)
-    2. Broken (Part Two) (Q29415041) – episode of House (S6 E2)
-    3. Epic Fail (Q13479269) – episode of House (S6 E3)
-
-- not sure what this is coming from:
-{
-    "error": {
-        "code": "toomanyvalues",
-        "info": "Too many values supplied for parameter \"ids\". The limit is 50.",
-        "parameter": "ids",
-        "limit": 50,
-        "lowlimit": 50,
-        "highlimit": 500,
-        "*": "See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes."
-    },
-    "servedby": "mw-api-ext.codfw.main-85f4f7c798-mgkvs"
-}
+        3. Epic Fail (Q13479269) – episode of House (S6 E3)
