@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Mini Editor</title>
+</head>
+<body>
+  <h1>GitHub Mini Editor</h1>
+
+  <h2>GitHub Token</h2>
+  <input type="text" id="github-token" placeholder="Paste your GitHub token here" />
+  <button id="save-token">Save Token</button>
+  <p><b>Stored Token:</b> <span id="token-info">No token saved</span></p>
+
+  <h2>Select Repository</h2>
+  <p id="repo-status">Checking stored permissions...</p>
+  <select id="repo-selector"><option value="">No repos loaded</option></select>
+  <button id="refresh-repos">Refresh PAT-Accessible Repos</button>
+
+  <h2>Git Commit Log</h2>
+  <button id="load-graph">Refresh Commit Log</button>
+  <ul id="commit-log"></ul>
+
+  <h2>Select File to Edit</h2>
+  <button id="load-files">Load Repository Files</button>
+  <select id="file-selector"><option value="">No files loaded</option></select>
+
+  <h2>Edit File</h2>
+  <textarea id="file-content" rows="10" cols="50"></textarea>
+  <br/>
+  <!-- New commit message input field -->
+  <label for="commit-message">Commit Message:</label>
+  <input type="text" id="commit-message" value="Updated via GitHub Mini Editor" size="50" />
+  <br/>
+  <button id="save-file">Commit & Push</button>
+  <p id="commit-status"></p>
+
+  <script>
+    // --- Token Storage ---
+    function saveToken(token) {
+      localStorage.setItem("github-token", token);
+    }
+    function getToken() {
+      return localStorage.getItem("github-token");
+    }
+
+    // --- IndexedDB for Repo Permissions Cache (keyed by token) ---
+    async function openDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open("GitHubEditorDB", 3);
+        request.onupgradeneeded = event => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains("repo_permissions")) {
+            db.createObjectStore("repo_permissions");
+          }
+        };
+        request.onsuccess = event => resolve(event.target.result);
+        request.onerror = () => reject("IndexedDB error");
+      });
+    }
+    async function saveCachedRepoPermissions(repoPermissions, token) {
+      const db = await openDatabase();
+      const tx = db.transaction("repo_permissions", "readwrite");
+      const store = tx.objectStore("repo_permissions");
+      // Cache under a key that combines the token and a label
+      store.put(repoPermissions, "permissions_" + token);
+    }
+    async function getCachedRepoPermissions(token) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction("repo_permissions", "readonly");
+        const store = tx.objectStore("repo_permissions");
+        const request = store.get("permissions_" + token);
+        request.onsuccess = () => resolve(request.result || {});
+        request.onerror = () => resolve({});
+      });
+    }
+
+    // --- Update Token Display ---
+    async function updateTokenDisplay() {
+      const token = getToken();
+      document.getElementById("token-info").textContent = token ? token : "No token saved";
+
+      if (token) {
+        const cachedRepoPermissions = await getCachedRepoPermissions(token);
+        const filteredRepos = Object.keys(cachedRepoPermissions).filter(repo => cachedRepoPermissions[repo]);
+
+        if (filteredRepos.length > 0) {
+          console.log("Using cached permissions:", cachedRepoPermissions);
+          populateRepoDropdown(filteredRepos);
+          document.getElementById("repo-status").textContent = "Using stored permissions.";
+        } else {
+          document.getElementById("repo-status").textContent = "No cached data. Click refresh to check permissions.";
+        }
+      }
+    }
+
+    document.getElementById("save-token").addEventListener("click", async function () {
+      const token = document.getElementById("github-token").value.trim();
+      if (!token) return;
+      saveToken(token);
+      updateTokenDisplay();
+    });
+
+    // --- Repository Permissions & Dropdown ---
+    async function refreshRepos() {
+      document.getElementById("repo-status").textContent = "Refreshing repository permissions...";
+      const token = getToken();
+      if (!token) {
+        document.getElementById("repo-status").textContent = "No GitHub token found.";
+        return;
+      }
+      // Get current user info
+      const usernameRes = await fetch("https://api.github.com/user", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const user = await usernameRes.json();
+      const username = user.login;
+      // Get repos accessible by token
+      const response = await fetch("https://api.github.com/user/repos", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const repos = await response.json();
+      if (!Array.isArray(repos)) {
+        document.getElementById("repo-status").textContent = "Failed to fetch repositories.";
+        return;
+      }
+      const repoPermissions = {}; // fresh permissions
+      const validRepos = [];
+      console.log("Checking permissions for repos:", repos.map(r => r.full_name));
+      for (const repo of repos) {
+        try {
+          const permRes = await fetch(`https://api.github.com/repos/${repo.full_name}/collaborators/${username}/permission`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (permRes.status === 403) {
+            console.warn(`Skipping ${repo.full_name}: 403 Forbidden`);
+            repoPermissions[repo.full_name] = false;
+            continue;
+          }
+          if (!permRes.ok) {
+            console.warn(`Skipping ${repo.full_name}: API returned ${permRes.status}`);
+            repoPermissions[repo.full_name] = false;
+            continue;
+          }
+          const permData = await permRes.json();
+          console.log(`Permission check for ${repo.full_name}:`, permData);
+          if (permData.permission && (permData.permission === "write" || permData.permission === "admin")) {
+            repoPermissions[repo.full_name] = true;
+            validRepos.push(repo.full_name);
+          } else {
+            repoPermissions[repo.full_name] = false;
+          }
+        } catch (e) {
+          console.warn(`Skipping repo ${repo.full_name} due to error:`, e);
+          repoPermissions[repo.full_name] = false;
+        }
+      }
+      await saveCachedRepoPermissions(repoPermissions, token);
+      populateRepoDropdown(validRepos);
+      if (validRepos.length > 0) {
+        document.getElementById("repo-status").textContent = "Permissions refreshed.";
+      } else {
+        document.getElementById("repo-status").textContent = "No writable repositories found.";
+      }
+    }
+    function populateRepoDropdown(repoNames) {
+      const repoSelector = document.getElementById("repo-selector");
+      repoSelector.innerHTML = "";
+      if (repoNames.length === 0) {
+        document.getElementById("repo-status").textContent = "No writable repositories found.";
+        return;
+      }
+      console.log("Final list of writable repos:", repoNames);
+      document.getElementById("repo-status").textContent = "Select a repository:";
+      repoNames.forEach(repoName => {
+        const option = document.createElement("option");
+        option.value = repoName;
+        option.textContent = repoName;
+        repoSelector.appendChild(option);
+      });
+      // Auto-select the first repo and load commits and files
+      repoSelector.selectedIndex = 0;
+      loadCommitLog();
+      loadRepositoryFiles();
+    }
+    document.getElementById("refresh-repos").addEventListener("click", refreshRepos);
+
+    // --- Auto-Reload on Repository Change ---
+    document.getElementById("repo-selector").addEventListener("change", function() {
+      if(this.value) {
+        loadCommitLog();
+        loadRepositoryFiles();
+      }
+    });
+
+    // --- Global variables for file editing ---
+    let currentFilePath = "";
+    let currentFileSha = "";
+
+    // --- Load Commit Log ---
+    async function loadCommitLog() {
+      const token = getToken();
+      const repo = document.getElementById("repo-selector").value;
+      if (!token || !repo) {
+        document.getElementById("commit-log").innerHTML = "<li>Please ensure a repository is selected.</li>";
+        return;
+      }
+      // Append a timestamp to bust cache and set cache mode to no-store
+      const timestamp = new Date().getTime();
+      document.getElementById("commit-log").innerHTML = "<li>Loading commits...</li>";
+      try {
+        const commitsRes = await fetch(`https://api.github.com/repos/${repo}/commits?t=${timestamp}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store"
+        });
+        const commits = await commitsRes.json();
+        const commitList = document.getElementById("commit-log");
+        commitList.innerHTML = "";
+        if (Array.isArray(commits)) {
+          commits.forEach(commit => {
+            const li = document.createElement("li");
+            li.textContent = `${commit.sha.substring(0, 7)}: ${commit.commit.message}`;
+            commitList.appendChild(li);
+          });
+        } else {
+          commitList.innerHTML = "<li>Failed to load commits.</li>";
+        }
+      } catch (error) {
+        document.getElementById("commit-log").innerHTML = `<li>Error loading commits: ${error}</li>`;
+      }
+    }
+    document.getElementById("load-graph").addEventListener("click", loadCommitLog);
+
+    // --- Load Repository Files ---
+    async function loadRepositoryFiles() {
+      const token = getToken();
+      const repo = document.getElementById("repo-selector").value;
+      if (!token || !repo) {
+        alert("Please ensure a GitHub token is saved and a repository is selected.");
+        return;
+      }
+      const fileSelector = document.getElementById("file-selector");
+      fileSelector.innerHTML = "<option value=''>Loading files...</option>";
+      try {
+        // List files in the repository root using GitHub contents API
+        const filesRes = await fetch(`https://api.github.com/repos/${repo}/contents`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const files = await filesRes.json();
+        fileSelector.innerHTML = "";
+        if (Array.isArray(files)) {
+          const fileFiles = files.filter(file => file.type === "file");
+          fileFiles.forEach(file => {
+            const option = document.createElement("option");
+            option.value = file.path;
+            option.textContent = file.name;
+            // Store the file SHA in a data attribute for later use
+            option.dataset.sha = file.sha;
+            fileSelector.appendChild(option);
+          });
+          if (fileFiles.length === 0) {
+            fileSelector.innerHTML = "<option value=''>No files found.</option>";
+          } else {
+            // Auto-select the first file and load its content
+            fileSelector.selectedIndex = 0;
+            loadFileContent(fileSelector.value);
+          }
+        } else {
+          fileSelector.innerHTML = "<option value=''>Failed to load files.</option>";
+        }
+      } catch (error) {
+        fileSelector.innerHTML = `<option value=''>Error: ${error}</option>`;
+      }
+    }
+    document.getElementById("load-files").addEventListener("click", loadRepositoryFiles);
+
+    // --- Load File Content when a file is selected ---
+    async function loadFileContent(filePath) {
+      const token = getToken();
+      const repo = document.getElementById("repo-selector").value;
+      if (!token || !repo || !filePath) return;
+      try {
+        const fileRes = await fetch(`https://api.github.com/repos/${repo}/contents/${encodeURIComponent(filePath)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const fileData = await fileRes.json();
+        if (fileData.content) {
+          // Decode base64 content (remove newlines if needed)
+          const content = atob(fileData.content.replace(/\n/g, ""));
+          document.getElementById("file-content").value = content;
+          currentFileSha = fileData.sha;
+          currentFilePath = fileData.path;
+        } else if (fileData.download_url) {
+          // Fallback: fetch raw text from download_url
+          const rawRes = await fetch(fileData.download_url);
+          const text = await rawRes.text();
+          document.getElementById("file-content").value = text;
+          currentFileSha = fileData.sha;
+          currentFilePath = fileData.path;
+        } else {
+          document.getElementById("file-content").value = "Error: Could not load file content.";
+        }
+      } catch (error) {
+        document.getElementById("file-content").value = "Error loading file: " + error;
+      }
+    }
+    document.getElementById("file-selector").addEventListener("change", function () {
+      loadFileContent(this.value);
+    });
+
+    // --- Commit & Push Changes ---
+    document.getElementById("save-file").addEventListener("click", async function () {
+      const token = getToken();
+      const repo = document.getElementById("repo-selector").value;
+      if (!token || !repo || !currentFilePath || !currentFileSha) {
+        alert("Please ensure a repository is selected and a file is loaded.");
+        return;
+      }
+      const newContent = document.getElementById("file-content").value;
+      // Base64 encode the content
+      const encodedContent = btoa(newContent);
+      const commitMessage = document.getElementById("commit-message").value;
+      if (!commitMessage) {
+        alert("Please enter a commit message.");
+        return;
+      }
+      try {
+        const updateRes = await fetch(`https://api.github.com/repos/${repo}/contents/${encodeURIComponent(currentFilePath)}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            message: commitMessage,
+            content: encodedContent,
+            sha: currentFileSha
+          })
+        });
+        const updateData = await updateRes.json();
+        if (updateRes.ok) {
+          document.getElementById("commit-status").textContent = "File updated and committed successfully.";
+          // Update SHA from the new commit for future edits
+          currentFileSha = updateData.content.sha;
+          // Refresh the commit log after successful commit
+          loadCommitLog();
+        } else {
+          document.getElementById("commit-status").textContent = "Error: " + (updateData.message || "Commit failed.");
+        }
+      } catch (error) {
+        document.getElementById("commit-status").textContent = "Commit error: " + error;
+      }
+    });
+
+    // --- On Page Load ---
+    window.onload = async () => {
+      updateTokenDisplay();
+      const token = getToken();
+      if (token) {
+        const cachedRepoPermissions = await getCachedRepoPermissions(token);
+        const validRepos = Object.keys(cachedRepoPermissions).filter(repo => cachedRepoPermissions[repo]);
+        if (validRepos.length > 0) {
+          populateRepoDropdown(validRepos);
+          document.getElementById("repo-status").textContent = "Using cached permissions.";
+        }
+      }
+    };
+  </script>
+</body>
+</html>

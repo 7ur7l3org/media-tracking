@@ -1,0 +1,12 @@
+thanks https://chatgpt.com/c/67a175df-bed4-800c-acd8-504433636020
+
+TODOs
+- remove watchlist double ===== print, fix queue-vote watchlist note to not be json but be the same kind of `imported from trakt-export--2025-01-31T02-36-14Z-7ur7l3/7ur7l3/blah` as the consumed history
+- separate the script into convert-history and convert-watchlist and make merge-and-sort-history-and-watchlist. should both use the same cache of wikidata requests
+- make convert time to mountain time in whatever format that is
+- add trakt json record id to processing log or like just add the `imported from trakt-export--2025-01-31T02-36-14Z-7ur7l3/7ur7l3/watched/history-3.json:7831016969` that will be added to the json but with the word converting instead of imported from
+- make logger also output to log file with filename reflective of trakt export and current conversion datetime
+- consider renaming title to title_P1476 and description to description_Pblah to be clear where they're coming from.. unless they aren't from those? i can't figure out what the description property is the heck. maybe just itemLabel and itemDescription. eh probably it's just fine
+- figure out how shows/one-piece-184618/seasons/1/episodes/1 as a trakt slug is possible to form or exist
+
+-- `"The Mathematician\u2019s Ghost"` how did this happen :/ i thought i fixed that. also `"description": "2020 film directed by Jasmila \u017dbani\u0107"` :/ , `"description": "2010 film by Lasse Hallstr\u00f6m"`, `"title": "Fain\u00e9ant.e.s"` -> i had dropped the `, ensure_ascii=False` on all json.dump(s)

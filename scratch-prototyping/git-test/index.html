@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>isomorphic‑git PWA Example</title>
+    <!-- Link to the Web App Manifest -->
+    <link rel="manifest" href="manifest.json" />
+
+    <!-- Load Lightning‑FS -->
+    <script src="https://unpkg.com/@isomorphic-git/lightning-fs@4.6.0/dist/lightning-fs.min.js"></script>
+    <!-- Load isomorphic‑git (UMD build) -->
+    <script src="https://unpkg.com/isomorphic-git@1.29.0/index.umd.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/xterm@5.4.0-beta.37/css/xterm.css" />
+<script src="https://unpkg.com/xterm@5.4.0-beta.37/lib/xterm.js"></script>
+    
+    <!-- Module script to set up window.fs and window.pfs -->
+    <script type="module">
+      import http from 'https://unpkg.com/isomorphic-git@1.29.0/http/web/index.js';
+      // Expose the HTTP client globally for remote operations if needed.
+      window.gitHttp = http;
+      // Initialize the global file system using LightningFS.
+      window.fs = new LightningFS('fs');
+      window.pfs = window.fs.promises;
+    </script>
+
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 2rem;
+      }
+      button {
+        margin: 0.5rem;
+        padding: 0.5rem 1rem;
+      }
+      #log,
+      #shell-output {
+        margin-top: 1rem;
+        white-space: pre-wrap;
+        border: 1px solid #ccc;
+        padding: 0.5rem;
+        background: #f9f9f9;
+      }
+      #shell-output {
+        background: #333;
+        color: #eee;
+        height: 200px;
+        overflow: auto;
+      }
+      #shell-input {
+        width: 100%;
+        font-size: 1.2em;
+        box-sizing: border-box;
+        padding: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>isomorphic‑git PWA Example</h1>
+    <button id="commit-btn">Add Commit</button>
+    <!-- (Optional) a button to sync with remote -->
+    <!-- <button id="sync-btn">Sync</button> -->
+    <div id="log">Log messages will appear here.</div>
+
+    <h2>Git Shell</h2>
+    <div id="shell-output"></div>
+    <input type="text" id="shell-input" placeholder="Type git or shell command here" />
+
+      <div id="terminal"></div>
+
+    <!-- Non-module script that waits until window.load -->
+    <script>
+      window.addEventListener('load', async () => {
+
+        var term = new Terminal();
+        term.open(document.getElementById('terminal'));
+        term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ')
+
+        // Now window.fs and window.pfs should be defined.
+        const fs = window.fs; // Full LightningFS instance.
+        const pfs = window.pfs; // Its promises interface.
+        const dir = '/repo';
+
+        // Utility: Logging function.
+        function log(msg) {
+          const logDiv = document.getElementById('log');
+          logDiv.textContent += msg + "\n";
+          console.log(msg);
+        }
+
+        // --- Initialize the Repository if Needed ---
+        try {
+          // Check for the existence of the .git folder.
+          await pfs.readdir(dir + '/.git');
+          log(`Repository already initialized in ${dir}`);
+        } catch (err) {
+          log(`Initializing repository in ${dir} ...`);
+          // Pass the full fs object to isomorphic-git.
+          await git.init({ fs, dir });
+          await git.setConfig({ fs, dir, path: 'user.name', value: 'Your Name' });
+          await git.setConfig({ fs, dir, path: 'user.email', value: 'you@example.com' });
+          await pfs.writeFile(dir + '/timestamp.txt', 'Initial commit\n', 'utf8');
+          await git.add({ fs, dir, filepath: 'timestamp.txt' });
+          await git.commit({
+            fs,
+            dir,
+            message: 'Initial commit',
+            author: { name: 'Your Name', email: 'you@example.com' }
+          });
+          log('Repository initialized with an initial commit.');
+        }
+
+        // --- Commit Button: Append a timestamp and commit ---
+        async function addCommit() {
+          try {
+            const now = new Date();
+            const message = now.toLocaleString();
+
+            let prevContent = '';
+            try {
+              prevContent = await pfs.readFile(dir + '/timestamp.txt', 'utf8');
+            } catch (readErr) {
+              log("Could not read file, it may not exist yet.");
+            }
+            const newContent = prevContent + message + "\n";
+            await pfs.writeFile(dir + '/timestamp.txt', newContent, 'utf8');
+            log(`Wrote new content to timestamp.txt:\n${message}`);
+            await git.add({ fs, dir, filepath: 'timestamp.txt' });
+            const sha = await git.commit({
+              fs,
+              dir,
+              message,
+              author: { name: 'Your Name', email: 'you@example.com' }
+            });
+            log(`Committed! New commit SHA: ${sha}`);
+          } catch (err) {
+            log("Error during commit: " + err.message);
+            console.error(err);
+          }
+        }
+        document.getElementById('commit-btn').addEventListener('click', addCommit);
+
+        // --- Register Service Worker ---
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('sw.js')
+            .then(reg => log('Service Worker registered.'))
+            .catch(err => log('Service Worker registration failed: ' + err));
+        }
+
+        // --- Request Persistent Storage ---
+        if (navigator.storage && navigator.storage.persist) {
+          navigator.storage.persist().then(granted => {
+            console.log(granted
+              ? 'Storage is persistent!'
+              : 'Storage may be cleared under storage pressure.');
+          });
+        }
+
+        // --- Git Shell Implementation with Extra Commands ---
+        document.getElementById('shell-input').addEventListener('keypress', async (e) => {
+          if (e.key === 'Enter') {
+            const input = e.target.value.trim();
+            e.target.value = '';
+            appendShellOutput(`> ${input}`);
+            
+            // Parse the command into tokens.
+            let tokens = parseCommand(input);
+            if (tokens.length === 0) return;
+            
+            // If the first token is "git", then remove it.
+            let cmd = tokens[0];
+            let args = tokens.slice(1);
+            if (cmd === 'git') {
+              if (args.length === 0) {
+                appendShellOutput("No git command provided.");
+                return;
+              }
+              cmd = args[0];
+              args = args.slice(1);
+            }
+            
+            try {
+              let result;
+              switch (cmd) {
+                // --- Git Commands ---
+                case 'init':
+                  result = await git.init({ fs, dir });
+                  appendShellOutput('Repository initialized.');
+                  break;
+                case 'commit':
+                  // Expects: commit "message"
+                  const message = args.join(' ');
+                  result = await git.commit({
+                    fs,
+                    dir,
+                    message,
+                    author: { name: 'Your Name', email: 'you@example.com' }
+                  });
+                  appendShellOutput(`Committed! SHA: ${result}`);
+                  break;
+                case 'add':
+                  // Expects: add <filepath>
+                  if (!args[0]) {
+                    appendShellOutput("Usage: add <filepath>");
+                  } else {
+                    result = await git.add({ fs, dir, filepath: args[0] });
+                    appendShellOutput(`Added ${args[0]}`);
+                  }
+                  break;
+                  
+                // --- Simple Shell Commands ---
+                case 'ls':
+                  // If no directory provided, default to the repo directory.
+                  const targetDir = args[0] || dir;
+                  try {
+                    const files = await pfs.readdir(targetDir);
+                    appendShellOutput(files.join('\n'));
+                  } catch (err) {
+                    appendShellOutput(`Error reading directory ${targetDir}: ${err.message}`);
+                  }
+                  break;
+                case 'cat':
+                  // Expects: cat <filename>
+                  if (!args[0]) {
+                    appendShellOutput("Usage: cat <filename>");
+                  } else {
+                    try {
+                      const content = await pfs.readFile(args[0], 'utf8');
+                      appendShellOutput(content);
+                    } catch (err) {
+                      appendShellOutput(`Error reading file ${args[0]}: ${err.message}`);
+                    }
+                  }
+                  break;
+                default:
+                  appendShellOutput(`Unknown command: ${cmd}`);
+              }
+            } catch (err) {
+              appendShellOutput(`Error: ${err.message}`);
+              console.error(err);
+            }
+          }
+        });
+        
+        function appendShellOutput(text) {
+          const output = document.getElementById('shell-output');
+          output.textContent += text + "\n";
+          output.scrollTop = output.scrollHeight;
+        }
+        
+        // A simple command parser that handles quotes.
+        function parseCommand(input) {
+          const regex = /[^\s"]+|"([^"]*)"/gi;
+          const args = [];
+          let match;
+          while ((match = regex.exec(input)) !== null) {
+            args.push(match[1] ? match[1] : match[0]);
+          }
+          return args;
+        }
+      });
+    </script>
+  </body>
+</html>

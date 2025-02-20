@@ -1,0 +1,11 @@
+thanks https://chatgpt.com/c/67b6f8b8-2774-800c-a5e9-7cf603db8d3d
+
+works very well on desktop. maybe i'll need per-device sync settings e.g. local repo -> github vs indexeddb -> github -> local export idk
+
+https makes window.showDirectoryPicker() work on phone
+
+TODOs
+- very slow on mobile
+- it still takes ~15 seconds for the git log to update. i wonder if working with an archive mount bundle/zip might help, or if being in a pwa would help, or if using lightningfs indexeddb with periodic or user initiated (zip?) dumps to the file system is the way. it's weird cause it's quite good on desktop browser. i'll just have to play around with it more i guess
+- oh is that the reason lightningfs exists to be fast cause the actual file system stuff is really slow? i wonder if we should shim lightningfs between the user side and the file system sync... or like we use the lightningfs indexeddb fs and then periodically or on demand dump it to the actual file system. i'll have to think about that later
+- loading the cached repo worked beautifully, now it's just a single popup on that button to load the stuff. idk if there's a better way to get even fewer clicks but that's completely fine for now.

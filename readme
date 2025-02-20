@@ -71,6 +71,10 @@ then make it integrate with *arr and trackers
 
 then add custom bookmarks/wiki pages for stuff like anime summer 2025 and such maybe
 
+also link to script that imports from mal to wikidata for if someone wants to set up a bot to do that in an automated way instead of manually on demand
+
+- long term make qr code to share pat between browser/device indexeddb stores.. or consider branch names gen'd from pat and pat per device. but def make easily copy pastable between places
+
 <now>
 
 thanks https://chatgpt.com/c/679d3064-16b0-800c-9e35-89509164697b (trying o3-mini)
@@ -130,32 +134,108 @@ cline with deepseek?
 -- make sure the series/sequencing display can handle when something is a part of multiple series, it should render each series that it's a part of. e.g. file:///C:/Users/7UR7L3/dev/media-tracking/site/index.html?id=Q155653 is only showing one right now
 -- currently things that aren't series and aren't part of any series display as Series: <themselves> and No parts found for this series. really it should just omit the Series/Sequencing Information when not applicable. i wonder if the fallback is to itself if it isn't part of a series and isn't "is a" series itself
 -- update series/sequencing css to align the bullets with the collapsible sections. currently the collapsible sections are double indented and not in line with the other adjacent bullets that don't have sub-parts
+-- interesting duplication issue in the recursive parts series/sequencing view. not sure what to do about this lol (file:///C:/Users/7UR7L3/dev/media-tracking/site/index.html?id=Q169042) <- i ingore it is what i do
+-- expand/collapse all buttons should exist for the properties and for the series/sequencing information parts
+-- consider compressing json? no because git already does blobs? e.g. fetch will be small even though repo is decently big in indexeddb? yeah probably. assuming i have the storage for like 10MB which surely i do. yeah actually my architecture is cracked
 
+
+- similarly to how we derive series information from `part of the series (P179)` backreferences for all things that are part of that series, we should be able to go to a person and pull all entities where that person is the director or cast member or screenwriter or producer or etc. etc. any other "wikidata property related to creative works" of that thing, like we should be able to pull all the things that the guy was a director of, or all the things that a guy was a cast member in, etc. similarly we should be able to pull all works where the main subject is xyz too, or where the genre is xyz. though i guess that might get pretty enormous so probably we'd focus on people first. for now the strat is to just go to sqid to find the related entities
 
 - series/sequencing information things:
     - somehow make copy paste on the series/sequencing information section retain the section/subsection indentation
     - somehow make copy paste copy hyperlinks too in addition to text content
-    - interesting duplication issue in the recursive parts series/sequencing view. not sure what to do about this lol
-    6. House, season 6 (Q169042) – season of television series
-        1. Broken (Q2504180) – joint title for the first and second episodes of the sixth season of the television series House
-            1. Broken (Part One) (Q6094328) – episode of House (S6 E1)
-            2. Broken (Part Two) (Q29415041) – episode of House (S6 E2)
-        1. Broken (Part One) (Q6094328) – episode of House (S6 E1)
-        2. Broken (Q2504180) – joint title for the first and second episodes of the sixth season of the television series House
-            1. Broken (Part One) (Q6094328) – episode of House (S6 E1)
-            2. Broken (Part Two) (Q29415041) – episode of House (S6 E2)
-        2. Broken (Part Two) (Q29415041) – episode of House (S6 E2)
-        3. Epic Fail (Q13479269) – episode of House (S6 E3)
 
-- expand all buttons should exist for the properties and for the series/sequencing information parts
 - prioritize some properties over others
 - let's load some images!
 - add filters to the search to only search for thinigs that are e.g. films
 - include title in url that is ignored, maybe in the # or something that indicates metadata that isn't important to the url
 - make caching longer, like 6h maybe
+- consolidate all ({qid}[sqid][wikidata]) rendering logic to a single place, and have localStorage setting to be able to toggle id rendering entirely on and off
+- navigating back to a previously visited page shouldn't have to load and perform a search at all if it's fully rendered.. only a refresh should trigger that
+- make https://www.wikidata.org/wiki/Q63348493 show up bold in the search. e.g. anime television series is yes. also television program for https://www.wikidata.org/wiki/Q28856068
+- fix wolfram language entity code hyperlinks e.g. file:///C:/Users/7UR7L3/dev/media-tracking/site/index.html?id=Q788822 has a broken link where it doesn't cram the whole value in for some reason
+- clear cache button or manually re-fetch-data button for when i update wikidata but my cache is now bad
+- prioritize search results for bolds such that e.g. first half are all bold even if it has to pre-search multiple pages for them. maybe. idk
+- make wikidata updater suggest ensuring e.g. (S3E13) is in the description of the entity
+- make site happy with chrome url autocomplete however that works, like i should type track.7<tab>the wild robot and it should go to `track.7ur.it?q=the wild robot`
+- make times be mountain time in json? probably. user settings? idk lol i guess settings in the repo seems kinda reasonable tho
+- update with new trakt export at migration time, for now tracking things in trakt
+- make search have "search by" to search by trakt/imdb/tvdb/letterboxed/mal url or id
 
-on new load of a large series that doesn't hit the cache at all, yet everything seems to work fine so not sure what these requests are on about:
+everything chips
+
+failure cache
+create tool
+google authority?
+torrent wikidata? sparql annas archive?
+let him crockpot
+snapshot version of entity and render on page
+get all instances of Wikidata property to identify films (Q29542094) to automate the creation of new wikidata entries
+
+on load of a large series (that maybe doesn't hit the cache?), yet everything seems to work fine so not sure what these requests are on about:
 Access to fetch at 'https://query.wikidata.org/sparql?query=%0A%20%20%20%20%20%20SELECT%20%3Fpart%20%3FpartLabel%20%3FpartDescription%20%3Fordinal%20WHERE%20%7B%0A%20%20%20%20%20%20%20%20wd%3AQ4854278%20p%3AP527%20%3Fstmt.%0A%20%20%20%20%20%20%20%20%3Fstmt%20ps%3AP527%20%3Fpart.%0A%20%20%20%20%20%20%20%20OPTIONAL%20%7B%20%3Fstmt%20pq%3AP1545%20%3Fordinal.%20%7D%0A%20%20%20%20%20%20%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22en%22.%20%7D%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20ORDER%20BY%20%3Fordinal%0A%20%20%20%20&format=json' from origin 'null' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
 GET https://query.wikidata.org/sparql?query=%0A%20%20%20%20%20%20SELECT%20%3Fpart%20%3FpartLabel%20%3FpartDescription%20%3Fordinal%20WHERE%20%7B%0A%20%20%20%20%20%20%20%20wd%3AQ4854278%20p%3AP527%20%3Fstmt.%0A%20%20%20%20%20%20%20%20%3Fstmt%20ps%3AP527%20%3Fpart.%0A%20%20%20%20%20%20%20%20OPTIONAL%20%7B%20%3Fstmt%20pq%3AP1545%20%3Fordinal.%20%7D%0A%20%20%20%20%20%20%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22en%22.%20%7D%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20ORDER%20BY%20%3Fordinal%0A%20%20%20%20&format=json net::ERR_FAILED 429 (Too Many Requests)
 series.js:69 Error fetching series parts: TypeError: Failed to fetch
     at getRequest.onsuccess (cache.js:61:13)
+
+
+get openrefine working to create missing entries
+make page that encourages getting stuff into wikidata with tools/automation depending on the content type (do movies first)
+
+
+get actual history/list stuff working
+well maybe first see how much coverage we do or don't have tbh
+make work with arbitrary id's (normally url's) ?
+import trakt and see how far we get
+
+
+
+
+-- noah league
+-- avs game
+isogit browser cli pwa with persistent storage. how to auth? vps for isomorphic-git proxy cors bs? in-page cli/terminal?
+integrate git into content tracker
+single json should be keyed by qid/url/id and hold all history and all queue votes and all notes. it should be trivial to render all watches in order of time, or render all queue in order of number of votes or last vote time. cause surely only like 100k or so entries would ever exist
+
+
+
+make trakt -> media tracker json
+
+sort (and merge dupe records?) media-tracking.json . why sort? idk.
+
+make tracker load json (manually from file for now)
+
+make series sequencing media pages show all queue votes and all consumptions
+^^^^^^^^^^^^^^^^^^
+
+get tracker showing /history and /queue and content pages showing all consumptions and queue votes. top links [media] page and [queues] with the watchlist queue and [consumption] where [consumption] shows by all chronologically (optionally filtering by wikidata "is a" content type), or by progress by shows in order of progress to completion and then completion (do i need to save off all series/sequencing information to a file? damn maybe.. probably.. actually probably unnecessary cause just need the sequencing information which is calc'd once and cached for all shows you've watched and that's only like a few thousand maybe)
+
+make tracker commit history records or queue-votes to the file with in-browser git
+make git auth and push to remote proxy per-user somehow (buy a vps finally?)
+
+make thing to make wikidata stubs for anime and for anime seasons and for anime episodes for mal hits, should send you to wikidata with the query to run or whatever so anyone can run the command directly. sub-search will search on tmdb/mal and give links to add to wikidata or will show existing wikidata vs what needs to be created. should also check and make stubs for new episodes that recently came out that wouldn't be on wikidata yet. maybe a button to consult e.g. mal/tmdb on the page which will compare wikidata with that and prompt to add to wikidata including adding missing authority references (e.g. weird non-canonical trakt slug of file:///C:/Users/7UR7L3/dev/media-tracking/site/index.html?id=Q130353420) and description naming info etc to wikidata. should take you to a quickstatements to run
+
+https://quickstatements.toolforge.org/#/batch/185948
+maybe figure out how to make this kind of thing https://www.wikidata.org/w/index.php?title=Q109526557&action=history&offset=&limit=50 referenced in e.g. `10:52, 4 May 2023 CennoxX talk contribs  38,621 bytes +850  Added reference to claim: Trakt.tv ID (P8013): shows/one-piece-184618, batch #185948 undothank Tag: quickstatements [2.0] (restore)`, https://quickstatements.toolforge.org/#/batches/CennoxX . that's gotta be the best way to do stuff lol. or at least each of my creation stuff should be a batch like this
+in fact it has `based on heuristic [P887]: inferred from IMDb ID database lookup [Q115288501]  retrieved [P813]: 2023-05-04` which i can probably do for my stuff cause that looks hot af
+https://www.wikidata.org/wiki/Wikidata:WikiProject_Movies/Properties#Description ooh i think i don't have to provide a description. that would be nice. sounds like director and publication date is desired. publication date probably from tmdb ig. idk tough. https://www.wikidata.org/wiki/Help:Description common formulas too
+
+
+
+
+
+
+- push all this to github
+- add "login with github" and use https://cors.isomorphic-git.org/ for auth, store oauth token in indexeddb (https://chatgpt.com/c/67b54ff5-8b00-800c-9ce4-f6ae553131b7)
+- ensure all content is set via .textContent and not .innerHTML (from wikidata and all other data sources) to protect against xss
+- add ui for json modification
+    - add generic key/url tracking
+- local commit json to branch
+- push json to github when online
+- figure out how to do local storage pwa on filesystem for offline explicit repo that can be termux managed
+- ideally three layers are push to indexeddb, push to local filesystem if granted access, push to github
+    - possibly do the latter and if that succeeds try the middle and if that fails do the first
+    - always show exact push/sync status
+
+- migrate git pat token auth from github api to isomorphic-git
+- make isomorphic-git work with actual filesystem access if it's not annoying to regrant permission constantly

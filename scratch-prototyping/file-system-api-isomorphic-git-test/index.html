@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Isomorphic-git Demo with Cached Repo & Refresh</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#317EFB">
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 2em;
+      max-width: 600px;
+    }
+    h1, h2 { color: #333; }
+    button { margin: 0.5em 0; padding: 0.5em 1em; cursor: pointer; }
+    textarea { width: 100%; height: 100px; }
+    #fileAccess, #gitOps {
+      margin-top: 1em; padding: 1em;
+      border: 1px solid #ccc; border-radius: 4px;
+    }
+    #fileAccess ul, #gitLog { margin: 0; padding: 0; list-style: none; }
+    #fileAccess li, #gitLog li {
+      margin: 0.25em 0; padding: 0.25em;
+      background: #f9f9f9; border-radius: 4px;
+    }
+    /* Always-visible info log */
+    #infoLog {
+      margin-top: 1em;
+      padding: 0.5em;
+      background: #eef;
+      border: 1px solid #99c;
+      border-radius: 4px;
+      font-size: 0.9em;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Isomorphic-git Demo with Cached Repo & Refresh</h1>
+  <p>
+    This demo runs as a PWA. You can load a cached repo, change the repo, and refresh the Git log.
+    The Git log refreshes immediately after a commit.
+  </p>
+  
+  <!-- Buttons for repo management -->
+  <button id="selectRepo">Select/Change Repository Folder</button>
+  <button id="loadCached">Load Cached Repo</button>
+  <button id="refreshLog">Refresh Git Log</button>
+  
+  <!-- Part 1: File list -->
+  <div id="fileAccess" style="display:none;">
+    <h2>Files in Repo:</h2>
+    <ul id="files"></ul>
+  </div>
+  
+  <!-- Part 2: Git operations -->
+  <div id="gitOps" style="display:none;">
+    <h2>Git Log (last 10 commits):</h2>
+    <ul id="gitLog"></ul>
+    <h2>Make a Commit</h2>
+    <p>
+      Edits will be applied to <strong>demo.txt</strong>.
+    </p>
+    <input type="text" id="commitMessage" placeholder="Commit message" style="width:100%; padding:0.5em;"/>
+    <br/><br/>
+    <textarea id="fileContent" placeholder="Edit file content"></textarea>
+    <br/>
+    <button id="commitBtn">Commit Changes</button>
+  </div>
+  
+  <!-- Always-visible info log -->
+  <div id="infoLog"></div>
+  
+  <!-- 1) Load isomorphic-git (UMD build) -->
+  <script src="https://unpkg.com/isomorphic-git@1.29.0/index.umd.min.js"></script>
+  <!-- 2) Dexie for caching -->
+  <script src="https://unpkg.com/dexie@3.2.2/dist/dexie.js"></script>
+  
+  <!-- 3) Main script -->
+  <script>
+    // Logging helpers: write messages to both console and on-screen log.
+    function log(msg) {
+      console.log(msg);
+      const logEl = document.getElementById('infoLog');
+      const div = document.createElement('div');
+      div.textContent = msg;
+      logEl.appendChild(div);
+    }
+    function debug(msg) {
+      console.debug(msg);
+      const logEl = document.getElementById('infoLog');
+      const div = document.createElement('div');
+      div.style.color = 'gray';
+      div.textContent = msg;
+      logEl.appendChild(div);
+    }
+    function error(msg) {
+      console.error(msg);
+      const logEl = document.getElementById('infoLog');
+      const div = document.createElement('div');
+      div.style.color = 'red';
+      div.textContent = msg;
+      logEl.appendChild(div);
+    }
+    
+    // Helper: Wrap a DOMException (or any error) in a new Error with a string code.
+    function wrapError(err, code) {
+      const newErr = new Error(err.message);
+      if (err.stack) newErr.stack = err.stack;
+      newErr.name = err.name || 'Error';
+      newErr.code = code;
+      newErr.originalError = err;
+      return newErr;
+    }
+    
+    // Global variables.
+    let rootDir;
+    const repoPath = '.';
+    
+    // Setup Dexie for caching the directory handle.
+    const db = new Dexie('git-demo-db');
+    db.version(1).stores({ handles: '' });
+    const DB_KEY = 'repoDir';
+    
+    async function getSavedDirectoryHandle() {
+      return await db.handles.get(DB_KEY);
+    }
+    async function saveDirectoryHandle(handle) {
+      await db.handles.put(handle, DB_KEY);
+    }
+    async function pickNewDirectoryHandle() {
+      debug('[demo] Prompting for directory...');
+      const handle = await window.showDirectoryPicker();
+      await handle.requestPermission({ mode: 'readwrite' });
+      await saveDirectoryHandle(handle);
+      return handle;
+    }
+    
+    function getPathSegments(filepath) {
+      debug('[customFs] getPathSegments: ' + filepath);
+      if (!filepath || filepath === '.' || filepath === './') return [];
+      let path = filepath.replace(/^\.\//, '');
+      return path.split('/').filter(part => part && part !== '.');
+    }
+    
+    // Custom FS adapter.
+    const customFs = {
+      async readFile(filepath, options = { encoding: 'utf8' }) {
+        debug('[customFs] readFile: ' + filepath);
+        if (typeof filepath === 'undefined') {
+          throw wrapError(new Error("File path is undefined"), "ENOENT");
+        }
+        try {
+          const parts = getPathSegments(filepath);
+          let currentDir = rootDir;
+          for (let i = 0; i < parts.length - 1; i++) {
+            debug('[customFs]   -> getDirectoryHandle: ' + parts[i]);
+            currentDir = await currentDir.getDirectoryHandle(parts[i]);
+          }
+          const fileName = parts[parts.length - 1];
+          debug('[customFs]   -> getFileHandle: ' + fileName);
+          const fileHandle = await currentDir.getFileHandle(fileName);
+          const file = await fileHandle.getFile();
+          if (options.encoding === 'utf8') {
+            const text = await file.text();
+            debug('[customFs]   -> readFile text: ' + text.slice(0, 100) + '...');
+            return text;
+          } else {
+            const arr = new Uint8Array(await file.arrayBuffer());
+            debug('[customFs]   -> readFile uint8 len: ' + arr.length);
+            return arr;
+          }
+        } catch (err) {
+          if (err instanceof DOMException) {
+            debug('[customFs] readFile caught DOMException: ' + err.name + ' ' + err.code);
+            if (err.name === 'NotFoundError') {
+              throw wrapError(err, 'ENOENT');
+            } else {
+              throw wrapError(err, err.name || 'EUNKNOWN');
+            }
+          }
+          throw err;
+        }
+      },
+    
+      async writeFile(filepath, data, options = { encoding: 'utf8' }) {
+        debug('[customFs] writeFile: ' + filepath);
+        try {
+          const parts = getPathSegments(filepath);
+          let currentDir = rootDir;
+          for (let i = 0; i < parts.length - 1; i++) {
+            debug('[customFs]   -> getDirectoryHandle (create): ' + parts[i]);
+            currentDir = await currentDir.getDirectoryHandle(parts[i], { create: true });
+          }
+          const fileName = parts[parts.length - 1];
+          debug('[customFs]   -> getFileHandle (create): ' + fileName);
+          const fileHandle = await currentDir.getFileHandle(fileName, { create: true });
+          const writable = await fileHandle.createWritable();
+          await writable.write(data);
+          await writable.close();
+          debug('[customFs]   -> writeFile complete');
+        } catch (err) {
+          if (err instanceof DOMException) {
+            debug('[customFs] writeFile caught DOMException: ' + err.name + ' ' + err.code);
+            if (err.name === 'NotFoundError') {
+              throw wrapError(err, 'ENOENT');
+            } else {
+              throw wrapError(err, err.name || 'EUNKNOWN');
+            }
+          }
+          throw err;
+        }
+      },
+    
+      async readdir(filepath) {
+        debug('[customFs] readdir: ' + filepath);
+        try {
+          const parts = getPathSegments(filepath);
+          let currentDir = rootDir;
+          for (const part of parts) {
+            debug('[customFs]   -> getDirectoryHandle: ' + part);
+            currentDir = await currentDir.getDirectoryHandle(part);
+          }
+          const entries = [];
+          for await (const [name, handle] of currentDir.entries()) {
+            entries.push(name);
+          }
+          debug('[customFs]   -> readdir result: ' + entries.join(', '));
+          return entries;
+        } catch (err) {
+          if (err instanceof DOMException) {
+            debug('[customFs] readdir caught DOMException: ' + err.name + ' ' + err.code);
+            if (err.name === 'NotFoundError') {
+              throw wrapError(err, 'ENOENT');
+            } else {
+              throw wrapError(err, err.name || 'EUNKNOWN');
+            }
+          }
+          throw err;
+        }
+      },
+    
+      async mkdir(filepath) {
+        debug('[customFs] mkdir: ' + filepath);
+        try {
+          const parts = getPathSegments(filepath);
+          let currentDir = rootDir;
+          for (const part of parts) {
+            debug('[customFs]   -> mkdir getDirectoryHandle: ' + part);
+            currentDir = await currentDir.getDirectoryHandle(part, { create: true });
+          }
+        } catch (err) {
+          if (err instanceof DOMException) {
+            debug('[customFs] mkdir caught DOMException: ' + err.name + ' ' + err.code);
+            if (err.name === 'NotFoundError') {
+              throw wrapError(err, 'ENOENT');
+            } else {
+              throw wrapError(err, err.name || 'EUNKNOWN');
+            }
+          }
+          throw err;
+        }
+      },
+    
+      async stat(filepath) {
+        debug('[customFs] stat: ' + filepath);
+        try {
+          const content = await this.readFile(filepath, { encoding: 'utf8' });
+          const size = new TextEncoder().encode(content).length;
+          debug('[customFs]   -> stat says: isFile');
+          return {
+            isFile: () => true,
+            isDirectory: () => false,
+            isSymbolicLink: () => false,
+            ctime: new Date(),
+            ctimeMs: Date.now(),
+            ctimeSeconds: Math.floor(Date.now() / 1000),
+            mtime: new Date(),
+            mtimeMs: Date.now(),
+            mtimeSeconds: Math.floor(Date.now() / 1000),
+            dev: 0,
+            ino: 0,
+            mode: 33188,
+            uid: 0,
+            gid: 0,
+            size
+          };
+        } catch (e) {
+          debug('[customFs] stat readFile error => try readdir');
+          try {
+            await this.readdir(filepath);
+            debug('[customFs]   -> stat says: isDirectory');
+            return {
+              isFile: () => false,
+              isDirectory: () => true,
+              isSymbolicLink: () => false,
+              ctime: new Date(),
+              ctimeMs: Date.now(),
+              ctimeSeconds: Math.floor(Date.now() / 1000),
+              mtime: new Date(),
+              mtimeMs: Date.now(),
+              mtimeSeconds: Math.floor(Date.now() / 1000),
+              dev: 0,
+              ino: 0,
+              mode: 16877,
+              uid: 0,
+              gid: 0,
+              size: 4096
+            };
+          } catch (e2) {
+            debug('[customFs] stat readdir error => throw original error');
+            throw e;
+          }
+        }
+      },
+    
+      async lstat(filepath) {
+        debug('[customFs] lstat: ' + filepath);
+        return this.stat(filepath);
+      },
+    
+      async readlink(filepath) {
+        debug('[customFs] readlink: ' + filepath);
+        throw wrapError(new Error('Symlinks not supported'), 'ENOSYS');
+      },
+      async symlink(target, path) {
+        debug('[customFs] symlink: ' + target + ", " + path);
+        throw wrapError(new Error('Symlinks not supported'), 'ENOSYS');
+      },
+    
+      async unlink(filepath) {
+        debug('[customFs] unlink: ' + filepath);
+        throw wrapError(new Error('unlink not implemented'), 'ENOSYS');
+      },
+      async rmdir(filepath) {
+        debug('[customFs] rmdir: ' + filepath);
+        throw wrapError(new Error('rmdir not implemented'), 'ENOSYS');
+      }
+    };
+    
+    // isomorphic-git emitter.
+    const emitter = {
+      emit: (event, data) => {
+        debug('[isomorphic-git event] ' + event + " " + JSON.stringify(data));
+      }
+    };
+    
+    async function initRepoUI() {
+      debug('[demo] initRepoUI()');
+      const fileNames = await customFs.readdir('.');
+      const filesUl = document.getElementById('files');
+      filesUl.innerHTML = '';
+      fileNames.forEach(name => {
+        const li = document.createElement('li');
+        li.textContent = name;
+        filesUl.appendChild(li);
+      });
+      document.getElementById('fileAccess').style.display = 'block';
+      document.getElementById('gitOps').style.display = 'block';
+      updateGitLog();
+      log('Repository loaded.');
+    }
+    
+    async function updateGitLog() {
+      debug('[demo] updateGitLog()');
+      try {
+        const logData = await git.log({
+          fs: customFs,
+          dir: repoPath,
+          depth: 10,
+          emitter
+        });
+        debug('[demo] git.log returned: ' + JSON.stringify(logData));
+        const logUl = document.getElementById('gitLog');
+        logUl.innerHTML = '';
+        logData.forEach(commit => {
+          const li = document.createElement('li');
+          li.textContent = commit.commit.message;
+          logUl.appendChild(li);
+        });
+      } catch (err) {
+        error('Error reading git log: ' + err.message);
+      }
+    }
+    
+    document.getElementById('commitBtn').addEventListener('click', async () => {
+      debug('[demo] commitBtn clicked');
+      try {
+        const message = document.getElementById('commitMessage').value.trim() || 'Update commit';
+        const content = document.getElementById('fileContent').value;
+        await customFs.writeFile('demo.txt', content);
+        debug('[demo] calling git.add');
+        await git.add({
+          fs: customFs,
+          dir: repoPath,
+          filepath: 'demo.txt',
+          emitter
+        });
+        debug('[demo] calling git.commit');
+        await git.commit({
+          fs: customFs,
+          dir: repoPath,
+          message,
+          author: { name: 'Your Name', email: 'you@example.com' },
+          emitter
+        });
+        log('Commit successful');
+        updateGitLog();
+      } catch (err) {
+        error('Error making commit: ' + err.message);
+      }
+    });
+    
+    // Button to load the cached repo handle without prompting.
+    document.getElementById('loadCached').addEventListener('click', async () => {
+      debug('[demo] loadCached button clicked');
+      try {
+        const savedHandle = await getSavedDirectoryHandle();
+        if (savedHandle) {
+          debug('[demo] Found saved handle. Checking permission...');
+          const perm = await savedHandle.requestPermission({ mode: 'readwrite' });
+          debug('[demo] Permission result: ' + perm);
+          if (perm === 'granted') {
+            rootDir = savedHandle;
+            await initRepoUI();
+          } else {
+            error('[demo] Permission not granted for cached handle.');
+          }
+        } else {
+          error('[demo] No cached handle found.');
+        }
+      } catch (err) {
+        error('Error loading cached repo: ' + err.message);
+      }
+    });
+    
+    // Button to force a refresh of the Git log.
+    document.getElementById('refreshLog').addEventListener('click', async () => {
+      debug('[demo] refreshLog button clicked');
+      updateGitLog();
+    });
+    
+    document.getElementById('selectRepo').addEventListener('click', async () => {
+      debug('[demo] selectRepo button clicked');
+      try {
+        rootDir = await pickNewDirectoryHandle();
+        await initRepoUI();
+      } catch (err) {
+        error('Error picking directory: ' + err.message);
+      }
+    });
+    
+    window.addEventListener('DOMContentLoaded', async () => {
+      debug('[demo] DOMContentLoaded');
+      try {
+        const savedHandle = await getSavedDirectoryHandle();
+        if (savedHandle) {
+          debug('[demo] Found saved handle. Checking permission...');
+          const perm = await savedHandle.requestPermission({ mode: 'readwrite' });
+          debug('[demo] Permission result: ' + perm);
+          if (perm === 'granted') {
+            rootDir = savedHandle;
+            await initRepoUI();
+          } else {
+            debug('[demo] Permission not granted for cached handle.');
+          }
+        } else {
+          debug('[demo] No saved handle found.');
+        }
+      } catch (err) {
+        error('Error auto-loading directory handle: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

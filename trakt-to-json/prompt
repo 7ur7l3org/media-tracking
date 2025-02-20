@@ -1,0 +1,115 @@
+i'm working on a script to convert a trakt.tv data export into a custom form of json that my new content tracking site that i'm developing works with. the goal is to store records like this { "<key>": { "consumptions": [ { "when": "<date time string>", "rating": <some number>, "note": "<some string>" }... ], "queue-votes": { "<queue name>": [ { "when": "<date time string>", "note": "<some string>" }... ] }, "notes": "some string" } }. this will essentially operate as a watchlist(s) and a watch history for movies, but should work for any form of content on wikidata.
+
+this is the current form of the information in the trakt dump:
+several files <trakt-export>/watched/history-N.json
+[
+  {
+    "id": 9469696390,
+    "watched_at": "2024-01-14T03:55:38.000Z",
+    "action": "watch",
+    "type": "episode",
+    "episode": {
+      "season": 18,
+      "number": 22,
+      "title": "Steve's Franken Out",
+      "ids": {
+        "trakt": 5285159,
+        "tvdb": 8525910,
+        "imdb": "tt15463300",
+        "tmdb": 3058335,
+        "tvrage": null
+      }
+    },
+    "show": {
+      "title": "American Dad!",
+      "year": 2005,
+      "ids": {
+        "trakt": 1424,
+        "slug": "american-dad",
+        "tvdb": 73141,
+        "imdb": "tt0397306",
+        "tmdb": 1433,
+        "tvrage": null
+      }
+    },
+    "application": {
+      "id": 0
+    },
+    "progress": 100.0,
+    "location": "Denver CO US",
+    "duration": null
+  },
+  {
+    "id": 10117688098,
+    "watched_at": "2024-10-06T20:15:00.000Z",
+    "action": "watch",
+    "type": "movie",
+    "movie": {
+      "title": "Sopyonje",
+      "year": 1993,
+      "ids": {
+        "trakt": 85630,
+        "slug": "sopyonje-1993",
+        "imdb": "tt0108192",
+        "tmdb": 124315
+      }
+    },
+    "application": {
+      "id": 0
+    },
+    "progress": 100.0,
+    "location": "Tokyo 13 JP",
+    "duration": null
+  },
+  ...
+]
+
+, several files <trakt-export>/lists/watchlist-N.json
+[
+  {
+    "rank": 1,
+    "id": 69848220,
+    "listed_at": "2015-12-10T00:40:07.000Z",
+    "notes": null,
+    "type": "show",
+    "show": {
+      "title": "The Goldbergs",
+      "year": 2013,
+      "ids": {
+        "trakt": 48702,
+        "slug": "the-goldbergs-2013",
+        "tvdb": 269653,
+        "imdb": "tt2712740",
+        "tmdb": 49009,
+        "tvrage": null
+      }
+    }
+  },
+  {
+    "rank": 2,
+    "id": 73111069,
+    "listed_at": "2015-12-25T17:52:03.000Z",
+    "notes": null,
+    "type": "movie",
+    "movie": {
+      "title": "Snatch",
+      "year": 2000,
+      "ids": {
+        "trakt": 76,
+        "slug": "snatch-2000",
+        "imdb": "tt0208092",
+        "tmdb": 107
+      }
+    }
+  },
+  ...
+]
+
+so it searches wikidata for the movie/episode and uses the wikidata entity url as the key in my format if it's a perfect match, and otherwise uses https://trakt.tv/shows/<trakt-slug>/seasons/{season}/episodes/{episode} or https://trakt.tv/movies/<trakt-slug> as the key. and it should put the full trakt json in the notes section of my json.
+
+can you help with this? here is the current script which i'll paste so you can familiarize yourself with it before i proceed to ask for your help iterating on it. i'll request now that whenever you make an update please give me the full file that changes.
+
+trakt_converter.py
+```
+<contents>
+```

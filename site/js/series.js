@@ -89,7 +89,7 @@ function fetchSeriesParts(seriesQid) {
         if (part.ordinal !== null) {
           partLine += part.ordinal + ". ";
         }
-        partLine += `<a href="index.html?id=${part.id}">${part.label} <span class="small-id">(${part.id})</span></a> <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${part.id}" target="_blank">sqid</a>] [<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">wikidata</a>]</span>`;
+        partLine += `<a href="index.html?id=${part.id}">${part.label}</a> <span class="small-id">(${part.id})</span><span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${part.id}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">wikidata</a>]</span>`;
     
         return renderPartsTree(part.id, currentQid).then(childHtml => {
           // Expand the details element if this part is the current entity or if any child branch contains the current entity.
