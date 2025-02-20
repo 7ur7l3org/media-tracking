@@ -1,0 +1,156 @@
+for openrefine, cite tmdb for all, then create new entry in wikidata:
+    title, original title
+    imdb id, tmdb id, trakt id, letterboxd id, eidr content id, asianwiki id, eiga.com movie id, douban film id
+    runtime
+    release date
+    genres
+    country
+    spoken languages
+    budget
+
+that is sufficient
+
+
+
+tmdb takes tmdb id:
+    https://api.themoviedb.org/3/movie/614919?api_key=TMDB_KEY
+        {
+            "adult": false,
+            "backdrop_path": "/yAbvAFxJfskfPyA3EY89g2OP0B7.jpg",
+            "belongs_to_collection": {
+                "id": 442937,
+                "name": "The Werewolf Game",
+                "poster_path": "/z5IAGI0RWG6nWoQ2CAaRKgU7y1q.jpg",
+                "backdrop_path": null
+            },
+            "budget": 0,
+            "genres": [
+                {
+                    "id": 27,
+                    "name": "Horror"
+                },
+                {
+                    "id": 18,
+                    "name": "Drama"
+                },
+                {
+                    "id": 9648,
+                    "name": "Mystery"
+                }
+            ],
+            "homepage": "",
+            "id": 614919,
+            "imdb_id": "tt8723756",
+            "origin_country": [
+                "JP"
+            ],
+            "original_language": "ja",
+            "original_title": "人狼ゲーム インフェルノ",
+            "overview": "Hiromi Nonoyama is a 2nd grade high school student. She finds herself confined in a strange place with nine of her classmates. They are forced to take part in a game that risks their lives....",
+            "popularity": 1.901,
+            "poster_path": "/cPkCagMH1nWz3cFpHdullk1D63f.jpg",
+            "production_companies": [],
+            "production_countries": [
+                {
+                    "iso_3166_1": "JP",
+                    "name": "Japan"
+                }
+            ],
+            "release_date": "2018-04-07",
+            "revenue": 0,
+            "runtime": 95,
+            "spoken_languages": [
+                {
+                    "english_name": "Japanese",
+                    "iso_639_1": "ja",
+                    "name": "日本語"
+                }
+            ],
+            "status": "Released",
+            "tagline": "",
+            "title": "The Werewolf Game: Inferno",
+            "video": false,
+            "vote_average": 7,
+            "vote_count": 2
+        }
+
+
+
+trakt takes trakt slug:
+    python .\movie-information-api-grab-trakt.py
+        {
+            "title": "The Werewolf Game: Inferno",
+            "year": 2018,
+            "ids": {
+                "trakt": 459183,
+                "slug": "the-werewolf-game-inferno-2018",
+                "imdb": "tt8723756",
+                "tmdb": 614919
+            },
+            "tagline": "",
+            "overview": "Hiromi Nonoyama is a 2nd grade high school student. She finds herself confined in a strange place with nine of her classmates. They are forced to take part in a game that risks their lives....",
+            "released": "2018-04-07",
+            "runtime": 95,
+            "country": "jp",
+            "trailer": null,
+            "homepage": null,
+            "status": "released",
+            "rating": 5.0,
+            "votes": 1,
+            "comment_count": 0,
+            "updated_at": "2024-05-07T08:06:44.000Z",
+            "language": "ja",
+            "languages": [
+                "ja"
+            ],
+            "available_translations": [
+                "en",
+                "es",
+                "ko",
+                "my",
+                "zh"
+            ],
+            "genres": [
+                "horror",
+                "drama",
+                "mystery"
+            ],
+            "certification": null
+        }
+
+
+
+omdb takes imdb id. omdb is kinda sus tbh:
+    https://www.omdbapi.com/?apikey=OMDB_KEY&i=tt8723756
+        {
+            "Title": "Werewolf Game: Inferno",
+            "Year": "2018",
+            "Rated": "N/A",
+            "Released": "07 Apr 2018",
+            "Runtime": "95 min",
+            "Genre": "Horror",
+            "Director": "Shin'ya Ayabe",
+            "Writer": "Giguru Akiguchi, Shin'ya Ayabe",
+            "Actors": "Osamu Adachi, Kento Hiramatsu, Riko Hisada",
+            "Plot": "Hiromi Nonoyama is a 2nd grade high school student. She finds herself confined in a strange place with nine of her classmates. They are forced to take part in a game that risks their lives. A monitor is turned on and a message app...",
+            "Language": "Japanese",
+            "Country": "Japan",
+            "Awards": "N/A",
+            "Poster": "https://m.media-amazon.com/images/M/MV5BNTJmODdlMDktZjJhNy00Y2ZmLTkwNjgtZjQ4MGJiZGM0OGY0XkEyXkFqcGc@._V1_SX300.jpg",
+            "Ratings": [
+                {
+                    "Source": "Internet Movie Database",
+                    "Value": "6.0/10"
+                }
+            ],
+            "Metascore": "N/A",
+            "imdbRating": "6.0",
+            "imdbVotes": "69",
+            "imdbID": "tt8723756",
+            "Type": "movie",
+            "DVD": "N/A",
+            "BoxOffice": "N/A",
+            "Production": "N/A",
+            "Website": "N/A",
+            "Response": "True"
+        }

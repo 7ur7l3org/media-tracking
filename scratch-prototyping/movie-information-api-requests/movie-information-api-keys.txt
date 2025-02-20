@@ -1,0 +1,4 @@
+TMDB_KEY
+    eabe79f469f95914ab2cd41b2d15afe6
+OMDB_KEY
+    65651e94
