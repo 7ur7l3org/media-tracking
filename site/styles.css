@@ -39,6 +39,25 @@ th {
     width: 30%;
 }
 
+/* Additional styling for backend tables to match other tables */
+.backend-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+.backend-table th,
+.backend-table td {
+  border: 1px solid #ddd;
+  padding: 5px;
+}
+.backend-table th {
+  background-color: #f0f0f0;
+}
+table.backend-table th:first-child,
+table.backend-table td:first-child {
+  width: 30%;
+}
+
 /* Additional styles for search results, pagination, and collapsible sections */
 .search-result-item {
   display: flex;

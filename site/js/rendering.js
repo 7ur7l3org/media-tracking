@@ -1,109 +1,112 @@
 /* js/rendering.js */
 
 function renderIdentifiers(entity, qid) {
-    const propIDs = Object.keys(entity.claims);
-    return fetchPropertyDefinitions(propIDs).then(async propDefinitions => {
-      const propertyRows = [];
-      const wikidataItemIds = new Set();
-      for (const prop in entity.claims) {
-        const row = { prop, values: [] };
-        for (const claim of entity.claims[prop]) {
-          if (claim.mainsnak && claim.mainsnak.datavalue) {
-            let rawValue = claim.mainsnak.datavalue.value;
-            const valueData = {};
-            if (typeof rawValue === "object" && rawValue["entity-type"] === "item" && rawValue.id) {
-              valueData.type = "wikidata";
-              valueData.qid = rawValue.id;
-              wikidataItemIds.add(rawValue.id);
-              valueData.display = rawValue.id;
-              valueData.hyperlink = rawValue.id;
-            } else {
-              valueData.type = "text";
-              valueData.display = (typeof rawValue === "string") ? rawValue : await formatWikidataValue(rawValue);
-              valueData.hyperlink = null;
-            }
-            const propDef = propDefinitions[prop];
-            if (propDef && propDef.formatter) {
-              valueData.hyperlink = propDef.formatter.replace("$1", valueData.display);
-            }
-            if (valueData.type === "text" && !valueData.hyperlink && typeof rawValue === "string" &&
-                rawValue.match(/^https?:\/\//)) {
-              valueData.hyperlink = rawValue;
-            }
-            row.values.push(valueData);
+  const propIDs = Object.keys(entity.claims);
+  return fetchPropertyDefinitions(propIDs).then(async propDefinitions => {
+    const propertyRows = [];
+    const wikidataItemIds = new Set();
+    for (const prop in entity.claims) {
+      const row = { prop, values: [] };
+      for (const claim of entity.claims[prop]) {
+        if (claim.mainsnak && claim.mainsnak.datavalue) {
+          let rawValue = claim.mainsnak.datavalue.value;
+          const valueData = {};
+          if (typeof rawValue === "object" && rawValue["entity-type"] === "item" && rawValue.id) {
+            valueData.type = "wikidata";
+            valueData.qid = rawValue.id;
+            wikidataItemIds.add(rawValue.id);
+            valueData.display = rawValue.id;
+            valueData.hyperlink = rawValue.id;
+          } else {
+            valueData.type = "text";
+            valueData.display = (typeof rawValue === "string") ? rawValue : await formatWikidataValue(rawValue);
+            valueData.hyperlink = null;
           }
-        }
-        if (row.values.length) {
-          propertyRows.push(row);
+          const propDef = propDefinitions[prop];
+          if (propDef && propDef.formatter) {
+            valueData.hyperlink = propDef.formatter.replace("$1", valueData.display);
+          }
+          if (valueData.type === "text" && !valueData.hyperlink && typeof rawValue === "string" &&
+              rawValue.match(/^https?:\/\//)) {
+            valueData.hyperlink = rawValue;
+          }
+          row.values.push(valueData);
         }
       }
-      const closureMapping = await getPropertyClosure(propertyRows.map(r => r.prop));
-      const grouped = { creative: [], authority: [], misc: [] };
-      propertyRows.forEach(row => {
-        const closure = closureMapping[row.prop] || [];
-        let group = "misc";
-        if (closure.includes("Q18614948")) {
-          group = "authority";
-        } else if (closure.includes("Q18618644")) {
-          group = "creative";
-        }
-        grouped[group].push(row);
-      });
-      const itemLabels = await fetchWikidataItemLabels(Array.from(wikidataItemIds));
-      // The table is given the id "propertiesContainer" so that toggleDetails() can work on it.
-      let tableHtml = `<table class="properties-table" id="propertiesContainer">
-        <thead>
-          <tr>
-            <th>
-              <button onclick="toggleDetails('propertiesContainer', this)">[+]</button>
-              Property (ID)
-            </th>
-            <th>Value(s)</th>
-          </tr>
-        </thead>
-        <tbody>`;
-      function renderGroup(groupId, groupTitle, refQid) {
-        if (!grouped[groupId] || grouped[groupId].length === 0) return "";
-        let headerLine = refQid
-          ? `${groupTitle} <span class="small-id">(${refQid}<span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${refQid}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${refQid}" target="_blank">wikidata</a>]</span>)</span>`
-          : groupTitle;
-        let html = `<tr class="group-header"><td colspan="2">
-            <details class="group-details">
-              <summary>${headerLine}</summary>`;
-        html += `<table>`;
-        grouped[groupId].forEach(row => {
-          const propDef = propDefinitions[row.prop];
-          const humanName = propDef ? propDef.label : row.prop;
-          const propIdDisplay = row.prop;
-          const propIdLinks = `<span class="small-id">(${propIdDisplay}<span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${row.prop}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/Property:${row.prop}" target="_blank">wikidata</a>]</span>)</span>`;
-          let cellContent = "";
-          row.values.forEach(val => {
-            if (val.type === "wikidata") {
-              const itemLabel = itemLabels[val.qid] || val.qid;
-              cellContent += `<a href="index.html?id=${val.qid}">${itemLabel}</a> <span class="small-id">(${val.qid}<span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${val.qid}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${val.qid}" target="_blank">wikidata</a>]</span>)</span>, `;
-            } else {
-              if (val.hyperlink) {
-                cellContent += `<a href="${val.hyperlink}" target="_blank">${val.display}</a>, `;
-              } else {
-                cellContent += `${val.display}, `;
-              }
-            }
-          });
-          cellContent = cellContent.replace(/, $/, "");
-          html += `<tr><td>${humanName} ${propIdLinks}</td><td>${cellContent}</td></tr>`;
-        });
-        html += `</table></details></td></tr>`;
-        return html;
+      if (row.values.length) {
+        propertyRows.push(row);
       }
-      tableHtml += renderGroup("creative", "Wikidata property related to creative works", "Q18618644");
-      tableHtml += renderGroup("authority", "Authority control properties", "Q18614948");
-      tableHtml += renderGroup("misc", "Miscellaneous Properties");
-      tableHtml += `</tbody></table>`;
-      return tableHtml;
+    }
+    const closureMapping = await getPropertyClosure(propertyRows.map(r => r.prop));
+    const grouped = { creative: [], authority: [], misc: [] };
+    propertyRows.forEach(row => {
+      const closure = closureMapping[row.prop] || [];
+      let group = "misc";
+      if (closure.includes("Q18614948")) {
+        group = "authority";
+      } else if (closure.includes("Q18618644")) {
+        group = "creative";
+      }
+      grouped[group].push(row);
     });
-  }
-    
-  function renderEntity(entity, qid, updateHistory = true) {
+    const itemLabels = await fetchWikidataItemLabels(Array.from(wikidataItemIds));
+    // The table is given the id "propertiesContainer" so that toggleDetails() can work on it.
+    let tableHtml = `<table class="properties-table" id="propertiesContainer">
+      <thead>
+        <tr>
+          <th>
+            <button onclick="toggleDetails('propertiesContainer', this)">[+]</button>
+            Property (ID)
+          </th>
+          <th>Value(s)</th>
+        </tr>
+      </thead>
+      <tbody>`;
+    function renderGroup(groupId, groupTitle, refQid) {
+      if (!grouped[groupId] || grouped[groupId].length === 0) return "";
+      let headerLine = refQid
+        ? `${groupTitle} <span class="small-id">(${refQid}<span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${refQid}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${refQid}" target="_blank">wikidata</a>]</span>)</span>`
+        : groupTitle;
+      let html = `<tr class="group-header"><td colspan="2">
+          <details class="group-details">
+            <summary>${headerLine}</summary>`;
+      html += `<table>`;
+      grouped[groupId].forEach(row => {
+        const propDef = propDefinitions[row.prop];
+        const humanName = propDef ? propDef.label : row.prop;
+        const propIdDisplay = row.prop;
+        const propIdLinks = `<span class="small-id">(${propIdDisplay}<span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${row.prop}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/Property:${row.prop}" target="_blank">wikidata</a>]</span>)</span>`;
+        let cellContent = "";
+        row.values.forEach(val => {
+          if (val.type === "wikidata") {
+            const itemLabel = itemLabels[val.qid] || val.qid;
+            cellContent += `<a href="index.html?id=${val.qid}">${itemLabel}</a> <span class="small-id">(${val.qid}<span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${val.qid}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${val.qid}" target="_blank">wikidata</a>]</span>)</span>, `;
+          } else {
+            if (val.hyperlink) {
+              cellContent += `<a href="${val.hyperlink}" target="_blank">${val.display}</a>, `;
+            } else {
+              cellContent += `${val.display}, `;
+            }
+          }
+        });
+        cellContent = cellContent.replace(/, $/, "");
+        html += `<tr><td>${humanName} ${propIdLinks}</td><td>${cellContent}</td></tr>`;
+      });
+      html += `</table></details></td></tr>`;
+      return html;
+    }
+    tableHtml += renderGroup("creative", "Wikidata property related to creative works", "Q18618644");
+    tableHtml += renderGroup("authority", "Authority control properties", "Q18614948");
+    tableHtml += renderGroup("misc", "Miscellaneous Properties");
+    tableHtml += `</tbody></table>`;
+    return tableHtml;
+  });
+}
+
+function renderEntity(entity, qid, updateHistory = true) {
+  // Load the backend data first, then continue rendering.
+  loadBackendData().then(() => {
+    const backendSection = renderBackendDetails(qid);
     const label = (entity.labels && entity.labels.en) ? entity.labels.en.value : qid;
     let headerHtml = `<h3><a href="index.html?id=${qid}">${label}</a> <span class="small-id">(${qid})</span><span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${qid}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${qid}" target="_blank">wikidata</a>]</span></h3>`;
     if (entity.descriptions && entity.descriptions.en) {
@@ -113,10 +116,10 @@ function renderIdentifiers(entity, qid) {
       window.history.pushState({}, '', "?id=" + qid);
     }
     document.title = label + " (" + qid + ") - Wikidata Media Tracker";
-  
+
     // Gather sequencing info (for direct statements)
     const sequencing = extractSequencingInfo(entity);
-  
+
     // Determine series QIDs.
     let seriesQids = [];
     if (entity.claims && entity.claims.P179 && entity.claims.P179.length > 0) {
@@ -143,7 +146,7 @@ function renderIdentifiers(entity, qid) {
     function continueRendering() {
       // Remove the search section when displaying an entity.
       document.getElementById("searchDetails").removeAttribute("open");
-  
+
       // Create series/sequencing rows for each series QID.
       Promise.all(seriesQids.map(seriesQid => {
         return fetchWikidataEntities([seriesQid]).then(seriesData => {
@@ -213,7 +216,7 @@ function renderIdentifiers(entity, qid) {
             if (parts.length === 0) {
               // Omit the Series/Sequencing Information.
               renderIdentifiers(entity, qid).then(propertiesHtml => {
-                document.getElementById('infoDisplay').innerHTML = headerHtml + propertiesHtml;
+                document.getElementById('infoDisplay').innerHTML = headerHtml + backendSection + propertiesHtml;
               });
             } else {
               // Render the series table as usual.
@@ -232,7 +235,7 @@ function renderIdentifiers(entity, qid) {
               });
               seriesTableHtml += `</tbody></table>`;
               renderIdentifiers(entity, qid).then(propertiesHtml => {
-                document.getElementById('infoDisplay').innerHTML = headerHtml + propertiesHtml + seriesTableHtml;
+                document.getElementById('infoDisplay').innerHTML = headerHtml + backendSection + propertiesHtml + seriesTableHtml;
               });
             }
           });
@@ -253,65 +256,65 @@ function renderIdentifiers(entity, qid) {
           });
           seriesTableHtml += `</tbody></table>`;
           renderIdentifiers(entity, qid).then(propertiesHtml => {
-            document.getElementById('infoDisplay').innerHTML = headerHtml + propertiesHtml + seriesTableHtml;
+            document.getElementById('infoDisplay').innerHTML = headerHtml + backendSection + propertiesHtml + seriesTableHtml;
           });
         }
       });
     }
-  }
-      
-  function fetchEntity(qid, updateHistory = true) {
-    const url = "https://www.wikidata.org/wiki/Special:EntityData/" + qid + ".json";
-    document.getElementById('infoDisplay').innerHTML = "<p>Loading...</p>";
-    persistentCachedJSONFetch(url)
-      .then(data => {
-        const keys = Object.keys(data.entities);
-        if (keys.length === 0) {
-          document.getElementById('infoDisplay').innerHTML = "<p>No entity found.</p>";
-          return;
-        }
-        const actualQid = keys[0];
-        const entity = data.entities[actualQid];
-        if (!entity) {
-          document.getElementById('infoDisplay').innerHTML = "<p>No entity found.</p>";
-          return;
-        }
-        document.getElementById("searchDetails").removeAttribute("open");
-        renderEntity(entity, actualQid, updateHistory);
-      })
-      .catch(error => {
-        console.error("Error in fetchEntity:", error);
-        document.getElementById('infoDisplay').innerHTML = "<p>Error fetching entity data.</p>";
-      });
-  }
-  
-  /**
-   * Toggles (expands or collapses) all <details> elements within the container identified by containerId.
-   * Also updates the button text to indicate the new state: "[-]" when expanded and "[+]" when collapsed.
-   *
-   * @param {string} containerId - The id of the container element.
-   * @param {HTMLElement} btn - The button element that was clicked.
-   */
-  function toggleDetails(containerId, btn) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    const detailsElements = container.querySelectorAll("details");
-    let shouldOpen = false;
-    detailsElements.forEach(detail => {
-      if (!detail.open) {
-        shouldOpen = true;
+  });
+}
+
+function fetchEntity(qid, updateHistory = true) {
+  const url = "https://www.wikidata.org/wiki/Special:EntityData/" + qid + ".json";
+  document.getElementById('infoDisplay').innerHTML = "<p>Loading...</p>";
+  persistentCachedJSONFetch(url)
+    .then(data => {
+      const keys = Object.keys(data.entities);
+      if (keys.length === 0) {
+        document.getElementById('infoDisplay').innerHTML = "<p>No entity found.</p>";
+        return;
       }
+      const actualQid = keys[0];
+      const entity = data.entities[actualQid];
+      if (!entity) {
+        document.getElementById('infoDisplay').innerHTML = "<p>No entity found.</p>";
+        return;
+      }
+      document.getElementById("searchDetails").removeAttribute("open");
+      renderEntity(entity, actualQid, updateHistory);
+    })
+    .catch(error => {
+      console.error("Error in fetchEntity:", error);
+      document.getElementById('infoDisplay').innerHTML = "<p>Error fetching entity data.</p>";
     });
-    detailsElements.forEach(detail => {
-      detail.open = shouldOpen;
-    });
-    // Update the button text based on the action taken.
-    if (shouldOpen) {
-      // Now all are open, so next click should collapse
-      btn.textContent = "[-]";
-    } else {
-      // Now all are closed, so next click should expand
-      btn.textContent = "[+]";
+}
+
+/**
+ * Toggles (expands or collapses) all <details> elements within the container identified by containerId.
+ * Also updates the button text to indicate the new state: "[-]" when expanded and "[+]" when collapsed.
+ *
+ * @param {string} containerId - The id of the container element.
+ * @param {HTMLElement} btn - The button element that was clicked.
+ */
+function toggleDetails(containerId, btn) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const detailsElements = container.querySelectorAll("details");
+  let shouldOpen = false;
+  detailsElements.forEach(detail => {
+    if (!detail.open) {
+      shouldOpen = true;
     }
+  });
+  detailsElements.forEach(detail => {
+    detail.open = shouldOpen;
+  });
+  // Update the button text based on the action taken.
+  if (shouldOpen) {
+    // Now all are open, so next click should collapse
+    btn.textContent = "[-]";
+  } else {
+    // Now all are closed, so next click should expand
+    btn.textContent = "[+]";
   }
-  
+}

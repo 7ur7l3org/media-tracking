@@ -225,7 +225,7 @@ https://www.wikidata.org/wiki/Wikidata:WikiProject_Movies/Properties#Description
 
 
 
-- push all this to github
+-- push all this to github
 - add "login with github" and use https://cors.isomorphic-git.org/ for auth, store oauth token in indexeddb (https://chatgpt.com/c/67b54ff5-8b00-800c-9ce4-f6ae553131b7)
 - ensure all content is set via .textContent and not .innerHTML (from wikidata and all other data sources) to protect against xss
 - add ui for json modification
