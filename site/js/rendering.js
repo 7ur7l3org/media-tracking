@@ -50,7 +50,6 @@ function renderIdentifiers(entity, qid) {
       grouped[group].push(row);
     });
     const itemLabels = await fetchWikidataItemLabels(Array.from(wikidataItemIds));
-    // The table is given the id "propertiesContainer" so that toggleDetails() can work on it.
     let tableHtml = `<table class="properties-table" id="propertiesContainer">
       <thead>
         <tr>
@@ -104,7 +103,6 @@ function renderIdentifiers(entity, qid) {
 }
 
 function renderEntity(entity, qid, updateHistory = true) {
-  // Load the backend data first, then continue rendering.
   loadBackendData().then(() => {
     const backendSection = renderBackendDetails(qid);
     const label = (entity.labels && entity.labels.en) ? entity.labels.en.value : qid;
@@ -116,11 +114,7 @@ function renderEntity(entity, qid, updateHistory = true) {
       window.history.pushState({}, '', "?id=" + qid);
     }
     document.title = label + " (" + qid + ") - Wikidata Media Tracker";
-
-    // Gather sequencing info (for direct statements)
     const sequencing = extractSequencingInfo(entity);
-
-    // Determine series QIDs.
     let seriesQids = [];
     if (entity.claims && entity.claims.P179 && entity.claims.P179.length > 0) {
       seriesQids = entity.claims.P179
@@ -128,12 +122,10 @@ function renderEntity(entity, qid, updateHistory = true) {
                       .filter(Boolean);
     } else if (entity.claims && entity.claims.P31) {
       const instanceIds = entity.claims.P31.map(claim => claim.mainsnak.datavalue.value.id).filter(Boolean);
-      // For some film types, we consider the entity to be its own series.
       if (instanceIds.includes("Q7725310") || instanceIds.includes("Q24856")) {
         seriesQids.push(qid);
       }
     }
-    // If no series found, try to fetch a parent series.
     if (seriesQids.length === 0) {
       getParentSeries(qid).then(parent => {
         seriesQids = parent ? [parent] : [qid];
@@ -144,62 +136,64 @@ function renderEntity(entity, qid, updateHistory = true) {
     }
     
     function continueRendering() {
-      // Remove the search section when displaying an entity.
       document.getElementById("searchDetails").removeAttribute("open");
-
-      // Create series/sequencing rows for each series QID.
       Promise.all(seriesQids.map(seriesQid => {
         return fetchWikidataEntities([seriesQid]).then(seriesData => {
-          const seriesInfo = seriesData[seriesQid];
-          let leftText = `Part of the series <span class="small-id">(P179<span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=P179" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/Property:P179" target="_blank">wikidata</a>]</span>)</span>`;
-          let rightText = `<a href="index.html?id=${seriesQid}">${seriesInfo.label}</a> <span class="small-id">(${seriesQid}<span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${seriesQid}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">wikidata</a>]</span>)</span>`;
-          let summaryText = leftText + " : " + rightText;
-          return renderPartsTree(seriesQid, qid).then(partsTreeHtml => {
-            let partsContentPromise;
-            if (partsTreeHtml && partsTreeHtml.trim()) {
-              partsContentPromise = Promise.resolve(partsTreeHtml);
-            } else {
-              partsContentPromise = fetchSeriesParts(seriesQid).then(fallbackParts => {
-                if (fallbackParts.length > 0) {
-                  let fallbackHtml = "<ul class='parts-tree'>";
-                  fallbackParts.forEach(part => {
-                    let partLine = "";
-                    if (part.ordinal !== null) {
-                      partLine += part.ordinal + ". ";
-                    }
-                    partLine += `<a href="index.html?id=${part.id}">${part.label}</a> <span class="small-id">(${part.id}<span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${part.id}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">wikidata</a>]</span>)</span>`;
-                    fallbackHtml += `<li>${partLine}</li>`;
-                  });
-                  fallbackHtml += "</ul>";
-                  return fallbackHtml;
-                }
-                return "";
-              });
+          let leftText = `Part of the series <span class="small-id">(P179<span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=P179" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/P179" target="_blank">wikidata</a>]</span>)</span>`;
+          let rightText = `<a href="index.html?id=${seriesQid}">${seriesData[seriesQid].label}</a> <span class="small-id">(${seriesQid}<span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${seriesQid}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${seriesQid}" target="_blank">wikidata</a>]</span>)</span>`;
+          return aggregateDescendantConsumptionStats(seriesQid).then(agg => {
+            let aggText = "";
+            if (agg.total > 0) {
+              let pct = ((agg.consumed / agg.total) * 100).toFixed(1);
+              aggText = `<span class="consumption-agg">consumed ${agg.consumed}/${agg.total} (${pct}%)</span>`;
             }
-            return partsContentPromise.then(partsContent => {
-              // Get direct sequencing statements.
-              const directIds = Array.from(new Set([...sequencing.follows, ...sequencing.followedBy, ...sequencing.hasParts]));
-              return fetchWikidataEntities(directIds).then(seqEntities => {
-                let directSeqHtml = "";
-                if (sequencing.follows.length > 0) {
-                  directSeqHtml += `<p>Follows: ${sequencing.follows.map(id => {
-                    const ent = seqEntities[id] || { label: id };
-                    return `<a href="index.html?id=${id}">${ent.label}</a> <span class="small-id">(${id}<span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${id}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${id}" target="_blank">wikidata</a>]</span>)</span>`;
-                  }).join(", ")}</p>`;
-                }
-                if (sequencing.followedBy.length > 0) {
-                  directSeqHtml += `<p>Followed by: ${sequencing.followedBy.map(id => {
-                    const ent = seqEntities[id] || { label: id };
-                    return `<a href="index.html?id=${id}">${ent.label}</a> <span class="small-id">(${id}<span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${id}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${id}" target="_blank">wikidata</a>]</span>)</span>`;
-                  }).join(", ")}</p>`;
-                }
-                let detailsContent = partsContent + directSeqHtml;
-                return `<tr><td>
-                          <details class="series-details" open>
-                            <summary>${summaryText}</summary>
-                            ${detailsContent}
-                          </details>
-                        </td></tr>`;
+            let summaryText = `<span class="summary-left">${leftText} : ${rightText}</span>${aggText}`;
+            return renderPartsTree(seriesQid, qid).then(partsTreeHtml => {
+              let partsContentPromise;
+              if (partsTreeHtml && partsTreeHtml.trim()) {
+                partsContentPromise = Promise.resolve(partsTreeHtml);
+              } else {
+                partsContentPromise = fetchSeriesParts(seriesQid).then(fallbackParts => {
+                  if (fallbackParts.length > 0) {
+                    let fallbackHtml = "<ul class='parts-tree'>";
+                    fallbackParts.forEach(part => {
+                      let partLine = "";
+                      if (part.ordinal !== null) {
+                        partLine += part.ordinal + ". ";
+                      }
+                      partLine += `<a href="index.html?id=${part.id}">${part.label}</a> <span class="small-id">(${part.id}<span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${part.id}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">wikidata</a>]</span>)</span>`;
+                      fallbackHtml += `<li>${partLine}</li>`;
+                    });
+                    fallbackHtml += "</ul>";
+                    return fallbackHtml;
+                  }
+                  return "";
+                });
+              }
+              return partsContentPromise.then(partsContent => {
+                const directIds = Array.from(new Set([...sequencing.follows, ...sequencing.followedBy, ...sequencing.hasParts]));
+                return fetchWikidataEntities(directIds).then(seqEntities => {
+                  let directSeqHtml = "";
+                  if (sequencing.follows.length > 0) {
+                    directSeqHtml += `<p>Follows: ${sequencing.follows.map(id => {
+                      const ent = seqEntities[id] || { label: id };
+                      return `<a href="index.html?id=${id}">${ent.label}</a> <span class="small-id">(${id}<span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${id}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${id}" target="_blank">wikidata</a>]</span>)</span>`;
+                    }).join(", ")}</p>`;
+                  }
+                  if (sequencing.followedBy.length > 0) {
+                    directSeqHtml += `<p>Followed by: ${sequencing.followedBy.map(id => {
+                      const ent = seqEntities[id] || { label: id };
+                      return `<a href="index.html?id=${id}">${ent.label}</a> <span class="small-id">(${id}<span class="extra-link small-extra">[<a href="https://sqid.toolforge.org/#/view?id=${id}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${id}" target="_blank">wikidata</a>]</span>)</span>`;
+                    }).join(", ")}</p>`;
+                  }
+                  let detailsContent = partsContent + directSeqHtml;
+                  return `<tr><td>
+                            <details class="series-details" open>
+                              <summary>${summaryText}</summary>
+                              ${detailsContent}
+                            </details>
+                          </td></tr>`;
+                });
               });
             });
           });
@@ -290,11 +284,7 @@ function fetchEntity(qid, updateHistory = true) {
 }
 
 /**
- * Toggles (expands or collapses) all <details> elements within the container identified by containerId.
- * Also updates the button text to indicate the new state: "[-]" when expanded and "[+]" when collapsed.
- *
- * @param {string} containerId - The id of the container element.
- * @param {HTMLElement} btn - The button element that was clicked.
+ * Toggles (expands/collapses) all <details> elements within the container.
  */
 function toggleDetails(containerId, btn) {
   const container = document.getElementById(containerId);
@@ -309,12 +299,5 @@ function toggleDetails(containerId, btn) {
   detailsElements.forEach(detail => {
     detail.open = shouldOpen;
   });
-  // Update the button text based on the action taken.
-  if (shouldOpen) {
-    // Now all are open, so next click should collapse
-    btn.textContent = "[-]";
-  } else {
-    // Now all are closed, so next click should expand
-    btn.textContent = "[+]";
-  }
+  btn.textContent = shouldOpen ? "[-]" : "[+]";
 }

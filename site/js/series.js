@@ -1,5 +1,8 @@
 /* js/series.js */
 
+// In-memory cache for series parts, keyed by series QID.
+const seriesPartsCache = {};
+
 /**
  * Formats a Date object as a short string: "YYYY-MM-DD"
  */
@@ -40,14 +43,9 @@ function toggleDate(el) {
 /**
  * Returns an object with two properties:
  * - statsHTML: a snippet of HTML with consumption and queue vote stats
- *   for the given QID. Each date is rendered as a clickable span that toggles
- *   between short (YYYY-MM-DD) and long (YYYY-MM-DD HH:MM:SS AM/PM TZ) formats.
- *   Each span always has a title showing the long format.
- *   For a single entry, the date is rendered directly; for multiple entries,
- *   it renders "xN" with comma-separated dates.
  * - isQueued: a boolean that is true if the entry has any queue votes.
  *
- * Both consumption and queue vote info are always shown.
+ * (Dates are rendered as clickable spans that toggle between short and long formats.)
  */
 function getBackendStatsForQid(qid) {
   return loadBackendData().then(backendData => {
@@ -106,8 +104,15 @@ function getBackendStatsForQid(qid) {
   });
 }
 
+/**
+ * Fetches the series parts for a given series QID.
+ * Uses an in-memory cache to avoid duplicate queries.
+ */
 function fetchSeriesParts(seriesQid) {
-  // First, try to get the series parts using the "has part(s)" (P527) property.
+  if (seriesPartsCache[seriesQid]) {
+    return Promise.resolve(seriesPartsCache[seriesQid]);
+  }
+  // Try to get parts via "has part(s)" (P527)
   const queryP527 = `
       SELECT ?part ?partLabel ?partDescription ?ordinal WHERE {
         wd:${seriesQid} p:P527 ?stmt.
@@ -118,7 +123,6 @@ function fetchSeriesParts(seriesQid) {
       ORDER BY ?ordinal
     `;
   const urlP527 = "https://query.wikidata.org/sparql?query=" + encodeURIComponent(queryP527) + "&format=json";
-
   return persistentCachedJSONFetch(urlP527)
     .then(data => {
       const parts = data.results.bindings.map(binding => {
@@ -135,9 +139,10 @@ function fetchSeriesParts(seriesQid) {
           if (a.ordinal !== null && b.ordinal !== null) return a.ordinal - b.ordinal;
           return a.label.localeCompare(b.label);
         });
+        seriesPartsCache[seriesQid] = parts;
         return parts;
       } else {
-        // Fallback: Get all items that are "part of the series" (P179) along with their ordinal (P1545)
+        // Fallback: Get parts via "part of the series" (P179)
         const queryP179 = `
             SELECT ?item ?itemLabel ?itemDescription ?ordinal WHERE {
               ?item p:P179 ?stmt.
@@ -163,20 +168,61 @@ function fetchSeriesParts(seriesQid) {
               if (a.ordinal !== null && b.ordinal !== null) return a.ordinal - b.ordinal;
               return a.label.localeCompare(b.label);
             });
+            seriesPartsCache[seriesQid] = parts2;
             return parts2;
           })
           .catch(err => {
             console.error("Error fetching series parts fallback:", err);
+            seriesPartsCache[seriesQid] = [];
             return [];
           });
       }
     })
     .catch(err => {
       console.error("Error fetching series parts:", err);
+      seriesPartsCache[seriesQid] = [];
       return [];
     });
 }
 
+/**
+ * Recursively aggregates consumption statistics for all descendant leaf nodes
+ * of a given series QID. It deduplicates QIDs using a shared visited set.
+ * Returns a promise that resolves to an object { total, consumed }.
+ */
+async function aggregateDescendantConsumptionStats(qid, visited = new Set(), backendData = null) {
+  if (!backendData) {
+    backendData = await loadBackendData();
+  }
+  let total = 0;
+  let consumed = 0;
+  const parts = await fetchSeriesParts(qid);
+  for (const part of parts) {
+    if (visited.has(part.id)) continue;
+    visited.add(part.id);
+    const childParts = await fetchSeriesParts(part.id);
+    if (childParts.length === 0) {
+      // Leaf node: count this part
+      total += 1;
+      const key = "http://www.wikidata.org/entity/" + part.id;
+      if (backendData[key] && backendData[key].consumptions && backendData[key].consumptions.length > 0) {
+        consumed += 1;
+      }
+    } else {
+      // Container node: aggregate only from descendants
+      const childAgg = await aggregateDescendantConsumptionStats(part.id, visited, backendData);
+      total += childAgg.total;
+      consumed += childAgg.consumed;
+    }
+  }
+  return { total, consumed };
+}
+
+/**
+ * Returns a promise that resolves to the HTML representing the parts tree for a given series QID.
+ * Highlights the current entity and recursively renders nested parts.
+ * For collapsible headers with children, appends consumption aggregate info.
+ */
 function renderPartsTree(qid, currentQid) {
   return fetchSeriesParts(qid).then(parts => {
     if (parts.length === 0) return "";
@@ -191,7 +237,7 @@ function renderPartsTree(qid, currentQid) {
         markerEnd = arrow + "</strong>";
       }
       
-      // Render the ordinal separately so it won't be highlighted.
+      // Render the ordinal separately.
       let ordinalPart = "";
       if (part.ordinal !== null) {
         ordinalPart = part.ordinal + ". ";
@@ -203,14 +249,19 @@ function renderPartsTree(qid, currentQid) {
       // Get backend stats for this part.
       return getBackendStatsForQid(part.id).then(statsObj => {
         let statsHTML = statsObj.statsHTML;
-        // If queued, wrap only the main part and stats (not the ordinal) in blue background.
         let combinedMain = statsObj.isQueued ? `<span class="queued-line">${mainPart + statsHTML}</span>` : (mainPart + statsHTML);
         const combinedLine = ordinalPart + combinedMain;
         return renderPartsTree(part.id, currentQid).then(childHtml => {
-          // Expand the details element if this part is the current entity or if any child branch contains the current entity.
-          const openAttr = (part.id === currentQid || childHtml.indexOf(currentQid) !== -1) ? " open" : "";
+          const openAttr = (part.id === currentQid || (childHtml && childHtml.indexOf(currentQid) !== -1)) ? " open" : "";
           if (childHtml) {
-            return `<details class="parts-tree"${openAttr}><summary>${markerStart}${combinedLine}${markerEnd}</summary>${childHtml}</details>`;
+            return aggregateDescendantConsumptionStats(part.id).then(agg => {
+              let aggText = "";
+              if (agg.total > 0) {
+                let pct = ((agg.consumed / agg.total) * 100).toFixed(1);
+                aggText = `<span class="consumption-agg">consumed ${agg.consumed}/${agg.total} (${pct}%)</span>`;
+              }
+              return `<details class="parts-tree"${openAttr}><summary><span class="summary-left">${markerStart}${combinedLine}${markerEnd}</span>${aggText}</summary>${childHtml}</details>`;
+            });
           } else {
             return `<li>${markerStart}${combinedLine}${markerEnd}</li>`;
           }
@@ -225,6 +276,9 @@ function renderPartsTree(qid, currentQid) {
   });
 }
 
+/**
+ * Returns a promise that resolves to the QID of the parent series of the given entity, if any.
+ */
 function getParentSeries(qid) {
   const query = `
       SELECT ?series WHERE {
@@ -245,6 +299,9 @@ function getParentSeries(qid) {
     });
 }
 
+/**
+ * Extracts sequencing information from a Wikidata entity.
+ */
 function extractSequencingInfo(entity) {
   const sequencing = { follows: [], followedBy: [], hasParts: [], partOf: [] };
   if (entity.claims) {

@@ -203,3 +203,25 @@ ul > details {
   display: none !important;
 }
 
+/* Apply flex layout only to these summary elements */
+.parts-tree summary,
+.series-details summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Wrap the left content in its own container so it doesn’t stretch */
+.summary-left {
+  flex: 1;
+}
+
+/* Adjust consumption aggregation styling */
+.consumption-agg {
+  font-style: italic;
+  margin-left: auto;
+  white-space: normal;
+}
+
+/* (Leave #searchDetails summary unmodified so that search remains normal) */

@@ -67,7 +67,8 @@ def main():
         "history/list tracker. currently it interfaces with wikidata to get information about media. the wikidata "
         "qid's will be the authoritative keys used for tracking things as much as possible. let me just paste the code "
         "for now and i'll ask you to help me iterate on it next after you are familiar with the code. in general i'd "
-        "like you to always give me the complete code of any files you need to edit:"
+        "like you to always give me the complete code of any files you need to edit, and no unchanged files, so it is "
+        "easier for me to copy paste into my environment:"
     )
 
     prompt_text = header + "\n\n"
