@@ -126,3 +126,39 @@ table.backend-table td:first-child {
 ul > details {
     margin-left: -17px;
 }
+
+/* Styling for backend stats badges in the series tree */
+.backend-stat {
+    margin-left: 5px;
+    font-style: italic;
+    color: #555;
+    cursor: default;
+    border-radius: 1px;
+}
+.backend-stat.consumed {
+    background-color: #e8d0ff; /* light purple */
+}
+.backend-stat.queued {
+    background-color: #d0e7ff; /* light blue */
+}
+
+.queued-line {
+    background-color: #d0e7ff; /* light blue */
+    display: inline-block;
+    border-radius: 1px;
+}
+
+/* Styling for clickable dates */
+.toggle-date {
+    cursor: pointer;
+}
+
+/* Style the background of the consumption date cell in the consumptions table */
+.consumption-date-cell {
+  background-color: #e8d0ff; /* light purple background */
+}
+
+/* Style entire queue vote rows with a light blue background */
+.queue-vote-row {
+  background-color: #d0e7ff; /* light blue */
+}

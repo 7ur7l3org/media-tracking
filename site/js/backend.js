@@ -33,10 +33,8 @@ function renderBackendDetails(qid) {
   const data = backendData[key] || { meta: {}, consumptions: [], "queue-votes": {} };
   let html = "<div id='backendDetails'>";
 
-  // Do not render meta title/description here.
-
   // Render Consumptions table.
-  html += `<table class="backend-table">
+  html += `<table class="backend-table consumptions-table">
               <thead>
                 <tr>
                   <th>Consumptions</th>
@@ -49,7 +47,7 @@ function renderBackendDetails(qid) {
       // Format the date to include the time zone.
       const when = new Date(consumption.when).toLocaleString('en-US', { timeZoneName: 'short' });
       html += `<tr>
-                 <td>${when}</td>
+                 <td class="consumption-date-cell">${when}</td>
                  <td>${consumption.note}</td>
                </tr>`;
     });
@@ -78,7 +76,7 @@ function renderBackendDetails(qid) {
       if (queueVotes[category].length > 0) {
         queueVotes[category].forEach(vote => {
           const when = new Date(vote.when).toLocaleString('en-US', { timeZoneName: 'short' });
-          html += `<tr>
+          html += `<tr class="queue-vote-row">
                      <td>${when}</td>
                      <td>${vote.note}</td>
                    </tr>`;
