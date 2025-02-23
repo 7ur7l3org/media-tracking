@@ -1,6 +1,7 @@
 thanks https://chatgpt.com/c/67a175df-bed4-800c-acd8-504433636020
 
 TODOs
+- i see `"trakt://1140373799"` in my json. figure out what that's about
 - remove watchlist double ===== print, fix queue-vote watchlist note to not be json but be the same kind of `imported from trakt-export--2025-01-31T02-36-14Z-7ur7l3/7ur7l3/blah` as the consumed history
 - separate the script into convert-history and convert-watchlist and make merge-and-sort-history-and-watchlist. should both use the same cache of wikidata requests
 - make convert time to mountain time in whatever format that is
