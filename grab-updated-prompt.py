@@ -6,6 +6,10 @@ import os
 import sys
 import pyperclip
 
+MAX_LINES = 10000
+TRUNCATE_HEAD = 75
+TRUNCATE_TAIL = 75
+
 def gather_files(root_dir):
     """
     Collects files from the root directory and then from subdirectories.
@@ -26,11 +30,26 @@ def gather_files(root_dir):
             for subdir, dirs, files in os.walk(full_path):
                 # Sort files for consistent ordering.
                 for file in sorted(files):
-                    # Create a relative file path from the root.
                     rel_dir = os.path.relpath(subdir, root_dir)
                     rel_file = os.path.join(rel_dir, file)
                     collected.append((rel_file, os.path.join(subdir, file)))
     return collected
+
+def read_and_truncate_file(filepath):
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+    except Exception as e:
+        return f"<Error reading file: {e}>"
+    
+    if len(lines) > MAX_LINES:
+        # Get first TRUNCATE_HEAD lines, last TRUNCATE_TAIL lines, and join them with a separator.
+        head = lines[:TRUNCATE_HEAD]
+        tail = lines[-TRUNCATE_TAIL:]
+        truncated = "".join(head) + "... (truncated) ...\n" + "".join(tail)
+        return truncated
+    else:
+        return "".join(lines)
 
 def main():
     if len(sys.argv) < 2:
@@ -51,21 +70,12 @@ def main():
         "like you to always give me the complete code of any files you need to edit:"
     )
 
-    # Start building the final prompt.
     prompt_text = header + "\n\n"
-
-    # Gather all file data.
     files = gather_files(root_dir)
     for rel_path, full_path in files:
-        try:
-            with open(full_path, 'r', encoding='utf-8') as f:
-                contents = f.read()
-        except Exception as e:
-            contents = f"<Error reading file: {e}>"
-        # Append the file name and its content formatted with markdown-style code blocks.
-        prompt_text += f"{rel_path}\n```\n{contents}\n```\n\n"
+        file_contents = read_and_truncate_file(full_path)
+        prompt_text += f"{rel_path}\n```\n{file_contents}\n```\n\n"
 
-    # Copy the final prompt text to the clipboard.
     pyperclip.copy(prompt_text)
     print("Updated prompt copied to clipboard.")
 
