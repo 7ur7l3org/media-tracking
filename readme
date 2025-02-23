@@ -81,6 +81,16 @@ https://www.wikidata.org/wiki/Q478780 both follows and followed by on here link 
 
 add animated television series (Q117467246) to list of bold prioritized search results
 
+i should find the actual non-messy place to put todo's but here is fine for now..
+
+should probably roll up the series/sequencing information to the top consumptions / queue votes area for esp show pages so it's easy to see you haven't finished watching something
+
+include the publication date of stuff more visibly in the series/sequencing view, along with runtime. and aggregate. not super important tho ig
+
+make api.php e.g. https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q8877|Q15069963|Q816565|Q1148822|Q760896|Q324572|Q21872808|Q238464|Q11539564|Q16232660|Q259816|Q1272489|Q515207|Q274616|Q20752077|Q28802743|Q51585526|Q111838057|Q19031|Q3732112|Q30|Q5294236|Q22074633|Q55808108|Q126399|Q1097348|Q907311|Q692550|Q55808115|Q313537|Q365230|Q1860|Q457893|Q622668|Q3041294|Q65557474|Q192557|Q471839|Q319221|Q20443008|Q52207399|Q188473|Q174526|Q22006653|Q3906523|Q18665339|Q21571488|Q27253940|Q27925240|Q28980099&languages=en&props=labels&format=json&origin=* also cache labels by qid e.g. i should only ever have to request qid's whose labels i don't have cached. label caches should also expire after 30 mins or whatever but it should be per qid included in the request list
+
+make the main Wikidata Media Tracker header be a hyperlink to the main page same as the Media link
+
 <now>
 
 thanks https://chatgpt.com/c/679d3064-16b0-800c-9e35-89509164697b (trying o3-mini)
