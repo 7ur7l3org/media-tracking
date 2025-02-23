@@ -91,6 +91,19 @@ make api.php e.g. https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q8
 
 make the main Wikidata Media Tracker header be a hyperlink to the main page same as the Media link
 
+-- pirates ii: stagnetti the search for this is trash. stagnetti doesn't work and the colon is critical
+-- migrate search to https://stackoverflow.com/a/77270949
+
+make sure give hits even if stuff is slightly mis-spelled if possible
+
+http://localhost:8000/index.html?id=Q7216 the sequencing for this is broken, it somehow shows the same thing as a collapsible thing for some reason even though it obviously is not part of the series itself
+
+move search into header to be able to search from any page
+
+set the title to Search: <query> or something instead of just `Wikidata Media Tracker`
+
+add P31 type filtering to search
+
 <now>
 
 thanks https://chatgpt.com/c/679d3064-16b0-800c-9e35-89509164697b (trying o3-mini)
