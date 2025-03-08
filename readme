@@ -102,7 +102,15 @@ move search into header to be able to search from any page
 
 set the title to Search: <query> or something instead of just `Wikidata Media Tracker`
 
-add P31 type filtering to search
+add P31 type filtering to search and sort by release date
+
+add search by mal id and all other authority control id's / links (i think there's probably a link->authority control id somehow)
+
+make the default page load focus be to the search input
+
+make queues and consumption dates say the day of the week
+
+in series/sequencing information make the e.g. `22. Lost in Translation (Q107270)[sqid][wikidata]consumed x2 (2022-10-07, 2016-11-17) watchlist 2024-04-17` sort the consumed in order, same for the queue votes. listing dates in order just makes sense
 
 <now>
 
@@ -268,3 +276,17 @@ https://www.wikidata.org/wiki/Wikidata:WikiProject_Movies/Properties#Description
 
 - migrate git pat token auth from github api to isomorphic-git
 - make isomorphic-git work with actual filesystem access if it's not annoying to regrant permission constantly
+
+
+
+
+- make login/logout with token that is always prominantly displayed in footer with explanation of exactly where the token is stored and explaining that it's a pure frontend site
+- make fetch/commit to indexeddb lightningfs repo clone and make sync to github. make sure network is minimal and git operations are instant. make sync very very visible, maybe even in header
+- make add consumption / queue vote ui
+- make external non-qid id pages for failed searches or uri's that should still function fine as id's for consumption/queue ui, probably just button on search failure and automatic if search failure and no hits
+- make proper pwa that works offline with indexeddb storage
+- make notes ui per id
+- make wikidata updater ui for external id's that previews the batch update thing and then links to it to run from there
+- make import/export repo to disk (manual for now, eventually sync to disk that syncs tar of indexeddb repo to disk (nondestructively?), but currently it's way too slow to fs directly and the access popups kinda suck)
+- add verbose trace debug logging (that normally are filtered out of console)
+- integrate wikidata images or wikipedia or mpdb or tmdb images or fanart or otherwise to get images on content

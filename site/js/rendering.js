@@ -113,7 +113,7 @@ function renderEntity(entity, qid, updateHistory = true) {
     if (updateHistory) {
       window.history.pushState({}, '', "?id=" + qid);
     }
-    document.title = label + " (" + qid + ") - Wikidata Media Tracker";
+    document.title = label + " (" + qid + ") - ueue🫵 - Wikidata Media Tracker";
     const sequencing = extractSequencingInfo(entity);
     let seriesQids = [];
     if (entity.claims && entity.claims.P179 && entity.claims.P179.length > 0) {
