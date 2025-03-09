@@ -75,9 +75,11 @@ document.addEventListener("DOMContentLoaded", function() {
       html = "<p>No queue votes found.</p>";
     }
     
+    // Build navigation links based solely on available queue categories.
     let navHtml = `<p><a href="queues.html">All Queues</a>`;
-    let knownCategories = ["watchlist"];
-    knownCategories.forEach(cat => {
+    let availableCategories = Object.keys(categoryMap).filter(cat => categoryMap[cat].length > 0);
+    availableCategories.sort();
+    availableCategories.forEach(cat => {
       navHtml += ` | <a href="queues.html?queue=${cat}">${cat}</a>`;
     });
     navHtml += "</p>";

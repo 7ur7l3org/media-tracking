@@ -1,8 +1,10 @@
 /* js/backend.js */
 
 /**
- * Loads the backend JSON data from the file "backend.json".
- * Uses persistentCachedJSONFetch to take advantage of caching.
+ * Loads the backend JSON data.
+ * This version does not fall back to a static file.
+ * If a GitHub token is present, it attempts to load the data from the user’s Git repo clone.
+ * Otherwise, it logs an error and returns an empty object.
  */
 let backendData = null;
 
@@ -10,16 +12,32 @@ function loadBackendData() {
   if (backendData !== null) {
     return Promise.resolve(backendData);
   }
-  return persistentCachedJSONFetch("backend.json")
-    .then(data => {
-      backendData = data;
-      return backendData;
-    })
-    .catch(error => {
-      console.error("Error loading backend data:", error);
-      backendData = {};
-      return backendData;
-    });
+  
+  const token = getToken(); // from auth.js
+  if (token) {
+    // Pseudocode: use gitSync functions to fetch the backend file from the repo clone.
+    console.log("Loading backend data from Git repo...");
+    return gitSync.cloneRepo()
+      .then(() => {
+        // Pseudocode: read the file from the LightningFS-based repo.
+        // Replace the following line with your actual file read from the repo.
+        return persistentCachedJSONFetch("backend.json");
+      })
+      .then(data => {
+        backendData = data;
+        return backendData;
+      })
+      .catch(error => {
+        console.error("Error loading backend data from repo:", error);
+        backendData = {};
+        return backendData;
+      });
+  } else {
+    // No token provided; do not fall back to static file.
+    console.error("No GitHub token provided. Please log in to load backend data.");
+    backendData = {};
+    return Promise.resolve(backendData);
+  }
 }
 
 /**

@@ -290,3 +290,4 @@ https://www.wikidata.org/wiki/Wikidata:WikiProject_Movies/Properties#Description
 - make import/export repo to disk (manual for now, eventually sync to disk that syncs tar of indexeddb repo to disk (nondestructively?), but currently it's way too slow to fs directly and the access popups kinda suck)
 - add verbose trace debug logging (that normally are filtered out of console)
 - integrate wikidata images or wikipedia or mpdb or tmdb images or fanart or otherwise to get images on content
+- dark mode by system default and toggle in corner
