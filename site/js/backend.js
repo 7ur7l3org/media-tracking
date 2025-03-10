@@ -1,43 +1,31 @@
 /* js/backend.js */
 
 /**
- * Loads the backend JSON data.
- * This version does not fall back to a static file.
- * If a GitHub token is present, it attempts to load the data from the user’s Git repo clone.
- * Otherwise, it logs an error and returns an empty object.
+ * Loads the backend JSON data from the Git repo cloned into LightningFS.
+ * The file used is "ueue-media-tracking.json" located at the root of the repo.
+ * If the file does not exist, it is created with an empty JSON object.
  */
 let backendData = null;
 
-function loadBackendData() {
-  if (backendData !== null) {
-    return Promise.resolve(backendData);
-  }
-  
-  const token = getToken(); // from auth.js
-  if (token) {
-    // Pseudocode: use gitSync functions to fetch the backend file from the repo clone.
-    console.log("Loading backend data from Git repo...");
-    return gitSync.cloneRepo()
-      .then(() => {
-        // Pseudocode: read the file from the LightningFS-based repo.
-        // Replace the following line with your actual file read from the repo.
-        return persistentCachedJSONFetch("backend.json");
-      })
-      .then(data => {
-        backendData = data;
-        return backendData;
-      })
-      .catch(error => {
-        console.error("Error loading backend data from repo:", error);
-        backendData = {};
-        return backendData;
-      });
-  } else {
-    // No token provided; do not fall back to static file.
-    console.error("No GitHub token provided. Please log in to load backend data.");
+async function loadBackendData() {
+  // Ensure that the repo is cloned or updated.
+  await gitSync.cloneRepo();
+  const filePath = gitSync.repoDir + '/ueue-media-tracking.json';
+  try {
+    const fileContent = await gitSync.pfs.readFile(filePath, 'utf8');
+    backendData = JSON.parse(fileContent);
+  } catch (err) {
+    console.warn("ueue-media-tracking.json not found – initializing new file.");
     backendData = {};
-    return Promise.resolve(backendData);
+    // Ensure the repo directory exists
+    try {
+      await gitSync.pfs.mkdir(gitSync.repoDir);
+    } catch (e) {
+      // Ignore if already exists
+    }
+    await gitSync.pfs.writeFile(filePath, JSON.stringify(backendData, null, 2), 'utf8');
   }
+  return backendData;
 }
 
 /**

@@ -280,14 +280,17 @@ https://www.wikidata.org/wiki/Wikidata:WikiProject_Movies/Properties#Description
 
 
 
-- make login/logout with token that is always prominantly displayed in footer with explanation of exactly where the token is stored and explaining that it's a pure frontend site
+-- make login/logout with token that is always prominantly displayed in footer with explanation of exactly where the token is stored and explaining that it's a pure frontend site
 - make fetch/commit to indexeddb lightningfs repo clone and make sync to github. make sure network is minimal and git operations are instant. make sync very very visible, maybe even in header
+    - ueue-media-tracking.json seems to be created (maybe committed) but doesn't seem to be pushed. maybe need to figure out branching scheme but probably committing and pushing is fine for now. maybe there is some kinda tab session fingerprint thing to be used on top of device browser location fingerprint
+    - find and spin up working cors proxy and make one click button for users to spin up their own personal one. for now running python script on localhost:8088
 - make add consumption / queue vote ui
 - make external non-qid id pages for failed searches or uri's that should still function fine as id's for consumption/queue ui, probably just button on search failure and automatic if search failure and no hits
 - make proper pwa that works offline with indexeddb storage
 - make notes ui per id
 - make wikidata updater ui for external id's that previews the batch update thing and then links to it to run from there
 - make import/export repo to disk (manual for now, eventually sync to disk that syncs tar of indexeddb repo to disk (nondestructively?), but currently it's way too slow to fs directly and the access popups kinda suck)
+    - https://github.com/isomorphic-git/isomorphic-git/blob/main/docs/fs.md#browserfs Besides IndexedDB, BrowserFS supports many different backends with different performance characteristics (some backends support sync operations, some only async), as well as different features such as proxying a static file server as a read-only file system, mounting ZIP files as file systems, or overlaying a writeable in-memory filesystem on top of a read-only filesystem. You don't need to know all these features, but familiarizing yourself with the different options may be necessary if you hit a storage limit or performance bottleneck in the IndexedDB backend I suggested above.
 - add verbose trace debug logging (that normally are filtered out of console)
 - integrate wikidata images or wikipedia or mpdb or tmdb images or fanart or otherwise to get images on content
 - dark mode by system default and toggle in corner

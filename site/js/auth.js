@@ -7,37 +7,6 @@
  *  - Saving and retrieving a GitHub token and repository pair.
  *  - Letting the user choose where to persist their login: IndexedDB, localStorage, or sessionStorage.
  *
- * Not Logged In UI:
- *  • A token input field (initially type "password") with label:
- *     "GitHub Token (for <a href='https://github.com/isomorphic-git/isomorphic-git' target='_blank'>isomorphic-git</a>):"
- *     Immediately below the input, the format description appears:
- *     "Format: github_pat_...[#https://your-cors-proxy] (default CORS proxy is https://cors.isomorphic-git.org/)"
- *     A "Show" toggle button is provided, and 100ms after page load the token field auto-toggles to type "text".
- *     Also, changes to the token field trigger a debounced (200ms) auto-call to load repositories.
- *  • A repository URL input field with label "Repository URL:" and placeholder "https://github.com/owner/repo"
- *     (with autocomplete="username").
- *  • A "Load Repos by Token Write Access" button on the same line as the Repository URL input,
- *     plus a hidden dropdown (<select id="repo-selector">) that will be shown when repos are loaded.
- *  • A "Client-Side Credential Storage Method" dropdown.
- *  • A button labeled "Login (Save Token in Client Storage)" to submit the form.
- *  • The whole UI is wrapped in a form (id="login-form") so that submission (via Enter or button click) triggers login.
- *
- * Logged In UI:
- *  • Displays the Repository URL first as a hyperlink.
- *  • Displays the token in clear text.
- *  • Displays the CORS proxy as a hyperlink.
- *  • Displays the client-side storage method.
- *  • An inline link to "Manage PATs" is provided.
- *  • A Logout button is provided.
- *
- * Stored login object structure:
- * {
- *   token: "<github token>",       // may include an appended "#<corsProxy>" to override the default
- *   repo: "<repository URL>",       // user-entered or selected
- *   storage: "indexeddb" | "localStorage" | "sessionStorage",
- *   corsProxy: "<cors proxy URL>"    // derived from token (default "https://cors.isomorphic-git.org/")
- * }
- *
  * Exposes:
  *  - updateAuthUI() to refresh the displayed login info.
  *  - getToken() to retrieve the current token.
@@ -123,6 +92,8 @@ async function saveLogin(loginData) {
   } else {
     await saveLoginIndexedDB(loginData);
   }
+  // Update the global login variable.
+  window.currentLogin = loginData;
 }
 
 async function getLogin() {
@@ -140,14 +111,8 @@ function getToken() {
 }
 
 function getLoginSync() {
-  let login = null;
-  try {
-    login = JSON.parse(localStorage.getItem("login_info"));
-    if (!login || login.token === undefined) {
-      login = JSON.parse(sessionStorage.getItem("login_info"));
-    }
-  } catch (e) {}
-  return login;
+  // Return the globally stored login info if available.
+  return window.currentLogin || null;
 }
 
 // ---------- Helper: Parse Token for Optional CORS Proxy ----------
@@ -177,8 +142,8 @@ async function updateAuthUI() {
   if (!container) return;
   const login = await getLogin();
   if (login && login.token && login.token.trim() !== "") {
-    // Logged In State: display login details in order:
-    // Repository URL, Token, CORS Proxy, Storage method, and a Manage PATs link.
+    // Update the global login variable.
+    window.currentLogin = login;
     container.innerHTML = `
       You are logged in to sync queue/consumption data with the following repo/token:</br>
       <p>
@@ -194,11 +159,10 @@ async function updateAuthUI() {
       updateAuthUI();
     });
   } else {
-    // Not Logged In State: show form to enter token and repository URL.
     container.innerHTML = `
       <form id="login-form">
         <p>
-          You are not logged in. To enable data sync (via <a href="https://github.com/isomorphic-git/isomorphic-git" target="_blank">https://github.com/isomorphic-git/isomorphic-git</a>), enter your GitHub Personal Access Token. See <a href="https://github.com/settings/personal-access-tokens" target="_blank">https://github.com/settings/personal-access-tokens</a> to manage or regenerate tokens, or <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">https://github.com/settings/personal-access-tokens/new</a> to create a new token with read and write access to repository Contents (recommended to scope the access to a single repository). For organization repos see https://github.com/organizations/{your-organization}/settings/personal-access-tokens to allow access via fine-grained personal access tokens. If no token is provided you may still use a public repository for read‑only access.
+          You are not logged in. To enable data sync (via <a href="https://github.com/isomorphic-git/isomorphic-git" target="_blank">isomorphic-git</a>), enter your GitHub Personal Access Token. See <a href="https://github.com/settings/personal-access-tokens" target="_blank">GitHub PAT settings</a> to manage or regenerate tokens, or create a new token with read and write access to repository Contents.
         </p>
         <label for="github-token">GitHub Token (password):</label>
         <input type="password" id="github-token" placeholder="github_pat_...[#https://your-cors-proxy]" style="width:300px;" autocomplete="password" />
@@ -216,7 +180,6 @@ async function updateAuthUI() {
         <button type="submit" id="save-login">Login</button> (Save Token/Repo in Client Storage)
       </form>
     `;
-    // Toggle token visibility on button click.
     document.getElementById("toggle-token-input").addEventListener("click", () => {
       const tokenInput = document.getElementById("github-token");
       const btn = document.getElementById("toggle-token-input");
@@ -228,7 +191,6 @@ async function updateAuthUI() {
         btn.textContent = "Show";
       }
     });
-    // Always auto-toggle token field to "text" 100ms after page load.
     setTimeout(() => {
       const tokenInput = document.getElementById("github-token");
       const toggleBtn = document.getElementById("toggle-token-input");
@@ -237,14 +199,12 @@ async function updateAuthUI() {
         toggleBtn.textContent = "Hide";
       }
     }, 100);
-    // Debounced auto-trigger when token is changed.
     const tokenInputField = document.getElementById("github-token");
     tokenInputField.addEventListener("input", debounce(() => {
       if (tokenInputField.value.trim() !== "") {
         refreshReposDOM();
       }
     }, 200));
-    // Handle form submission.
     document.getElementById("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const rawToken = document.getElementById("github-token").value.trim();
@@ -264,7 +224,6 @@ async function updateAuthUI() {
       await saveLogin(loginData);
       updateAuthUI();
     });
-    // Also trigger refreshReposDOM if "Load Repos by Token Write Access" is clicked.
     document.getElementById("load-repos").addEventListener("click", () => {
       refreshReposDOM();
     });
@@ -275,7 +234,7 @@ async function refreshReposDOM() {
   const statusElem = document.getElementById("repo-status");
   statusElem.textContent = " Loading repositories...";
   const rawToken = document.getElementById("github-token").value.trim();
-  const token = parseToken(rawToken).token; // Use only the token part for API calls.
+  const token = parseToken(rawToken).token;
   const repoInput = document.getElementById("repo-input");
   if (!token) {
     statusElem.textContent = " Error: Please enter a GitHub token to load repositories with write access.";
@@ -308,7 +267,6 @@ async function refreshReposDOM() {
         if (!permRes.ok) continue;
         const permData = await permRes.json();
         if (permData.user && permData.user.permissions && permData.user.permissions.push) {
-          // Use repo.html_url instead of repo.full_name.
           validRepos.push(repo.html_url);
         }
       } catch (e) { }
