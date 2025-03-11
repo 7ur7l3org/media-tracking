@@ -1,5 +1,11 @@
 /* js/main.js */
 
+// Start cloning the repo as soon as possible.
+window.addEventListener('DOMContentLoaded', function() {
+  // Kick off repo cloning concurrently.
+  gitSync.cloneRepo();
+});
+
 window.addEventListener('popstate', function(event) {
   const params = new URLSearchParams(window.location.search);
   if (params.has("id")) {

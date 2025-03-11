@@ -37,9 +37,13 @@
   <script src="js/backend.js"></script>
   <script src="js/queues.js"></script>
   
-  <!-- Footer showing authentication info -->
+  <!-- Footer showing authentication info and Git log -->
   <footer style="border-top: 1px solid #ccc; margin-top: 20px; padding-top: 10px; font-family: monospace;">
     <div id="authFooter"></div>
+    <details id="gitLog" open style="margin-top:10px;">
+      <summary>Git Operations Log</summary>
+      <pre id="gitLogContent" style="max-height:200px; overflow:auto;"></pre>
+    </details>
   </footer>
 </body>
 </html>

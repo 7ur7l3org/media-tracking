@@ -281,10 +281,14 @@ https://www.wikidata.org/wiki/Wikidata:WikiProject_Movies/Properties#Description
 
 
 -- make login/logout with token that is always prominantly displayed in footer with explanation of exactly where the token is stored and explaining that it's a pure frontend site
-- make fetch/commit to indexeddb lightningfs repo clone and make sync to github. make sure network is minimal and git operations are instant. make sync very very visible, maybe even in header
-    - ueue-media-tracking.json seems to be created (maybe committed) but doesn't seem to be pushed. maybe need to figure out branching scheme but probably committing and pushing is fine for now. maybe there is some kinda tab session fingerprint thing to be used on top of device browser location fingerprint
+-- make fetch/commit to indexeddb lightningfs repo clone and make sync to github. make sure network is minimal and git operations are instant. make sync very very visible, maybe even in header
+    -- ueue-media-tracking.json seems to be created (maybe committed) but doesn't seem to be pushed. maybe need to figure out branching scheme but probably committing and pushing is fine for now. maybe there is some kinda tab session fingerprint thing to be used on top of device browser location fingerprint <- actually shouldn't need this. client should easily be able to rebase and try again until the remote accepts the change the client is trying to make. the client would deal with the merge conflict worst case but that should be rare
+
     - find and spin up working cors proxy and make one click button for users to spin up their own personal one. for now running python script on localhost:8088
 - make add consumption / queue vote ui
+    - make it show loading/progress in the new entry as it is syncing to github
+    - make queues page allow reordering queues for the add new queue vote ui, and deleting queues (and optionally purging all queue votes of that deleted queue from all media)
+    - make series/sequencing show top level consumed and queue votes for e.g. House in the Part of the series line just like e.g. season 5 does
 - make external non-qid id pages for failed searches or uri's that should still function fine as id's for consumption/queue ui, probably just button on search failure and automatic if search failure and no hits
 - make proper pwa that works offline with indexeddb storage
 - make notes ui per id
@@ -294,3 +298,7 @@ https://www.wikidata.org/wiki/Wikidata:WikiProject_Movies/Properties#Description
 - add verbose trace debug logging (that normally are filtered out of console)
 - integrate wikidata images or wikipedia or mpdb or tmdb images or fanart or otherwise to get images on content
 - dark mode by system default and toggle in corner
+- fix login button to always prompt to update/add username/password if changed somehow
+- ensure repo caches are wiped on logout and login
+- put meta title/description in commit messages
+- allow adding/removing consumption or queue vote from series/sequencing information view

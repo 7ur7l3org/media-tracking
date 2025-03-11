@@ -48,7 +48,8 @@ function getBackendStatsForQid(qid) {
   console.log("Entering getBackendStatsForQid with qid:", qid);
   return loadBackendData().then(backendData => {
     const key = "http://www.wikidata.org/entity/" + qid;
-    const entry = backendData[key];
+    // Updated: look inside backendData.media
+    const entry = backendData.media ? backendData.media[key] : null;
     let consumptionHTML = "";
     let queueHTML = "";
     let isQueued = false;
@@ -201,44 +202,31 @@ function fetchSeriesParts(qid) {
 
 /**
  * Recursively aggregates consumption statistics for all descendant leaf nodes
- * of a given series QID. It deduplicates leaf nodes using a shared "counted" set.
+ * of a given series QID. This version now looks under backendData.media[...] for consumptions.
  * Returns a promise that resolves to an object { total, consumed }.
- *
- * A leaf node is counted only once even if reached via multiple paths.
  */
-async function aggregateDescendantConsumptionStats(qid, visited = new Set(), counted = new Set(), backendData = null) {
-  console.log("Entering aggregateDescendantConsumptionStats with qid:", qid, "visited:", Array.from(visited), "counted:", Array.from(counted));
-  if (!backendData) {
-    backendData = await loadBackendData();
+async function aggregateDescendantConsumptionStats(qid, visited = new Set(), counted = new Set(), backend = null) {
+  if (!backend) {
+    backend = await loadBackendData();
   }
   let total = 0;
   let consumed = 0;
-  console.log("aggregateDescendantConsumptionStats fetching series parts " + qid);
   const parts = await fetchSeriesParts(qid);
-  // (No separate deduplication here – we check duplicates when counting a leaf.)
-  // Collect child QIDs that haven't been visited.
   const childQids = parts.map(p => p.id).filter(id => !visited.has(id));
   childQids.forEach(id => visited.add(id));
-  // Batch fetch children parts for all these QIDs.
-  console.log("aggregateDescendantConsumptionStats batch fetching children parts " + childQids);
-  const childrenMapping = await batchFetchSeriesParts(childQids);
   for (const part of parts) {
-    const childParts = childrenMapping[part.id] || [];
+    const partKey = "http://www.wikidata.org/entity/" + part.id;
+    const childParts = await fetchSeriesParts(part.id);
     if (childParts.length === 0) {
-      // Leaf node: count this part only if not already counted.
       if (!counted.has(part.id)) {
         total += 1;
-        const key = "http://www.wikidata.org/entity/" + part.id;
-        if (backendData[key] && backendData[key].consumptions && backendData[key].consumptions.length > 0) {
+        if (backend.media && backend.media[partKey] && backend.media[partKey].consumptions && backend.media[partKey].consumptions.length > 0) {
           consumed += 1;
         }
         counted.add(part.id);
       }
-      else
-        console.log("skipping count cause it was already in it " + part.id);
     } else {
-      // Container node: aggregate recursively, sharing the same counted set.
-      const childAgg = await aggregateDescendantConsumptionStats(part.id, visited, counted, backendData);
+      const childAgg = await aggregateDescendantConsumptionStats(part.id, visited, counted, backend);
       total += childAgg.total;
       consumed += childAgg.consumed;
     }
@@ -247,11 +235,9 @@ async function aggregateDescendantConsumptionStats(qid, visited = new Set(), cou
 }
 
 /**
- * Returns a promise that resolves to the HTML representing the parts tree for a given series QID.
+ * Renders a parts tree for a given series QID.
  * Highlights the current entity and recursively renders nested parts.
- * For collapsible headers with children, appends consumption aggregate info.
- *
- * A shared "counted" set is passed so that duplicate leaf nodes across the entire tree are only counted once.
+ * Returns a promise that resolves to the HTML string for the parts tree.
  */
 function renderPartsTree(qid, currentQid, counted = new Set()) {
   console.log("Entering renderPartsTree with qid:", qid, "and currentQid:", currentQid);
@@ -259,7 +245,6 @@ function renderPartsTree(qid, currentQid, counted = new Set()) {
     if (parts.length === 0) return "";
     let html = "<ul class='parts-tree'>";
     const partPromises = parts.map(part => {
-      // Define arrow for the current entry.
       const arrow = " ⟵";
       let markerStart = "";
       let markerEnd = "";
@@ -267,12 +252,10 @@ function renderPartsTree(qid, currentQid, counted = new Set()) {
         markerStart = "<strong class='current-entry'>";
         markerEnd = arrow + "</strong>";
       }
-      // Render the ordinal separately.
       let ordinalPart = "";
       if (part.ordinal !== null) {
         ordinalPart = part.ordinal + ". ";
       }
-      // Render the main part (label, IDs, extra links)
       let mainPart = `<a href="index.html?id=${part.id}">${part.label}</a> <span class="small-id">(${part.id})</span><span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${part.id}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">wikidata</a>]</span>`;
       return getBackendStatsForQid(part.id).then(statsObj => {
         let statsHTML = statsObj.statsHTML;
@@ -281,7 +264,6 @@ function renderPartsTree(qid, currentQid, counted = new Set()) {
         return renderPartsTree(part.id, currentQid, counted).then(childHtml => {
           const openAttr = (part.id === currentQid || (childHtml && childHtml.indexOf(currentQid) !== -1)) ? " open" : "";
           if (childHtml) {
-            // Pass along the shared counted set to the aggregator.
             return aggregateDescendantConsumptionStats(part.id, new Set(), new Set()).then(agg => {
               let aggText = "";
               if (agg.total > 0) {

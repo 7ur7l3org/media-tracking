@@ -1,5 +1,8 @@
 /* js/rendering.js */
 
+/**
+ * Renders the identifiers (properties) table for a Wikidata entity.
+ */
 function renderIdentifiers(entity, qid) {
   const propIDs = Object.keys(entity.claims);
   return fetchPropertyDefinitions(propIDs).then(async propDefinitions => {
@@ -102,11 +105,26 @@ function renderIdentifiers(entity, qid) {
   });
 }
 
+/**
+ * Renders the full entity view.
+ * This function preserves all fallback logic (for checking parts and fallback parts)
+ * and now uses the new backend structure. It also attaches add‑entry handlers after rendering.
+ */
 function renderEntity(entity, qid, updateHistory = true) {
-  loadBackendData().then(() => {
+  loadBackendData().then((backend) => {
+    const key = "http://www.wikidata.org/entity/" + qid;
+    // Update meta if not set.
+    if (!backend.media[key] || !backend.media[key].meta.title) {
+      ensureMediaEntry(qid);
+      backend.media[key].meta.title = (entity.labels && entity.labels.en) ? entity.labels.en.value : qid;
+      backend.media[key].meta.description = (entity.descriptions && entity.descriptions.en) ? entity.descriptions.en.value : "";
+      saveBackendData();
+    }
+    window.currentEntity = entity; // store globally for refreshes
     const backendSection = renderBackendDetails(qid);
     const label = (entity.labels && entity.labels.en) ? entity.labels.en.value : qid;
-    let headerHtml = `<h3><a href="index.html?id=${qid}">${label}</a> <span class="small-id">(${qid})</span><span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${qid}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${qid}" target="_blank">wikidata</a>]</span></h3>`;
+    let headerHtml = `<h3><a href="index.html?id=${qid}">${label}</a> <span class="small-id">(${qid})</span>
+      <span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${qid}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${qid}" target="_blank">wikidata</a>]</span></h3>`;
     if (entity.descriptions && entity.descriptions.en) {
       headerHtml += `<p>${entity.descriptions.en.value}</p>`;
     }
@@ -126,15 +144,6 @@ function renderEntity(entity, qid, updateHistory = true) {
         seriesQids.push(qid);
       }
     }
-    if (seriesQids.length === 0) {
-      getParentSeries(qid).then(parent => {
-        seriesQids = parent ? [parent] : [qid];
-        continueRendering();
-      });
-    } else {
-      continueRendering();
-    }
-    
     function continueRendering() {
       document.getElementById("searchDetails").removeAttribute("open");
       Promise.all(seriesQids.map(seriesQid => {
@@ -199,21 +208,17 @@ function renderEntity(entity, qid, updateHistory = true) {
           });
         });
       })).then(seriesRowsArray => {
-        // Decide whether to display the Series/Sequencing Information.
-        // If the only series QID is the current entity and there is no sequencing info (no follows/followedBy)
-        // and no parts are found for this entity, then omit the section.
         if (seriesQids.length === 1 && seriesQids[0] === qid &&
             sequencing.follows.length === 0 &&
             sequencing.followedBy.length === 0) {
-          // Check for parts by fetching series parts for the current entity.
+          // Fallback: Check for parts by fetching series parts for the current entity.
           fetchSeriesParts(qid).then(parts => {
             if (parts.length === 0) {
-              // Omit the Series/Sequencing Information.
               renderIdentifiers(entity, qid).then(propertiesHtml => {
-                document.getElementById('infoDisplay').innerHTML = headerHtml + backendSection + propertiesHtml;
+                document.getElementById('infoDisplay').innerHTML = headerHtml + renderBackendDetails(qid) + propertiesHtml;
+                window.backendModule.attachAddEntryHandlers(qid);
               });
             } else {
-              // Render the series table as usual.
               let seriesTableHtml = `<table class="series-table" id="seriesContainer">
                 <thead>
                   <tr>
@@ -229,12 +234,15 @@ function renderEntity(entity, qid, updateHistory = true) {
               });
               seriesTableHtml += `</tbody></table>`;
               renderIdentifiers(entity, qid).then(propertiesHtml => {
-                document.getElementById('infoDisplay').innerHTML = headerHtml + backendSection + propertiesHtml + seriesTableHtml;
+                const finalHtml = headerHtml + 
+                                  `<div id="backendDetailsContainer">` + renderBackendDetails(qid) + `</div>` + 
+                                  propertiesHtml + seriesTableHtml;
+                document.getElementById('infoDisplay').innerHTML = finalHtml;
+                window.backendModule.attachAddEntryHandlers(qid);
               });
             }
           });
         } else {
-          // Render the series table as usual.
           let seriesTableHtml = `<table class="series-table" id="seriesContainer">
             <thead>
               <tr>
@@ -250,14 +258,26 @@ function renderEntity(entity, qid, updateHistory = true) {
           });
           seriesTableHtml += `</tbody></table>`;
           renderIdentifiers(entity, qid).then(propertiesHtml => {
-            document.getElementById('infoDisplay').innerHTML = headerHtml + backendSection + propertiesHtml + seriesTableHtml;
+            document.getElementById('infoDisplay').innerHTML = headerHtml + renderBackendDetails(qid) + propertiesHtml + seriesTableHtml;
+            window.backendModule.attachAddEntryHandlers(qid);
           });
         }
       });
     }
+    if (seriesQids.length === 0) {
+      getParentSeries(qid).then(parent => {
+        seriesQids = parent ? [parent] : [qid];
+        continueRendering();
+      });
+    } else {
+      continueRendering();
+    }
   });
 }
 
+/**
+ * Fetches an entity from Wikidata and renders it.
+ */
 function fetchEntity(qid, updateHistory = true) {
   const url = "https://www.wikidata.org/wiki/Special:EntityData/" + qid + ".json";
   document.getElementById('infoDisplay').innerHTML = "<p>Loading...</p>";
