@@ -31,7 +31,7 @@ async function loadBackendData() {
     }
     await gitSync.pfs.writeFile(filePath, JSON.stringify(backendData, null, 2), 'utf8');
     gitSync.commitChanges("Initial commit: Created ueue-media-tracking.json")
-      .then(() => gitSync.pushSync())
+      .then(() => gitSync.syncRepo())
       .catch(e => console.error("Error during initial commit/push:", e));
   }
   return backendData;
@@ -100,7 +100,7 @@ async function addNewConsumption(qid, note) {
   sanitizeMediaRecord(qid);
   await saveBackendData();
   await gitSync.commitChanges("Added new consumption for " + qid);
-  await gitSync.pushSync();
+  await gitSync.syncRepo();
 }
 
 /**
@@ -113,7 +113,7 @@ async function removeConsumption(qid, index) {
     sanitizeMediaRecord(qid);
     await saveBackendData();
     await gitSync.commitChanges("Removed consumption #" + index + " for " + qid);
-    await gitSync.pushSync();
+    await gitSync.syncRepo();
   }
 }
 
@@ -132,7 +132,7 @@ async function addNewQueueVote(qid, queueName, note) {
   sanitizeMediaRecord(qid);
   await saveBackendData();
   await gitSync.commitChanges("Added new queue vote (" + queueName + ") for " + qid);
-  await gitSync.pushSync();
+  await gitSync.syncRepo();
 }
 
 /**
@@ -151,7 +151,7 @@ async function removeQueueVote(qid, queueName, index) {
     sanitizeMediaRecord(qid);
     await saveBackendData();
     await gitSync.commitChanges("Removed queue vote #" + index + " from (" + queueName + ") for " + qid);
-    await gitSync.pushSync();
+    await gitSync.syncRepo();
   }
 }
 
@@ -167,7 +167,7 @@ async function addNewQueue(queueName) {
     backendData.meta.queues.push(queueName);
     await saveBackendData();
     await gitSync.commitChanges("Added new queue: " + queueName);
-    await gitSync.pushSync();
+    await gitSync.syncRepo();
   }
 }
 
@@ -296,7 +296,7 @@ function attachAddEntryHandlers(qid) {
       try {
         await addNewConsumption(qid, note);
         pendingRow.innerHTML = `<td colspan="3"><em>New consumption: pushing...</em></td>`;
-        updateGitSyncStatus("New consumption added and synced.");
+        updateGitSyncStatus("New consumption added and synced.", false, "green");
         window.refreshEntity(qid);
       } catch (e) {
         console.error(e);
@@ -315,7 +315,7 @@ function attachAddEntryHandlers(qid) {
       try {
         await removeConsumption(qid, index);
         row.innerHTML = `<td colspan="3"><em>Removing consumption: pushing...</em></td>`;
-        updateGitSyncStatus("Consumption removed and synced.");
+        updateGitSyncStatus("Consumption removed and synced.", false, "green");
         window.refreshEntity(qid);
       } catch (e) {
         console.error(e);
@@ -347,7 +347,7 @@ function attachAddEntryHandlers(qid) {
       updateGitSyncStatus("Adding new queue...");
       try {
         await addNewQueue(newQueueName);
-        updateGitSyncStatus("New queue added.");
+        updateGitSyncStatus("New queue added.", false, "green");
         document.getElementById("newQueueSelector").value = newQueueName;
         document.getElementById("newQueueName").value = "";
         document.getElementById("newQueueNameContainer").style.display = "none";
@@ -360,7 +360,6 @@ function attachAddEntryHandlers(qid) {
   }
   const queueVoteBtn = document.getElementById("addQueueVoteBtn");
   if (queueVoteBtn) {
-console.log("how am i getting called twice")
     queueVoteBtn.addEventListener("click", async function() {
       const selectedQueue = document.getElementById("newQueueSelector").value;
       if (selectedQueue === "new") {
@@ -376,7 +375,7 @@ console.log("how am i getting called twice")
       try {
         await addNewQueueVote(qid, selectedQueue, note);
         pendingRow.innerHTML = `<td colspan="3"><em>New queue vote: pushing...</em></td>`;
-        updateGitSyncStatus("New queue vote added and synced.");
+        updateGitSyncStatus("New queue vote added and synced.", false, "green");
         window.refreshEntity(qid);
       } catch (e) {
         console.error(e);
@@ -395,7 +394,7 @@ console.log("how am i getting called twice")
       try {
         await removeQueueVote(qid, queueName, index);
         row.innerHTML = `<td colspan="3"><em>Removing queue vote: pushing...</em></td>`;
-        updateGitSyncStatus("Queue vote removed and synced.");
+        updateGitSyncStatus("Queue vote removed and synced.", false, "green");
         window.refreshEntity(qid);
       } catch (e) {
         console.error(e);

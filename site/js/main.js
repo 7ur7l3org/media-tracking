@@ -1,10 +1,16 @@
 /* js/main.js */
 
-// Start cloning the repo as soon as possible.
-window.addEventListener('DOMContentLoaded', function() {
-  // Kick off repo cloning concurrently.
-  gitSync.cloneRepo();
+window.addEventListener('DOMContentLoaded', () => {
+  // Trigger a full sync on page load.
+  if (window.gitSync && typeof window.gitSync.syncRepo === 'function') {
+    window.gitSync.syncRepo().catch(error => {
+      console.error("Sync failed:", error);
+    });
+  } else {
+    console.error("gitSync.syncRepo is not available.");
+  }
 });
+
 
 window.addEventListener('popstate', function(event) {
   const params = new URLSearchParams(window.location.search);

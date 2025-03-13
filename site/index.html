@@ -18,6 +18,7 @@
   <!-- Header with navigation -->
   <header class="site-header">
     <div class="site-title">ueue🫵 - Wikidata Media Tracker</div>
+    <span id="branchIndicator"></span>
     <nav class="site-nav">
       [<a href="index.html" class="active">Media</a>]
       [<a href="queues.html">Queues</a>]
@@ -39,12 +40,12 @@
     </section>
   </details>
 
+  <!-- Git Sync Status (moved up for prominence) -->
+  <div id="gitSyncStatus" style="font-family: monospace; padding: 10px; margin: 10px 0; border: 1px solid #ccc;"></div>
+
   <!-- Entity Info Display -->
   <section id="infoDisplay" class="result"></section>
   
-  <!-- Container for Git Sync status messages -->
-  <div id="gitSyncStatus" style="font-family: monospace; padding: 10px; margin: 10px 0; border: 1px solid #ccc;"></div>
-
   <!-- Script load order: auth.js and git-sync.js come first -->
   <script src="js/auth.js"></script>
   <script src="js/git-sync.js"></script>

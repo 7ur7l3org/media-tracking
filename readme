@@ -280,6 +280,9 @@ https://www.wikidata.org/wiki/Wikidata:WikiProject_Movies/Properties#Description
 
 
 
+
+thanks https://chatgpt.com/c/679d8f5e-ad78-800c-ac21-cba9c0ffbd01, https://chatgpt.com/c/67d26a50-554c-800c-87ae-b8cb1d2f8cce
+
 -- make login/logout with token that is always prominantly displayed in footer with explanation of exactly where the token is stored and explaining that it's a pure frontend site
 -- make fetch/commit to indexeddb lightningfs repo clone and make sync to github. make sure network is minimal and git operations are instant. make sync very very visible, maybe even in header
     -- ueue-media-tracking.json seems to be created (maybe committed) but doesn't seem to be pushed. maybe need to figure out branching scheme but probably committing and pushing is fine for now. maybe there is some kinda tab session fingerprint thing to be used on top of device browser location fingerprint <- actually shouldn't need this. client should easily be able to rebase and try again until the remote accepts the change the client is trying to make. the client would deal with the merge conflict worst case but that should be rare
@@ -289,6 +292,23 @@ https://www.wikidata.org/wiki/Wikidata:WikiProject_Movies/Properties#Description
     - make it show loading/progress in the new entry as it is syncing to github
     - make queues page allow reordering queues for the add new queue vote ui, and deleting queues (and optionally purging all queue votes of that deleted queue from all media)
     - make series/sequencing show top level consumed and queue votes for e.g. House in the Part of the series line just like e.g. season 5 does
+- fetch doesn't seem to work cause i deleted a bunch of queues and they're still there somehow in my local repo. oh just error handling is wrong. the ui is working when it's broken
+    [6:59:09 PM] Local repo exists – fetching updates...
+    [6:59:11 PM] Repo fetched successfully.
+    [7:00:09 PM] Adding new queue...
+    [7:00:09 PM] Committing changes...
+    [7:00:09 PM] Commit complete.
+    [7:00:09 PM] Pushing changes to GitHub...
+    [7:00:10 PM] Error pushing changes: Push rejected because it was not a simple fast-forward. Use "force: true" to override.
+    [7:00:10 PM] New queue added.
+    [7:00:48 PM] Committing changes...
+    [7:00:48 PM] Commit complete.
+    [7:00:48 PM] Pushing changes to GitHub...
+    [7:00:49 PM] Error pushing changes: Push rejected because it was not a simple fast-forward. Use "force: true" to override.
+    [7:00:49 PM] New queue vote added and synced.
+- add edit buttons to notes and queue votes / consumption timestamps
+- remove how am i getting called twice print
+- add ` Read access to metadata; Read and Write access to code and pull requests` to list of what the token should have in login section
 - make external non-qid id pages for failed searches or uri's that should still function fine as id's for consumption/queue ui, probably just button on search failure and automatic if search failure and no hits
 - make proper pwa that works offline with indexeddb storage
 - make notes ui per id
@@ -302,3 +322,4 @@ https://www.wikidata.org/wiki/Wikidata:WikiProject_Movies/Properties#Description
 - ensure repo caches are wiped on logout and login
 - put meta title/description in commit messages
 - allow adding/removing consumption or queue vote from series/sequencing information view
+- fix the css of the site-nav to be aligned to the right, and make the branchIndicator appear before the site-nav
