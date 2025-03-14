@@ -286,13 +286,8 @@ thanks https://chatgpt.com/c/679d8f5e-ad78-800c-ac21-cba9c0ffbd01, https://chatg
 -- make login/logout with token that is always prominantly displayed in footer with explanation of exactly where the token is stored and explaining that it's a pure frontend site
 -- make fetch/commit to indexeddb lightningfs repo clone and make sync to github. make sure network is minimal and git operations are instant. make sync very very visible, maybe even in header
     -- ueue-media-tracking.json seems to be created (maybe committed) but doesn't seem to be pushed. maybe need to figure out branching scheme but probably committing and pushing is fine for now. maybe there is some kinda tab session fingerprint thing to be used on top of device browser location fingerprint <- actually shouldn't need this. client should easily be able to rebase and try again until the remote accepts the change the client is trying to make. the client would deal with the merge conflict worst case but that should be rare
-
-    - find and spin up working cors proxy and make one click button for users to spin up their own personal one. for now running python script on localhost:8088
-- make add consumption / queue vote ui
-    - make it show loading/progress in the new entry as it is syncing to github
-    - make queues page allow reordering queues for the add new queue vote ui, and deleting queues (and optionally purging all queue votes of that deleted queue from all media)
-    - make series/sequencing show top level consumed and queue votes for e.g. House in the Part of the series line just like e.g. season 5 does
-- fetch doesn't seem to work cause i deleted a bunch of queues and they're still there somehow in my local repo. oh just error handling is wrong. the ui is working when it's broken
+-- make add consumption / queue vote ui
+-- fetch doesn't seem to work cause i deleted a bunch of queues and they're still there somehow in my local repo. oh just error handling is wrong. the ui is working when it's broken -> fixed. it actually wasn't properly updating the working tree and the sync process was trash
     [6:59:09 PM] Local repo exists – fetching updates...
     [6:59:11 PM] Repo fetched successfully.
     [7:00:09 PM] Adding new queue...
@@ -306,20 +301,35 @@ thanks https://chatgpt.com/c/679d8f5e-ad78-800c-ac21-cba9c0ffbd01, https://chatg
     [7:00:48 PM] Pushing changes to GitHub...
     [7:00:49 PM] Error pushing changes: Push rejected because it was not a simple fast-forward. Use "force: true" to override.
     [7:00:49 PM] New queue vote added and synced.
-- add edit buttons to notes and queue votes / consumption timestamps
-- remove how am i getting called twice print
-- add ` Read access to metadata; Read and Write access to code and pull requests` to list of what the token should have in login section
+-- remove how am i getting called twice print
+-- fix the css of the site-nav to be aligned to the right, and make the branchIndicator appear before the site-nav
+
+
+phase 1
+- fix queues and consumptions pages
+- add edit buttons to notes and timestamps for queue votes and consumptions
 - make external non-qid id pages for failed searches or uri's that should still function fine as id's for consumption/queue ui, probably just button on search failure and automatic if search failure and no hits
 - make proper pwa that works offline with indexeddb storage
+- make the ui not flicker - merge the new dom into the old dom directly updating contents and only inserting/deleting elements when necessary
+- make consumptions and queue votes show loading/progress in the new entry as it is syncing to github
 - make notes ui per id
+- dark mode by system default and toggle in corner
+- fix login button to always prompt to update/add username/password if changed somehow in chrome password manager
+- ensure repo caches are wiped on logout and login
+- make queues page allow reordering queues for the add new queue vote ui, and deleting queues (and optionally purging all queue votes of that deleted queue from all media)
+- make series/sequencing show top level consumed and queue votes for e.g. House in the Part of the series line just like e.g. season 5 does
+- integrate wikidata images or wikipedia or mpdb or tmdb images or fanart or otherwise to get images on content
+- add ` Read access to metadata; Read and Write access to code and pull requests` to list of what the token should have in login section
+- put meta title/description in commit messages
+- find and spin up working cors proxy and make one click button for users to spin up their own personal one. for now running python script on localhost:8088
+
+phase 2
+- refactor to reduce the number of lines in each file to be easier to edit with ai
+- update trakt converter, re-export trakt, and fully migrate
 - make wikidata updater ui for external id's that previews the batch update thing and then links to it to run from there
 - make import/export repo to disk (manual for now, eventually sync to disk that syncs tar of indexeddb repo to disk (nondestructively?), but currently it's way too slow to fs directly and the access popups kinda suck)
     - https://github.com/isomorphic-git/isomorphic-git/blob/main/docs/fs.md#browserfs Besides IndexedDB, BrowserFS supports many different backends with different performance characteristics (some backends support sync operations, some only async), as well as different features such as proxying a static file server as a read-only file system, mounting ZIP files as file systems, or overlaying a writeable in-memory filesystem on top of a read-only filesystem. You don't need to know all these features, but familiarizing yourself with the different options may be necessary if you hit a storage limit or performance bottleneck in the IndexedDB backend I suggested above.
 - add verbose trace debug logging (that normally are filtered out of console)
-- integrate wikidata images or wikipedia or mpdb or tmdb images or fanart or otherwise to get images on content
-- dark mode by system default and toggle in corner
-- fix login button to always prompt to update/add username/password if changed somehow
-- ensure repo caches are wiped on logout and login
-- put meta title/description in commit messages
 - allow adding/removing consumption or queue vote from series/sequencing information view
-- fix the css of the site-nav to be aligned to the right, and make the branchIndicator appear before the site-nav
+- make pr's that don't actually have any conflict auto-merge and branch clean up. long term tho. concurrent equivalent updates should be rare
+- make it so that merely visiting a thing doesn't auto-commit it to the repo probably. renderEntity probably just shouldn't ensureMediaEntry/saveBackendData. ensureMediaEntry should probably automatically saveBackendData if it changes

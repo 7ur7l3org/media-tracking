@@ -39,10 +39,13 @@ async function loadBackendData() {
 
 /**
  * Saves the current backendData to the JSON file.
+ * After writing, we dispatch a "backendUpdated" event so that UI components can re‑render.
  */
 async function saveBackendData() {
   const filePath = gitSync.repoDir + '/ueue-media-tracking.json';
   await gitSync.pfs.writeFile(filePath, JSON.stringify(backendData, null, 2), 'utf8');
+  // Notify that the backend data has updated.
+  document.dispatchEvent(new Event('backendUpdated'));
 }
 
 /**

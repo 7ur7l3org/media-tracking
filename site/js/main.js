@@ -11,7 +11,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-
+// Listen for history changes.
 window.addEventListener('popstate', function(event) {
   const params = new URLSearchParams(window.location.search);
   if (params.has("id")) {
@@ -39,6 +39,16 @@ window.addEventListener('load', function() {
   }
   if (params.has("id")) {
     const qid = params.get("id");
+    fetchEntity(qid, false);
+  }
+});
+
+// Listen for backend updates to refresh the current entity view (if any)
+document.addEventListener("backendUpdated", () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("id")) {
+    const qid = params.get("id");
+    // Refresh the entity view using the latest data.
     fetchEntity(qid, false);
   }
 });
