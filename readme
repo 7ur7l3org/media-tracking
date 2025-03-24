@@ -5,10 +5,7 @@ thanks https://chatgpt.com/c/67d7c151-3f90-800c-9811-cf45a2920d74 (cloudflare wo
 thanks https://chatgpt.com/c/67e1015d-38c4-800c-9eaf-ac5ea8796807 (cloudflare pages site deployment to https://ueue.pages.dev/)
 
 phase 1
-- fix that automatic sync is broken on ueue.7ur.it but works fine on ueue.pages.dev -> aha 7ur.it is loading rocket-loader.min.js and pages.dev isn't
-- find and spin up working cors proxy and make one click button for users to spin up their own personal one. for now running python script on localhost:8088
-- put on github pages
-- fix queues and consumptions pages
+- fix queues and consumptions pages (queues?queue=books doesn't only load books. consumptions seems to work. both are missing notes)
 - add edit buttons to notes and timestamps for queue votes and consumptions
 - make queues page allow reordering queues for the add new queue vote ui, and deleting queues (and optionally purging all queue votes of that deleted queue from all media)
 - make external non-qid id pages for failed searches or uri's that should still function fine as id's for consumption/queue ui, probably just button on search failure and automatic if search failure and no hits
@@ -50,3 +47,12 @@ https://cors-proxy.m7ur7l3.workers.dev/github.com/7ur7l3org/tracking-repo/info/r
 - make pr's that don't actually have any conflict auto-merge and branch clean up. long term tho. concurrent equivalent updates should be rare
 - make it so that merely visiting a thing doesn't auto-commit it to the repo probably. renderEntity probably just shouldn't ensureMediaEntry/saveBackendData. ensureMediaEntry should probably automatically saveBackendData if it changes
 - make /raw or something to view the raw json
+- make one click cloudflare worker button not trash
+- probably change default cors proxy to https://ueue-cors-proxy.7ur.workers.dev/ linking to source and noting why https://cors.isomorphic-git.org/ doesn't work
+
+---
+
+done
+-- fix that automatic sync is broken on ueue.7ur.it but works fine on ueue.pages.dev -> aha 7ur.it is loading rocket-loader.min.js and pages.dev isn't. disabled it cause i couldn't get it to even load the script that maybe fixed it
+-- find and spin up working cors proxy and make one click button for users to spin up their own personal one. for now running python script on localhost:8088 -> https://dash.cloudflare.com/d3f974b3287fb000e629aafe6423b481/workers/services/view/ueue-cors-proxy/production/deployments = https://ueue-cors-proxy.7ur.workers.dev/ = https://github.com/7ur7l3org/cors-proxy . one click button is trash
+-- put on github pages -> put on cloudflare pages! https://dash.cloudflare.com/d3f974b3287fb000e629aafe6423b481/pages/view/ueue = https://ueue.7ur.it/
