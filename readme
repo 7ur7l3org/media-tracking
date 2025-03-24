@@ -1,0 +1,48 @@
+thanks https://chatgpt.com/c/679d3064-16b0-800c-9e35-89509164697b (trying o3-mini)
+thanks https://chatgpt.com/c/679d8f5e-ad78-800c-ac21-cba9c0ffbd01 (o3-mini is good!)
+thanks https://chatgpt.com/c/67d26a50-554c-800c-87ae-b8cb1d2f8cce
+thanks https://chatgpt.com/c/67d7c151-3f90-800c-9811-cf45a2920d74 (cloudflare workers cors proxy deployment to https://ueue-cors-proxy.7ur.workers.dev)
+thanks https://chatgpt.com/c/67e1015d-38c4-800c-9eaf-ac5ea8796807 (cloudflare pages site deployment to https://ueue.pages.dev/)
+
+phase 1
+- find and spin up working cors proxy and make one click button for users to spin up their own personal one. for now running python script on localhost:8088
+- put on github pages
+- fix queues and consumptions pages
+- add edit buttons to notes and timestamps for queue votes and consumptions
+- make queues page allow reordering queues for the add new queue vote ui, and deleting queues (and optionally purging all queue votes of that deleted queue from all media)
+- make external non-qid id pages for failed searches or uri's that should still function fine as id's for consumption/queue ui, probably just button on search failure and automatic if search failure and no hits
+- make proper pwa that works offline with indexeddb storage
+- make the ui not flicker - merge the new dom into the old dom directly updating contents and only inserting/deleting elements when necessary
+- make consumptions and queue votes show loading/progress in the new entry as it is syncing to github
+- make notes ui per id
+- dark mode by system default and toggle in corner
+- fix login button to always prompt to update/add username/password if changed somehow in chrome password manager
+- ensure repo caches are wiped on logout and login
+- make series/sequencing show top level consumed and queue votes for e.g. House in the Part of the series line just like e.g. season 5 does
+- integrate wikidata images or wikipedia or mpdb or tmdb images or fanart or otherwise to get images on content
+- add ` Read access to metadata; Read and Write access to code and pull requests` to list of what the token should have in login section
+- put meta title/description in commit messages
+- make cache series/sequencing for all elements of the series if it doesn't already
+- make title/description include type of tags like the search shows
+- make search work offline to search through all the things you've ever visited
+- make adding consumption default to removing from watchlist probably? tho that might just be nice to do from its own page later idk
+- visiting a page for the first time commits the title/description to the repo, but only locally. it doesn't trigger a sync. then when you refresh and visit it for the first time you get a "auto-commit pre-sync" on initial sync because the local repo is ahead. the local repo should never be ahead because all commits should be "then sync" triggering actions
+- the edit of votes should be able to switch which queue an entry is on directly
+- when logged out i get `pushOrDivergeAndPush: Error: Please log in with your GitHub token first.` red at the top, but not in the sync status where it should clearly show "local only". the logs are `[11:04:20 PM mistress fe363a1] syncing repo  [11:04:20 PM mistress fe363a1] no changes to commit  [11:04:20 PM mistress fe363a1] cloneOrFetchUpdates: Error: Please log in with your GitHub token first.  [11:04:20 PM mistress fe363a1] pushOrDivergeAndPush: Error: Please log in with your GitHub token first.`. in fact when logged out and on the home page it's only a single yellow warning saying "syncing repo" since i guess the local repo wasn't even initialized yet (it becomes the same red once you visit any content page)
+- logging in doesn't trigger a sync until refresh
+
+phase 2
+- fetching 
+https://cors-proxy.m7ur7l3.workers.dev/github.com/7ur7l3org/tracking-repo/info/refs?service=git-upload-pack always gets a 401 and then a 204 options preflight and then a 200. possibly this code is bad making the 401 request idk
+- "load by token write access" is returning a lot of "disk cache" responses. i feel like clicking the button should hard refresh the responses esp if they've changed something on github's end
+- make it not slow
+- refactor to reduce the number of lines in each file to be easier to edit with ai
+- update trakt converter, re-export trakt, and fully migrate
+- make wikidata updater ui for external id's that previews the batch update thing and then links to it to run from there
+- make import/export repo to disk (manual for now, eventually sync to disk that syncs tar of indexeddb repo to disk (nondestructively?), but currently it's way too slow to fs directly and the access popups kinda suck -> or am i just not using the good browserfs..)
+    - https://github.com/isomorphic-git/isomorphic-git/blob/main/docs/fs.md#browserfs Besides IndexedDB, BrowserFS supports many different backends with different performance characteristics (some backends support sync operations, some only async), as well as different features such as proxying a static file server as a read-only file system, mounting ZIP files as file systems, or overlaying a writeable in-memory filesystem on top of a read-only filesystem. You don't need to know all these features, but familiarizing yourself with the different options may be necessary if you hit a storage limit or performance bottleneck in the IndexedDB backend I suggested above.
+- add verbose trace debug logging (that normally are filtered out of console)
+- allow adding/removing consumption or queue vote from series/sequencing information view
+- make pr's that don't actually have any conflict auto-merge and branch clean up. long term tho. concurrent equivalent updates should be rare
+- make it so that merely visiting a thing doesn't auto-commit it to the repo probably. renderEntity probably just shouldn't ensureMediaEntry/saveBackendData. ensureMediaEntry should probably automatically saveBackendData if it changes
+- make /raw or something to view the raw json
