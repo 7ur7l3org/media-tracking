@@ -49,6 +49,7 @@ https://cors-proxy.m7ur7l3.workers.dev/github.com/7ur7l3org/tracking-repo/info/r
 - make /raw or something to view the raw json
 - make one click cloudflare worker button not trash
 - probably change default cors proxy to https://ueue-cors-proxy.7ur.workers.dev/ linking to source and noting why https://cors.isomorphic-git.org/ doesn't work
+- can easily add friends and view other people's queues and watchlists without logging out by sharing and saving to meta read-only pat's! probably via url ?repo=blah&pat= that disables sync and puts you in read only mode for their stuff!
 
 ---
 
