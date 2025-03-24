@@ -32,7 +32,8 @@ phase 1
 - when logged out i get `pushOrDivergeAndPush: Error: Please log in with your GitHub token first.` red at the top, but not in the sync status where it should clearly show "local only". the logs are `[11:04:20 PM mistress fe363a1] syncing repo  [11:04:20 PM mistress fe363a1] no changes to commit  [11:04:20 PM mistress fe363a1] cloneOrFetchUpdates: Error: Please log in with your GitHub token first.  [11:04:20 PM mistress fe363a1] pushOrDivergeAndPush: Error: Please log in with your GitHub token first.`. in fact when logged out and on the home page it's only a single yellow warning saying "syncing repo" since i guess the local repo wasn't even initialized yet (it becomes the same red once you visit any content page)
 - logging in doesn't trigger a sync until refresh
 - make it way easier to share login password/username between devices/sites, copy pasting the token and cors proxy separately and # appending them is dumb. should probably just show username and password directly possibly idk
-- make slow generic "loading..." actually incrementally load or something or at least show clearly what it's loading
+- make slow generic "loading..." actually incrementally load or something or at least show clearly what it's loading (e.g. main part first then series/sequencing is loading)
+- cache series/sequencing information in the ueue-media-tracking.json directly (similarly to caching visited content) with just ui to refresh/reload the series/sequencing information for a piece of content. probably this would be in .meta.series where all the root series are placed there. should make the wikidata cache less important too which is good
 
 phase 2
 - fetching 
