@@ -5,6 +5,7 @@ thanks https://chatgpt.com/c/67d7c151-3f90-800c-9811-cf45a2920d74 (cloudflare wo
 thanks https://chatgpt.com/c/67e1015d-38c4-800c-9eaf-ac5ea8796807 (cloudflare pages site deployment to https://ueue.pages.dev/)
 
 phase 1
+- fix that automatic sync is broken on ueue.7ur.it but works fine on ueue.pages.dev
 - find and spin up working cors proxy and make one click button for users to spin up their own personal one. for now running python script on localhost:8088
 - put on github pages
 - fix queues and consumptions pages
@@ -30,6 +31,8 @@ phase 1
 - the edit of votes should be able to switch which queue an entry is on directly
 - when logged out i get `pushOrDivergeAndPush: Error: Please log in with your GitHub token first.` red at the top, but not in the sync status where it should clearly show "local only". the logs are `[11:04:20 PM mistress fe363a1] syncing repo  [11:04:20 PM mistress fe363a1] no changes to commit  [11:04:20 PM mistress fe363a1] cloneOrFetchUpdates: Error: Please log in with your GitHub token first.  [11:04:20 PM mistress fe363a1] pushOrDivergeAndPush: Error: Please log in with your GitHub token first.`. in fact when logged out and on the home page it's only a single yellow warning saying "syncing repo" since i guess the local repo wasn't even initialized yet (it becomes the same red once you visit any content page)
 - logging in doesn't trigger a sync until refresh
+- make it way easier to share login password/username between devices/sites, copy pasting the token and cors proxy separately and # appending them is dumb. should probably just show username and password directly possibly idk
+- make slow generic "loading..." actually incrementally load or something or at least show clearly what it's loading
 
 phase 2
 - fetching 
