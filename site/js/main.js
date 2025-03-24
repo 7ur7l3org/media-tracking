@@ -1,7 +1,7 @@
 /* js/main.js */
 
-window.addEventListener('DOMContentLoaded', () => {
-  // Trigger a full sync on page load.
+// Trigger a full sync on page load.
+function syncOnPageLoad() {
   if (window.gitSync && typeof window.gitSync.syncRepo === 'function') {
     window.gitSync.syncRepo().catch(error => {
       console.error("Sync failed:", error);
@@ -9,7 +9,12 @@ window.addEventListener('DOMContentLoaded', () => {
   } else {
     console.error("gitSync.syncRepo is not available.");
   }
-});
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => queueMicrotask(syncOnPageLoad));
+} else {
+  queueMicrotask(syncOnPageLoad);
+}
 
 // Listen for history changes.
 window.addEventListener('popstate', function(event) {

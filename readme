@@ -5,7 +5,7 @@ thanks https://chatgpt.com/c/67d7c151-3f90-800c-9811-cf45a2920d74 (cloudflare wo
 thanks https://chatgpt.com/c/67e1015d-38c4-800c-9eaf-ac5ea8796807 (cloudflare pages site deployment to https://ueue.pages.dev/)
 
 phase 1
-- fix that automatic sync is broken on ueue.7ur.it but works fine on ueue.pages.dev
+- fix that automatic sync is broken on ueue.7ur.it but works fine on ueue.pages.dev -> aha 7ur.it is loading rocket-loader.min.js and pages.dev isn't
 - find and spin up working cors proxy and make one click button for users to spin up their own personal one. for now running python script on localhost:8088
 - put on github pages
 - fix queues and consumptions pages
