@@ -13,7 +13,7 @@ phase 1
 - make the ui not flicker - merge the new dom into the old dom directly updating contents and only inserting/deleting elements when necessary
 - make consumptions and queue votes show loading/progress in the new entry as it is syncing to github
 - make notes ui per id
-- dark mode by system default and toggle in corner
+- dark mode by system default and toggle in corner (https://chatgpt.com/c/67e24631-3cb4-800c-8c74-b2cffff5cb09 js in head to set theme from user toggle localStorage else os preference, use variables for everything, no themes)
 - fix login button to always prompt to update/add username/password if changed somehow in chrome password manager
 - ensure repo caches are wiped on logout and login -> orrr just the tokens so you can "login" to different offline repos? or maybe ux for "local repos" where you can wipe them if you want idk. like if you log out and then you see all the local repos you could log into without the pat or you could wipe them cause you see that they're there. that sounds like the best
 - make series/sequencing show top level consumed and queue votes for e.g. House in the Part of the series line just like e.g. season 5 does
