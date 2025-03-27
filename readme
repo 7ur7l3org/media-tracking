@@ -37,6 +37,7 @@ phase 1
 - pat doesn't wrap on a phone (and is wider than the phone screen) causing the whole page to be too wide (zooming out one actually fixes it, but i should make it wrap or overflow into the void or something..)
 - do debounced sync on visibility and focus changes https://chatgpt.com/c/67e58cec-bb98-800c-829a-9d513192634e
 - pwa offline and background sync https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Offline_and_background_operation , https://developer.mozilla.org/en-US/docs/Web/API/Web_Periodic_Background_Synchronization_API
+- verify two tabs syncing at the same time cant fuck anything up (e.g. do i have to lock the indexeddb git operations)
 
 phase 2
 - fetching 
