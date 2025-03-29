@@ -46,6 +46,7 @@ phase 1
 - add description to page title in addition to title and qid. `Title (Description) - ueueYOU (Qid)` maybe
 - move series/sequencing "follows" and "followed by" at the top by the title
 - add link to main ueue that goes to main ueue page
+- fr fucking make consumptions/votes and wikidata and series/sequencing all load separately from each other. shit's so slow
 
 phase 2
 - fetching 
