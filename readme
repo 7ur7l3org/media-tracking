@@ -4,6 +4,9 @@ thanks https://chatgpt.com/c/67d26a50-554c-800c-87ae-b8cb1d2f8cce
 thanks https://chatgpt.com/c/67d7c151-3f90-800c-9811-cf45a2920d74 (cloudflare workers cors proxy deployment to https://ueue-cors-proxy.7ur.workers.dev)
 thanks https://chatgpt.com/c/67e1015d-38c4-800c-9eaf-ac5ea8796807 (cloudflare pages site deployment to https://ueue.pages.dev/)
 
+can use something like https://ueue.7ur.it/?id=Q5884621 for unknown uncategorized everything
+can enter note saying ep3 for stuff that doesn't have episodes yet
+
 phase 1
 - fix queues and consumptions pages (queues?queue=books doesn't only load books. consumptions seems to work. both are missing notes and number of votes and probably sorting)
 - add edit buttons to notes and timestamps for queue votes and consumptions
@@ -42,6 +45,7 @@ phase 1
 - make add consumption ui (with note) to series/sequencing view so you can mark the handful that you just watched all watched at once
 - add description to page title in addition to title and qid. `Title (Description) - ueueYOU (Qid)` maybe
 - move series/sequencing "follows" and "followed by" at the top by the title
+- add link to main ueue that goes to main ueue page
 
 phase 2
 - fetching 
