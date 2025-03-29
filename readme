@@ -38,6 +38,10 @@ phase 1
 - do debounced sync on visibility and focus changes https://chatgpt.com/c/67e58cec-bb98-800c-829a-9d513192634e
 - pwa offline and background sync https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Offline_and_background_operation , https://developer.mozilla.org/en-US/docs/Web/API/Web_Periodic_Background_Synchronization_API
 - verify two tabs syncing at the same time cant fuck anything up (e.g. do i have to lock the indexeddb git operations)
+- make tooltip and click expand in series/sequencing show note
+- make add consumption ui (with note) to series/sequencing view so you can mark the handful that you just watched all watched at once
+- add description to page title in addition to title and qid. `Title (Description) - ueueYOU (Qid)` maybe
+- move series/sequencing "follows" and "followed by" at the top by the title
 
 phase 2
 - fetching 
