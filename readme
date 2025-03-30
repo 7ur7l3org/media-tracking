@@ -52,6 +52,7 @@ phase 1
 - fr fucking make consumptions/votes and wikidata and series/sequencing all load separately from each other. shit's so slow
 - public queues? additional auth to public repos? multi auth in general? /public-repo? or something?
 - pre fetch content for followed by in the background
+- name diverged branches better
 
 phase 2
 - fetching 
