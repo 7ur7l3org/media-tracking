@@ -48,6 +48,7 @@ phase 1
 - move series/sequencing "follows" and "followed by" at the top by the title
 - add link to main ueue that goes to main ueue page
 - fr fucking make consumptions/votes and wikidata and series/sequencing all load separately from each other. shit's so slow
+- public queues? additional auth to public repos? multi auth in general? /public-repo? or something?
 
 phase 2
 - fetching 
