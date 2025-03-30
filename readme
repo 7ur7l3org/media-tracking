@@ -9,6 +9,7 @@ can enter note saying ep3 for stuff that doesn't have episodes yet
 
 phase 1
 - dark theme, sync on visible, fix width/wrapping, content notes, edits, queue ordering and filtering
+- fix visiting content not pushing the commit leading to almost inevitable diverge on refresh (also doesn't make any sense indexeddb changing in the background but the commit living... somewhere??? well maybe the diverge is purely from two devices which is fair)
 - fix queues and consumptions pages (queues?queue=books doesn't only load books. consumptions seems to work. both are missing notes and number of votes and probably sorting)
 - add edit buttons to notes and timestamps for queue votes and consumptions
 - make queues page allow reordering queues for the add new queue vote ui, and deleting queues (and optionally purging all queue votes of that deleted queue from all media)
