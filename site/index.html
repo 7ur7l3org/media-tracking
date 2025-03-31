@@ -3,16 +3,30 @@
 <head>
   <meta charset="utf-8">
   <title>ueue🫵 - Wikidata Media Tracker - Media</title>
+  <!-- Load theme.js synchronously to set data-theme before CSS loads -->
+  <meta name="color-scheme" content="base-browser-light-dark-ui-theme--set-by-theme.js">
+  <script src="js/theme.js"></script>
   <link rel="stylesheet" href="styles.css">
   <!-- External libraries for Git operations -->
-  <script src="https://unpkg.com/@isomorphic-git/lightning-fs@4.6.0/dist/lightning-fs.min.js"></script>
-  <script src="https://unpkg.com/isomorphic-git@1.29.0/index.umd.min.js"></script>
-  <script src="https://unpkg.com/isomorphic-git@1.29.0/http/web/index.umd.js"></script>
+  <script src="external/lightning-fs-4.6.0.min.js"></script>
+  <script src="external/isomorphic-git-1.29.0-index.umd.min.js"></script>
+  <script src="external/isomorphic-git-1.29.0-http-web-index.umd.js"></script>
   <!-- Import HTTP helper as module and assign to global -->
   <script type="module">
-    import http from 'https://unpkg.com/isomorphic-git@1.29.0/http/web/index.js';
+    import http from './external/isomorphic-git-1.29.0-http-web-index.js';
     window.http = http;
   </script>
+  <!-- Other JS scripts (all deferred to after http is imported) -->
+  <script src="js/auth.js" defer></script>
+  <script src="js/git-sync.js" defer></script>
+  <script src="js/cache.js" defer></script>
+  <script src="js/wikidata.js" defer></script>
+  <script src="js/formatters.js" defer></script>
+  <script src="js/series.js" defer></script>
+  <script src="js/rendering.js" defer></script>
+  <script src="js/backend.js" defer></script>
+  <script src="js/search.js" defer></script>
+  <script src="js/main.js" defer></script>
 </head>
 <body>
   <!-- Header with navigation -->
@@ -45,18 +59,6 @@
 
   <!-- Entity Info Display -->
   <section id="infoDisplay" class="result"></section>
-  
-  <!-- Script load order: auth.js and git-sync.js come first -->
-  <script src="js/auth.js"></script>
-  <script src="js/git-sync.js"></script>
-  <script src="js/cache.js"></script>
-  <script src="js/wikidata.js"></script>
-  <script src="js/formatters.js"></script>
-  <script src="js/series.js"></script>
-  <script src="js/rendering.js"></script>
-  <script src="js/backend.js"></script>
-  <script src="js/search.js"></script>
-  <script src="js/main.js"></script>
 
   <!-- Footer showing authentication info and Git log -->
   <footer class="git-info">

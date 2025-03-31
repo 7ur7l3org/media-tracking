@@ -8,7 +8,7 @@ can use something like https://ueue.7ur.it/?id=Q5884621 for unknown uncategorize
 can enter note saying ep3 for stuff that doesn't have episodes yet
 
 phase 1
-- dark theme, sync on visible, fix width/wrapping, content notes, edits, queue ordering and filtering
+- sync on visible, fix width/wrapping, content notes, edits, queue ordering and filtering
 - fix visiting content not pushing the commit leading to almost inevitable diverge on refresh (also doesn't make any sense indexeddb changing in the background but the commit living... somewhere??? well maybe the diverge is purely from two devices which is fair)
 - make wikidata cache live forever until manual refresh (if success cause internet). few things aren't well in the past
 - fix queues and consumptions pages (queues?queue=books doesn't only load books. consumptions seems to work. both are missing notes and number of votes and probably sorting)
@@ -53,6 +53,8 @@ phase 1
 - public queues? additional auth to public repos? multi auth in general? /public-repo? or something? esp for sharing your own progress or giving someone a link to check where we're at if they're watching with you
 - pre fetch content for followed by in the background
 - name diverged branches better
+- move all zip tools gpt bullshit into scratch-prototyping/dont-use-4o lol
+- make theme better
 
 phase 2
 - fetching 
@@ -77,6 +79,7 @@ https://cors-proxy.m7ur7l3.workers.dev/github.com/7ur7l3org/tracking-repo/info/r
 ---
 
 done
+-- dark theme
 -- fix that automatic sync is broken on ueue.7ur.it but works fine on ueue.pages.dev -> aha 7ur.it is loading rocket-loader.min.js and pages.dev isn't. disabled it cause i couldn't get it to even load the script that maybe fixed it
 -- find and spin up working cors proxy and make one click button for users to spin up their own personal one. for now running python script on localhost:8088 -> https://dash.cloudflare.com/d3f974b3287fb000e629aafe6423b481/workers/services/view/ueue-cors-proxy/production/deployments = https://ueue-cors-proxy.7ur.workers.dev/ = https://github.com/7ur7l3org/cors-proxy . one click button is trash
 -- put on github pages -> put on cloudflare pages! https://dash.cloudflare.com/d3f974b3287fb000e629aafe6423b481/pages/view/ueue = https://ueue.7ur.it/

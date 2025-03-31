@@ -1,6 +1,6 @@
 /* styles.css */
 
-/* Theme Variables */
+/* Default Theme Variables (Light) */
 :root {
   --font-family: monospace;
   --primary-color: #333;
@@ -15,6 +15,9 @@
   --link-hover-decoration: underline;
   --active-link-decoration: underline;
   --active-link-font-weight: bold;
+
+  --summary-bg-1: #eee;      /* Used for #searchDetails and .series-details */
+  --summary-bg-2: #f0f0f0;   /* Used for .group-details */
 
   --table-border: 1px solid #ddd;
   --table-header-bg: #f0f0f0;
@@ -40,6 +43,8 @@
   --queue-header-bg: #eaeaea;
   --queue-header-font-weight: bold;
 
+  --backend-stat-color: #555;
+
   --small-font-size: 0.8em;
 
   --toggle-date-cursor: pointer;
@@ -56,6 +61,29 @@
   --add-queue-vote-margin-top: 5px;
   --add-queue-vote-padding: 5px;
   --add-queue-vote-border: 1px solid #ddd;
+}
+
+/* Dark Theme Overrides for data-theme="dark" */
+:root[data-theme="dark"] {
+  --primary-color: #f9f9f9;
+  --background-color: #333;
+  --border-color: #666;
+  --header-border-color: #666;
+  --link-color: #f9f9f9;
+  --summary-bg-1: #3c3c3c;      /* Or whatever dark shade you prefer */
+  --summary-bg-2: #3c3c3c;   /* Slightly lighter/different for grouping */
+  --table-border: 1px solid #555;
+  --table-header-bg: #3c3c3c;
+  --result-bg: #444;
+  --result-border: 1px solid #555;
+  --git-sync-status-border: 1px solid #555;
+  --git-sync-status-error-color: #ff5555;
+  --git-sync-status-success-color: #55ff55;
+  --queue-header-bg: #444;
+  --add-consumption-border: 1px solid #555;
+  --add-queue-vote-border: 1px solid #555;
+  --consumption-bg: #5a3a6f;
+  --backend-stat-color: #bbb;
 }
 
 /* Use a monospace font for everything */
@@ -176,7 +204,7 @@ table.backend-table td:first-child {
   cursor: pointer;
   font-weight: bold;
   padding: 4px;
-  background-color: #eee;
+  background-color: var(--summary-bg-1);
   border: 1px solid var(--border-color);
   margin-bottom: 5px;
 }
@@ -185,7 +213,7 @@ table.backend-table td:first-child {
   cursor: pointer;
   font-weight: bold;
   padding: 4px;
-  background-color: #f0f0f0;
+  background-color: var(--summary-bg-2);
   border: 1px solid var(--border-color);
   margin-bottom: 5px;
 }
@@ -194,7 +222,7 @@ table.backend-table td:first-child {
   cursor: pointer;
   font-weight: bold;
   padding: 4px;
-  background-color: #eee;
+  background-color: var(--summary-bg-1);
   border: 1px solid var(--border-color);
   margin-bottom: 5px;
 }
@@ -220,7 +248,7 @@ ul > details {
 .backend-stat {
   margin-left: 5px;
   font-style: italic;
-  color: #555;
+  color: var(--backend-stat-color);
   cursor: default;
   border-radius: 1px;
 }
