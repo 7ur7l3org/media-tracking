@@ -5,10 +5,20 @@
 import os
 import sys
 import pyperclip
+import subprocess
+from datetime import datetime
 
 MAX_LINES = 10000
 TRUNCATE_HEAD = 75
 TRUNCATE_TAIL = 75
+
+def get_git_sha():
+    try:
+        # Get the current git commit SHA
+        git_sha = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode('utf-8')
+        return git_sha
+    except Exception:
+        return "unknown"
 
 def gather_files(root_dir):
     """
@@ -61,12 +71,16 @@ def main():
         print(f"Error: {root_dir} is not a valid directory.")
         sys.exit(1)
 
+    # Get git sha and timestamp.
+    git_sha = get_git_sha()
+    timestamp = datetime.now().isoformat()
+
     # Header text to be placed before the file listings.
     header = (
         "hello! i am working on a project that is coming along nicely that will end up being a media/content "
         "history/list tracker. currently it interfaces with wikidata to get information about media. the wikidata "
         "qid's will be the authoritative keys used for tracking things as much as possible. let me just paste the code "
-        "for now and i'll ask you to help me iterate on it next after you are familiar with the code. in general i'd "
+        f"for now and i'll ask you to help me iterate on it next after you are familiar with the code (git sha: {git_sha} timestamp: {timestamp}). in general i'd "
         "like you to always give me the complete code of any files you need to edit, and no unchanged files, so it is "
         "easier for me to copy paste into my environment:"
     )
