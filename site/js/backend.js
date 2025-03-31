@@ -209,7 +209,7 @@ function renderBackendDetails(qid) {
   }
   html += `<tr class="addConsumptionRow">
              <td colspan="3">
-               <div style="padding:5px; border:1px solid #ddd;">
+               <div class="add-consumption-container">
                  <strong>Add new consumption:</strong><br>
                  <input type="text" id="newConsumptionInput" placeholder="Enter note">
                  <button id="addConsumptionBtn">Add Consumption</button>
@@ -232,7 +232,7 @@ function renderBackendDetails(qid) {
   if (qVotes && Object.keys(qVotes).length > 0) {
     Object.keys(qVotes).forEach(queueName => {
       html += `<tr class="queueHeaderRow">
-                 <td colspan="3" style="background-color: #eaeaea; font-weight: bold;">${queueName}</td>
+                 <td colspan="3" class="queue-header">${queueName}</td>
                </tr>`;
       if (qVotes[queueName].length > 0) {
         qVotes[queueName].forEach((vote, idx) => {
@@ -259,13 +259,13 @@ function renderBackendDetails(qid) {
   queueOptions += `<option value="new">-- new queue --</option>`;
   html += `<tr class="addQueueVoteRow">
              <td colspan="3">
-               <div style="margin-top:5px; border:1px solid #ddd; padding:5px;">
+               <div class="add-queue-vote-container">
                  <strong>Add new queue vote:</strong><br>
                  <label for="newQueueSelector">Queue:</label>
                  <select id="newQueueSelector">
                    ${queueOptions}
                  </select>
-                 <span id="newQueueNameContainer" style="display:none;">
+                 <span id="newQueueNameContainer" class="hidden">
                    <input type="text" id="newQueueName" placeholder="Enter new queue name">
                    <button id="addNewQueueBtn">Add Queue</button>
                  </span><br>
@@ -333,9 +333,9 @@ function attachAddEntryHandlers(qid) {
   if (queueSelector) {
     queueSelector.addEventListener("change", function() {
       if (this.value === "new") {
-        document.getElementById("newQueueNameContainer").style.display = "inline";
+        document.getElementById("newQueueNameContainer").classList.remove("hidden");
       } else {
-        document.getElementById("newQueueNameContainer").style.display = "none";
+        document.getElementById("newQueueNameContainer").classList.add("hidden");
       }
     });
   }
@@ -353,7 +353,7 @@ function attachAddEntryHandlers(qid) {
         updateGitSyncStatus("New queue added.", false, "green");
         document.getElementById("newQueueSelector").value = newQueueName;
         document.getElementById("newQueueName").value = "";
-        document.getElementById("newQueueNameContainer").style.display = "none";
+        document.getElementById("newQueueNameContainer").classList.add("hidden");
         window.refreshEntity(qid);
       } catch (e) {
         console.error(e);

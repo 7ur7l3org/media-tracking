@@ -165,12 +165,12 @@ async function updateAuthUI() {
           You are not logged in. To enable data sync (via <a href="https://github.com/isomorphic-git/isomorphic-git" target="_blank">isomorphic-git</a>), enter your GitHub Personal Access Token. See <a href="https://github.com/settings/personal-access-tokens" target="_blank">GitHub PAT settings</a> to manage or regenerate tokens, or create a new token with read and write access to repository Contents.
         </p>
         <label for="github-token">GitHub Token (password):</label>
-        <input type="password" id="github-token" placeholder="github_pat_...[#https://your-cors-proxy]" style="width:300px;" autocomplete="password" />
-        <button type="button" id="toggle-token-input" style="display: none;">Show</button>
+        <input type="password" id="github-token" placeholder="github_pat_...[#https://your-cors-proxy]" class="input-wide" autocomplete="password" />
+        <button type="button" id="toggle-token-input" class="hidden">Show</button>
         <small>Format: github_pat_...[#https://your-cors-proxy] (default CORS proxy is <a href="https://cors.isomorphic-git.org/">https://cors.isomorphic-git.org/</a>)</small><br/>
         <label for="repo-input">Repository URL (username):</label>
-        <input type="text" id="repo-input" placeholder="https://github.com/owner/repo" style="width:300px;" autocomplete="username" />
-        <small>[<button type="button" id="load-repos"><small>Load by Token Write Access</small></button>:<span id="repo-status"></span><select id="repo-selector" style="display:none;"></select>]</small><br/>
+        <input type="text" id="repo-input" placeholder="https://github.com/owner/repo" class="input-wide" autocomplete="username" />
+        <small>[<button type="button" id="load-repos"><small>Load by Token Write Access</small></button>:<span id="repo-status"></span><select id="repo-selector" class="hidden"></select>]</small><br/>
         <label for="storage-method">Client-Side Credential Storage Method:</label>
         <select id="storage-method">
           <option value="indexeddb">IndexedDB (persistent, local only)</option>
@@ -292,7 +292,8 @@ function populateRepoDropdown(repoNames) {
     option.textContent = repoName;
     repoSelector.appendChild(option);
   });
-  repoSelector.style.display = "inline-block";
+  repoSelector.classList.remove("hidden");
+  repoSelector.classList.add("inline-block");
   if (repoNames.length > 0) {
     repoSelector.selectedIndex = 0;
     document.getElementById("repo-input").value = repoNames[0];

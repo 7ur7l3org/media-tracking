@@ -31,42 +31,42 @@
 
 /* Use a monospace font for everything */
 body, input, button, h1, h2, h3, p, td, th, pre, a {
-    font-family: monospace;
+  font-family: monospace;
 }
 
 /* Basic styling for layout */
 body {
-    margin: 20px;
-    background-color: #f9f9f9;
-    color: #333;
+  margin: 20px;
+  background-color: #f9f9f9;
+  color: #333;
 }
 
 .result {
-    background-color: #fff;
-    padding: 15px;
-    border: 1px solid #ccc;
-    margin-bottom: 20px;
+  background-color: #fff;
+  padding: 15px;
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
 }
 
 table {
-    border-collapse: collapse;
-    margin-bottom: 20px;
-    width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  width: 100%;
 }
 
 table, th, td {
-    border: 1px solid #ddd;
-    padding: 5px;
+  border: 1px solid #ddd;
+  padding: 5px;
 }
 
 th {
-    background-color: #f0f0f0;
+  background-color: #f0f0f0;
 }
 
 /* Widen the first column in the property table */
 .properties-table th:first-child,
 .properties-table td:first-child {
-    width: 30%;
+  width: 30%;
 }
 
 /* Additional styling for backend tables to match other tables */
@@ -154,33 +154,33 @@ table.backend-table td:first-child {
 
 /* align details with li in parts-tree ul's */
 ul > details {
-    margin-left: -17px;
+  margin-left: -17px;
 }
 
 /* Styling for backend stats badges in the series tree */
 .backend-stat {
-    margin-left: 5px;
-    font-style: italic;
-    color: #555;
-    cursor: default;
-    border-radius: 1px;
+  margin-left: 5px;
+  font-style: italic;
+  color: #555;
+  cursor: default;
+  border-radius: 1px;
 }
 .backend-stat.consumed {
-    background-color: #e8d0ff; /* light purple */
+  background-color: #e8d0ff; /* light purple */
 }
 .backend-stat.queued {
-    background-color: #d0e7ff; /* light blue */
+  background-color: #d0e7ff; /* light blue */
 }
 
 .queued-line {
-    background-color: #d0e7ff; /* light blue */
-    display: inline-block;
-    border-radius: 1px;
+  background-color: #d0e7ff; /* light blue */
+  display: inline-block;
+  border-radius: 1px;
 }
 
 /* Styling for clickable dates */
 .toggle-date {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 /* Style the background and italic styling for consumption text */
@@ -224,8 +224,6 @@ ul > details {
   white-space: normal;
 }
 
-/* (Leave #searchDetails summary unmodified so that search remains normal) */
-
 /* === Extracted from consumptions.html === */
 .git-sync-status {
   font-family: monospace;
@@ -234,18 +232,61 @@ ul > details {
   border: 1px solid #ccc;
 }
 
-footer.git-info {
-  border-top: 1px solid #ccc;
-  margin-top: 20px;
-  padding-top: 10px;
-  font-family: monospace;
+/* New helper classes for centralized styling */
+
+/* Wide input fields */
+.input-wide {
+  width: 300px;
 }
 
-footer.git-info details {
-  margin-top: 10px;
+/* For elements that need display inline-block */
+.inline-block {
+  display: inline-block;
 }
 
-footer.git-info pre {
-  max-height: 200px;
-  overflow: auto;
+/* Container for new consumption entry */
+.add-consumption-container {
+  padding: 5px;
+  border: 1px solid #ddd;
+}
+
+/* Container for new queue vote entry */
+.add-queue-vote-container {
+  margin-top: 5px;
+  padding: 5px;
+  border: 1px solid #ddd;
+}
+
+/* Queue header cells (replacing inline styles) */
+.queue-header {
+  background-color: #eaeaea;
+  font-weight: bold;
+}
+
+/* Git Sync Status variations */
+.git-sync-status.error {
+  color: red;
+}
+.git-sync-status.success {
+  color: green;
+}
+.git-sync-status.warning {
+  color: orange;
+}
+
+/* Sync failure indicator */
+.sync-failure-indicator {
+  color: red;
+  font-weight: bold;
+}
+
+/* Branch warning link styling */
+.branch-warning-link {
+  color: orange;
+  font-weight: bold;
+}
+
+/* Branch error styling */
+.branch-error {
+  color: red;
 }

@@ -60,11 +60,19 @@ function updateGitSyncStatus(message, isError = false, color = null) {
   const statusElem = document.getElementById("gitSyncStatus");
   if (statusElem) {
     statusElem.innerHTML = message;
-    statusElem.style.color = color ? color : (isError ? "red" : "orange");
+    // Remove previous status classes
+    statusElem.classList.remove("error", "warning", "success");
+    // Determine new class based on provided color or error flag.
+    if (color === "green" || (!color && !isError)) {
+      statusElem.classList.add("success");
+    } else if (color === "red" || isError) {
+      statusElem.classList.add("error");
+    } else {
+      statusElem.classList.add("warning");
+    }
   }
   console.log("GitSyncStatus:", message);
   logGitOperation(message);
-  // (() => { const start = Date.now(); while (Date.now() - start < 1000) {} })();
 }
 
 function setSyncFailedHeader() {
@@ -73,8 +81,7 @@ function setSyncFailedHeader() {
     const indicator = document.createElement("span");
     indicator.id = "syncFailureIndicator";
     indicator.textContent = " SYNC FAILED! LOCAL ONLY!";
-    indicator.style.color = "red";
-    indicator.style.fontWeight = "bold";
+    indicator.classList.add("sync-failure-indicator");
     header.appendChild(indicator);
     updateGitSyncStatus("setSyncFailedHeader: Added failure indicator.");
   }
@@ -469,6 +476,7 @@ async function updateDivergedBranchNotice() {
   }
   if (branch === "mistress") {
     branchIndicator.textContent = "";
+    branchIndicator.className = "";
     return;
   }
   try {
@@ -476,10 +484,10 @@ async function updateDivergedBranchNotice() {
     const login = await getLogin();
     const { owner, repo } = parseRepoURL(login.repo);
     const prUrl = `https://github.com/${owner}/${repo}/pull/${pr.number}/conflicts`;
-    branchIndicator.innerHTML = ` [WARNING: You are on diverged branch: ${branch} (primary: mistress)] - <a href="${prUrl}" target="_blank" style="color: orange; font-weight: bold;">Resolve Conflicts</a>`;
+    branchIndicator.innerHTML = ` [WARNING: You are on diverged branch: ${branch} (primary: mistress)] - <a href="${prUrl}" target="_blank" class="branch-warning-link">Resolve Conflicts</a>`;
   } catch (err) {
     branchIndicator.textContent = ` [WARNING: You are on diverged branch: ${branch} (primary: mistress)] - Failed to create PR (check PAT): ${err}`;
-    branchIndicator.style.color = "red";
+    branchIndicator.classList.add("branch-error");
   }
 }
 
