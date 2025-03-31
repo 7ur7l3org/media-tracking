@@ -1,66 +1,125 @@
 /* styles.css */
 
+/* Theme Variables */
+:root {
+  --font-family: monospace;
+  --primary-color: #333;
+  --background-color: #f9f9f9;
+  --border-color: #ccc;
+  --header-border-color: #ccc;
+  --header-padding-bottom: 10px;
+  --header-margin-bottom: 20px;
+  --header-title-font-size: 1.5em;
+  --header-title-font-weight: bold;
+  --link-color: #333;
+  --link-hover-decoration: underline;
+  --active-link-decoration: underline;
+  --active-link-font-weight: bold;
+
+  --table-border: 1px solid #ddd;
+  --table-header-bg: #f0f0f0;
+  --table-padding: 5px;
+
+  --result-bg: #fff;
+  --result-padding: 15px;
+  --result-border: 1px solid #ccc;
+  --result-margin-bottom: 20px;
+
+  --site-margin: 20px;
+
+  --git-sync-status-font-family: monospace;
+  --git-sync-status-padding: 10px;
+  --git-sync-status-margin: 10px 0;
+  --git-sync-status-border: 1px solid #ccc;
+  --git-sync-status-error-color: red;
+  --git-sync-status-success-color: green;
+  --git-sync-status-warning-color: orange;
+
+  --consumption-bg: #e8d0ff;
+  --queue-bg: #d0e7ff;
+  --queue-header-bg: #eaeaea;
+  --queue-header-font-weight: bold;
+
+  --small-font-size: 0.8em;
+
+  --toggle-date-cursor: pointer;
+
+  --sync-failure-color: red;
+  --branch-warning-color: orange;
+  --branch-error-color: red;
+
+  --input-wide-width: 300px;
+
+  --add-consumption-padding: 5px;
+  --add-consumption-border: 1px solid #ddd;
+
+  --add-queue-vote-margin-top: 5px;
+  --add-queue-vote-padding: 5px;
+  --add-queue-vote-border: 1px solid #ddd;
+}
+
+/* Use a monospace font for everything */
+body, input, button, h1, h2, h3, p, td, th, pre, a {
+  font-family: var(--font-family);
+}
+
+/* Basic styling for layout */
+body {
+  margin: var(--site-margin);
+  background-color: var(--background-color);
+  color: var(--primary-color);
+}
+
 /* Common header styles */
 .site-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ccc;
+  margin-bottom: var(--header-margin-bottom);
+  padding-bottom: var(--header-padding-bottom);
+  border-bottom: 1px solid var(--header-border-color);
 }
 
 .site-title {
-  font-size: 1.5em;
-  font-weight: bold;
+  font-size: var(--header-title-font-size);
+  font-weight: var(--header-title-font-weight);
 }
 
 .site-nav a {
   text-decoration: none;
-  color: #333;
+  color: var(--link-color);
 }
 
 .site-nav a:hover {
-  text-decoration: underline;
+  text-decoration: var(--link-hover-decoration);
 }
 
 .site-nav a.active {
-  text-decoration: underline;
-  font-weight: bold;
+  text-decoration: var(--active-link-decoration);
+  font-weight: var(--active-link-font-weight);
 }
 
-/* Use a monospace font for everything */
-body, input, button, h1, h2, h3, p, td, th, pre, a {
-  font-family: monospace;
-}
-
-/* Basic styling for layout */
-body {
-  margin: 20px;
-  background-color: #f9f9f9;
-  color: #333;
-}
-
+/* Basic styling for results and tables */
 .result {
-  background-color: #fff;
-  padding: 15px;
-  border: 1px solid #ccc;
-  margin-bottom: 20px;
+  background-color: var(--result-bg);
+  padding: var(--result-padding);
+  border: var(--result-border);
+  margin-bottom: var(--result-margin-bottom);
 }
 
 table {
   border-collapse: collapse;
-  margin-bottom: 20px;
+  margin-bottom: var(--result-margin-bottom);
   width: 100%;
 }
 
 table, th, td {
-  border: 1px solid #ddd;
-  padding: 5px;
+  border: var(--table-border);
+  padding: var(--table-padding);
 }
 
 th {
-  background-color: #f0f0f0;
+  background-color: var(--table-header-bg);
 }
 
 /* Widen the first column in the property table */
@@ -73,15 +132,15 @@ th {
 .backend-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
+  margin-bottom: var(--result-margin-bottom);
 }
 .backend-table th,
 .backend-table td {
-  border: 1px solid #ddd;
-  padding: 5px;
+  border: var(--table-border);
+  padding: var(--table-padding);
 }
 .backend-table th {
-  background-color: #f0f0f0;
+  background-color: var(--table-header-bg);
 }
 table.backend-table th:first-child,
 table.backend-table td:first-child {
@@ -94,7 +153,7 @@ table.backend-table td:first-child {
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--border-color);
   padding: 4px 0;
 }
 .search-result-item span {
@@ -118,7 +177,7 @@ table.backend-table td:first-child {
   font-weight: bold;
   padding: 4px;
   background-color: #eee;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   margin-bottom: 5px;
 }
 /* Collapsible property groups */
@@ -127,7 +186,7 @@ table.backend-table td:first-child {
   font-weight: bold;
   padding: 4px;
   background-color: #f0f0f0;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   margin-bottom: 5px;
 }
 /* Details element for series rows */
@@ -136,20 +195,20 @@ table.backend-table td:first-child {
   font-weight: bold;
   padding: 4px;
   background-color: #eee;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   margin-bottom: 5px;
 }
 /* Extra links (sqid and wikidata) in a smaller font */
 .extra-link {
-  font-size: 0.8em;
+  font-size: var(--small-font-size);
 }
 /* QID and property IDs in a smaller font */
 .small-id {
-  font-size: 0.8em;
+  font-size: var(--small-font-size);
 }
 /* A helper class to ensure extra link elements inside small sections remain small */
 .small-extra {
-  font-size: 0.8em;
+  font-size: var(--small-font-size);
 }
 
 /* align details with li in parts-tree ul's */
@@ -166,32 +225,32 @@ ul > details {
   border-radius: 1px;
 }
 .backend-stat.consumed {
-  background-color: #e8d0ff; /* light purple */
+  background-color: var(--consumption-bg);
 }
 .backend-stat.queued {
-  background-color: #d0e7ff; /* light blue */
+  background-color: var(--queue-bg);
 }
 
 .queued-line {
-  background-color: #d0e7ff; /* light blue */
+  background-color: var(--queue-bg);
   display: inline-block;
   border-radius: 1px;
 }
 
 /* Styling for clickable dates */
 .toggle-date {
-  cursor: pointer;
+  cursor: var(--toggle-date-cursor);
 }
 
 /* Style the background and italic styling for consumption text */
 .consumption-date-cell {
-  background-color: #e8d0ff; /* light purple background */
+  background-color: var(--consumption-bg);
   font-style: italic;
 }
 
 /* Style entire queue vote rows with a light blue background */
 .queue-vote-row {
-  background-color: #d0e7ff; /* light blue */
+  background-color: var(--queue-bg);
 }
 
 /* Optional: style for toggle notes buttons */
@@ -226,17 +285,17 @@ ul > details {
 
 /* === Extracted from consumptions.html === */
 .git-sync-status {
-  font-family: monospace;
-  padding: 10px;
-  margin: 10px 0;
-  border: 1px solid #ccc;
+  font-family: var(--font-family);
+  padding: var(--git-sync-status-padding);
+  margin: var(--git-sync-status-margin);
+  border: var(--git-sync-status-border);
 }
 
 /* New helper classes for centralized styling */
 
 /* Wide input fields */
 .input-wide {
-  width: 300px;
+  width: var(--input-wide-width);
 }
 
 /* For elements that need display inline-block */
@@ -246,47 +305,47 @@ ul > details {
 
 /* Container for new consumption entry */
 .add-consumption-container {
-  padding: 5px;
-  border: 1px solid #ddd;
+  padding: var(--add-consumption-padding);
+  border: var(--add-consumption-border);
 }
 
 /* Container for new queue vote entry */
 .add-queue-vote-container {
-  margin-top: 5px;
-  padding: 5px;
-  border: 1px solid #ddd;
+  margin-top: var(--add-queue-vote-margin-top);
+  padding: var(--add-queue-vote-padding);
+  border: var(--add-queue-vote-border);
 }
 
 /* Queue header cells (replacing inline styles) */
 .queue-header {
-  background-color: #eaeaea;
-  font-weight: bold;
+  background-color: var(--queue-header-bg);
+  font-weight: var(--queue-header-font-weight);
 }
 
 /* Git Sync Status variations */
 .git-sync-status.error {
-  color: red;
+  color: var(--git-sync-status-error-color);
 }
 .git-sync-status.success {
-  color: green;
+  color: var(--git-sync-status-success-color);
 }
 .git-sync-status.warning {
-  color: orange;
+  color: var(--git-sync-status-warning-color);
 }
 
 /* Sync failure indicator */
 .sync-failure-indicator {
-  color: red;
+  color: var(--sync-failure-color);
   font-weight: bold;
 }
 
 /* Branch warning link styling */
 .branch-warning-link {
-  color: orange;
+  color: var(--branch-warning-color);
   font-weight: bold;
 }
 
 /* Branch error styling */
 .branch-error {
-  color: red;
+  color: var(--branch-error-color);
 }
