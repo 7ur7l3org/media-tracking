@@ -2,4 +2,9 @@ gpt seems to want to work with zips now for some reason
 
 TODOs:
 - for update-site-from-gpt-inbox.py have a --hard mode that wipes site and fully replaces it with the new site
-- give grab-updated-zip.ps1 an optional destination directory like gpt-upload-outbox-site that can be .gitignore'd
+    - gpt seems to like giving me patch zips tho
+
+---
+
+done:
+-- give grab-updated-zip.ps1 an optional destination directory like gpt-upload-outbox-site that can be .gitignore'd
