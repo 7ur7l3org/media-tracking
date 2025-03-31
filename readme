@@ -55,6 +55,8 @@ phase 1
 - name diverged branches better
 - move all zip tools gpt bullshit into scratch-prototyping/dont-use-4o lol
 - make theme better
+- make theme changing ux to call setTheme light or dark or nothing to be sustem preference
+- make cloudflare-deploy branch to merge mistress into so i dont abuse their autobuilds unnecessarily
 
 phase 2
 - fetching 
