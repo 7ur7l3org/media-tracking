@@ -225,3 +225,27 @@ ul > details {
 }
 
 /* (Leave #searchDetails summary unmodified so that search remains normal) */
+
+/* === Extracted from consumptions.html === */
+.git-sync-status {
+  font-family: monospace;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+}
+
+footer.git-info {
+  border-top: 1px solid #ccc;
+  margin-top: 20px;
+  padding-top: 10px;
+  font-family: monospace;
+}
+
+footer.git-info details {
+  margin-top: 10px;
+}
+
+footer.git-info pre {
+  max-height: 200px;
+  overflow: auto;
+}

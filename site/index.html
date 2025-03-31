@@ -41,7 +41,7 @@
   </details>
 
   <!-- Git Sync Status (moved up for prominence) -->
-  <div id="gitSyncStatus" style="font-family: monospace; padding: 10px; margin: 10px 0; border: 1px solid #ccc;"></div>
+  <div id="gitSyncStatus" class="git-sync-status"></div>
 
   <!-- Entity Info Display -->
   <section id="infoDisplay" class="result"></section>
@@ -59,11 +59,11 @@
   <script src="js/main.js"></script>
 
   <!-- Footer showing authentication info and Git log -->
-  <footer style="border-top: 1px solid #ccc; margin-top: 20px; padding-top: 10px; font-family: monospace;">
+  <footer class="git-info">
     <div id="authFooter"></div>
-    <details id="gitLog" open style="margin-top:10px;">
+    <details id="gitLog" open>
       <summary>Git Operations Log</summary>
-      <pre id="gitLogContent" style="max-height:200px; overflow:auto;"></pre>
+      <pre id="gitLogContent"></pre>
     </details>
   </footer>
 </body>
