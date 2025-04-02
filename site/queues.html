@@ -3,8 +3,23 @@
 <head>
   <meta charset="utf-8">
   <title>Queues - ueue🫵 - Wikidata Media Tracker</title>
-  <!-- Load theme.js synchronously -->
-  <meta name="color-scheme" content="base-browser-light-dark-ui-theme--set-by-theme.js">
+  <!-- Load theme.js synchronously to set data-theme before CSS loads -->
+  <meta name="color-scheme" content="setme">
+  <script>
+    function applyTheme(theme) {
+      metaColorSchemes = {
+        light: "light",
+        dark: "dark"
+      };
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      theme = theme ? theme : systemTheme;
+      const colorScheme = theme in metaColorSchemes ? metaColorSchemes[theme] : systemTheme;
+      
+      document.documentElement.setAttribute("data-theme", theme)
+      document.querySelector('meta[name="color-scheme"]').content = colorScheme;
+    }
+    applyTheme(localStorage.getItem("theme"));
+  </script>
   <script src="js/theme.js"></script>
   <link rel="stylesheet" href="styles.css">
   <!-- External libraries for Git operations -->
