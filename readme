@@ -50,7 +50,7 @@ phase 1
 - move series/sequencing "follows" and "followed by" at the top by the title
 - add link to main ueue that goes to main ueue page
 - fr fucking make consumptions/votes and wikidata and series/sequencing all load separately from each other. shit's so slow
-- public queues? additional auth to public repos? multi auth in general? /public-repo? or something? esp for sharing your own progress or giving someone a link to check where we're at if they're watching with you
+- public queues? additional auth to public repos? multi auth in general? /public-repo? or something? esp for sharing your own progress or giving someone a link to check where we're at if they're watching with you. actually the github path to a public repo should be completely fine and should work patless. just need to work out rw for main user else read only or something on the repo side
 - pre fetch content for followed by in the background
 - name diverged branches better
 - move all zip tools gpt bullshit into scratch-prototyping/dont-use-4o lol
