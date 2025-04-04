@@ -84,6 +84,7 @@ https://cors-proxy.m7ur7l3.workers.dev/github.com/7ur7l3org/tracking-repo/info/r
 ---
 
 done
+-- made update-site-dependencies.py actually do as advertized
 -- make work on file:// -> `http` was loaded by isomorphic-git-1.29.0-http-web-index.umd.js as `GitHttp` so just had to use that. didn't need the es 6 http-web-index.js module itself at all
 -- pat doesn't wrap on a phone (and is wider than the phone screen) causing the whole page to be too wide (zooming out one actually fixes it, but i should make it wrap or overflow into the void or something..) -> overflow auto
 -- fix width/wrapping
