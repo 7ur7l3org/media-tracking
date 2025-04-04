@@ -5,12 +5,10 @@ import sys
 import shutil
 import re
 from pathlib import Path
-from os.path import splitext
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 SITE_DIR = SCRIPT_DIR / "site"
 
-# Hardcoded list of files to roll
 ASSET_GLOBS = [
     "site/js/*.js",
     "site/styles.css",
@@ -39,13 +37,16 @@ def collect_files():
         files.extend(SCRIPT_DIR.glob(pattern))
     return files
 
+def strip_existing_sha(stem):
+    return re.sub(r"\.[a-f0-9]{7}$", "", stem)
+
 def roll_filenames(files, sha):
     rolled = []
     for path in files:
         if not path.is_file():
             continue
 
-        base = path.stem
+        base = strip_existing_sha(path.stem)
         ext = path.suffix
         new_name = f"{base}.{sha}{ext}"
         new_path = path.with_name(new_name)
@@ -59,37 +60,36 @@ def roll_filenames(files, sha):
 def update_refs(rolled_files, sha):
     print(f"[+] Rewriting references in {SITE_DIR}/*")
 
-    for html_file in SITE_DIR.glob("*"):
-        if not html_file.is_file():
+    for file in SITE_DIR.glob("*"):
+        if not file.is_file():
             continue
 
-        with html_file.open("r", encoding="utf-8") as f:
+        with file.open("r", encoding="utf-8") as f:
             content = f.read()
-
         original = content
 
         for path in rolled_files:
-            rel = path.relative_to(SITE_DIR).as_posix()  # e.g. "js/git-sync.abc1234.js"
-            stem, ext = splitext(rel)
-            # Match quoted string like "js/git-sync.*.js"
-            pattern = re.compile(rf'"{re.escape(stem)}.*?{re.escape(ext)}"')
-            replacement = f'"{stem}.{sha}{ext}"'
+            rel = path.relative_to(SITE_DIR).as_posix()
+            stem, ext = rel.rsplit(".", 1)
+            ext = "." + ext
+            pattern = re.compile(rf'"{re.escape(strip_existing_sha(stem))}.*?{re.escape(ext)}"')
+            replacement = f'"{strip_existing_sha(stem)}.{sha}{ext}"'
             content = pattern.sub(replacement, content)
 
         if content != original:
-            print(f"📝 Patched {html_file.name}")
-            with html_file.open("w", encoding="utf-8") as f:
+            print(f"📝 Patched {file.name}")
+            with file.open("w", encoding="utf-8") as f:
                 f.write(content)
 
 def commit_and_merge():
     print("[+] Committing and merging into 'mistress'")
     run(["git", "add", "."])
     run(["git", "commit", "-m", "Deploy: roll asset filenames to SHA"])
+    run(["git", "push"])  # Push mattress before merge
     run(["git", "checkout", "mistress"])
     run(["git", "merge", "--no-ff", "mattress"])
-    run(["git", "push"])
+    run(["git", "push"])  # Push mistress after merge
     run(["git", "checkout", "mattress"])
-    run(["git", "push"])
 
 def main():
     check_branch()
