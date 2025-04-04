@@ -11,7 +11,7 @@ SITE_DIR = SCRIPT_DIR / "site"
 
 ASSET_GLOBS = [
     "site/js/*.js",
-    "site/styles.css",
+    "site/*.css",
 ]
 
 def run(cmd):
