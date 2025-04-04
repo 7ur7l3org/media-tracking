@@ -4,29 +4,14 @@
   <meta charset="utf-8">
   <title>ueue🫵 - Wikidata Media Tracker - Media</title>
   <!-- Load theme.js synchronously to set data-theme before CSS loads -->
-  <meta name="color-scheme" content="setme">
-  <script>
-    function applyTheme(theme) {
-      metaColorSchemes = {
-        light: "light",
-        dark: "dark"
-      };
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      theme = theme ? theme : systemTheme;
-      const colorScheme = theme in metaColorSchemes ? metaColorSchemes[theme] : systemTheme;
-      
-      document.documentElement.setAttribute("data-theme", theme)
-      document.querySelector('meta[name="color-scheme"]').content = colorScheme;
-    }
-    applyTheme(localStorage.getItem("theme"));
-  </script>
+  <meta name="color-scheme" content="set-by-theme-js">
   <script src="js/theme.js"></script>
   <link rel="stylesheet" href="styles.css">
   <!-- External libraries for Git operations -->
-  <script src="external/@isomorphic-git_lightning-fs@4.6.0_dist_lightning-fs.min.js"></script>
-  <script src="external/isomorphic-git@1.30.1_index.umd.min.js"></script>
-  <script src="external/isomorphic-git@1.30.1_http_web_index.umd.js"></script>
-  <!-- Other JS scripts (all deferred to after http is imported) -->
+  <script src="external/@isomorphic-git_lightning-fs@4.6.0_dist_lightning-fs.min.js" defer></script>
+  <script src="external/isomorphic-git@1.30.1_index.umd.min.js" defer></script>
+  <script src="external/isomorphic-git@1.30.1_http_web_index.umd.js" defer></script>
+  <!-- Other JS scripts -->
   <script src="js/auth.js" defer></script>
   <script src="js/git-sync.js" defer></script>
   <script src="js/cache.js" defer></script>
