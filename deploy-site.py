@@ -87,7 +87,9 @@ def commit_and_merge():
     run(["git", "commit", "-m", "Deploy: roll asset filenames to SHA"])
     run(["git", "checkout", "mistress"])
     run(["git", "merge", "--no-ff", "mattress"])
+    run(["git", "push"])
     run(["git", "checkout", "mattress"])
+    run(["git", "push"])
 
 def main():
     check_branch()
