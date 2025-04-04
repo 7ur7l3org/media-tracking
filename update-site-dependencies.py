@@ -15,10 +15,6 @@ dependencies = [
     {
         "url": "https://unpkg.com/isomorphic-git@1.29.0/http/web/index.umd.js",
         "filename": "isomorphic-git-1.29.0-http-web-index.umd.js"
-    },
-    {
-        "url": "https://unpkg.com/isomorphic-git@1.29.0/http/web/index.js",
-        "filename": "isomorphic-git-1.29.0-http-web-index.js"
     }
 ]
 

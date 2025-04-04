@@ -126,7 +126,7 @@ async function cloneOrFetchUpdates() {
       updateGitSyncStatus("local repo exists – fetching updates...");
       await git.fetch({
         fs: pfs,
-        http,
+        http: window.GitHttp,
         dir: repoDir,
         onAuth: () => authObj,
         corsProxy: login.corsProxy,
@@ -139,7 +139,7 @@ async function cloneOrFetchUpdates() {
       try {
         await git.clone({
           fs: pfs,
-          http,
+          http: window.GitHttp,
           dir: repoDir,
           url: repoUrl,
           singleBranch: true,
@@ -331,7 +331,7 @@ async function pushOrDivergeAndPush() {
     updateGitSyncStatus("pushing changes to GitHub...");
     await git.push({
       fs: pfs,
-      http,
+      http: window.GitHttp,
       dir: repoDir,
       ref: branch,
       onAuth: () => authObj,
@@ -349,7 +349,7 @@ async function pushOrDivergeAndPush() {
         updateGitSyncStatus("pushOrDivergeAndPush: Switched to branch: " + sessionBranch, true);
         await git.push({
           fs: pfs,
-          http,
+          http: window.GitHttp,
           dir: repoDir,
           ref: sessionBranch,
           remoteRef: sessionBranch,
