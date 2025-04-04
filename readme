@@ -55,8 +55,6 @@ phase 1
 - move all zip tools gpt bullshit into scratch-prototyping/dont-use-4o lol
 - make theme better
 - make theme changing ux to call setTheme light or dark or nothing to be sustem preference
-- make cloudflare-deploy branch to merge mistress into so i dont abuse their autobuilds unnecessarily
-- make all files roll to -vN or -firmmmmmmmm or -firm32m so there can be no caching on merge into deploy
 - probably move the theme logic back into theme.js now that the phone's css cache is updated by visiting it manually and spam refreshing
 - happy `remote already updated (skipping push)` on `[1:42:13 AM mistress cdf11c8] cloneOrFetchUpdates: Error cloning repo: http is not defined` should not be possible. both cause i should load http correctly but also because i'm not detecting clone failures
 
@@ -84,6 +82,8 @@ https://cors-proxy.m7ur7l3.workers.dev/github.com/7ur7l3org/tracking-repo/info/r
 ---
 
 done
+-- make all files roll to -vN or -firmmmmmmmm or -firm32m so there can be no caching on merge into deploy -> yes
+-- make cloudflare-deploy branch to merge mistress into so i dont abuse their autobuilds unnecessarily -> mistress is deploy. mattress is dev
 -- made update-site-dependencies.py actually do as advertized
 -- make work on file:// -> `http` was loaded by isomorphic-git-1.29.0-http-web-index.umd.js as `GitHttp` so just had to use that. didn't need the es 6 http-web-index.js module itself at all
 -- pat doesn't wrap on a phone (and is wider than the phone screen) causing the whole page to be too wide (zooming out one actually fixes it, but i should make it wrap or overflow into the void or something..) -> overflow auto
