@@ -89,6 +89,7 @@
 /* Use a monospace font for everything */
 body, input, button, h1, h2, h3, p, td, th, pre, a {
   font-family: var(--font-family);
+  overflow: auto;
 }
 
 /* Basic styling for layout */
