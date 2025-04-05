@@ -145,7 +145,7 @@ def reset_refs(files):
 def deploy(rolled_files, sha):
     print("[+] Committing rolled versions for deploy")
     run(["git", "add", "."])
-    run(["git", "commit", "-m", "Deploy: roll asset filenames to SHA {sha}"])
+    run(["git", "commit", "-m", f"Deploy: roll asset filenames to SHA {sha}"])
     run(["git", "push"])
 
     print("[+] Fast-forwarding mistress to mattress (no merge commits allowed)")
