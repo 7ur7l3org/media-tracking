@@ -8,9 +8,18 @@ can use something like https://ueue.7ur.it/?id=Q5884621 for unknown uncategorize
 can enter note saying ep3 for stuff that doesn't have episodes yet
 
 phase 1
+- why the fuck is css broken -> deploy turns <link rel="stylesheet" href="styles.123abcd.css"> into <link rel="styles.dca3bc1.css"> amazing
+- probably half revert deploy back into just sticking ?v=N into all references in the htmls. should be able to navigate to the files by name. having the filenames change is cancerous and i don't really want even more commits to make it look and feel normal on dev
+- make sitemap or filemap or some index of the site's files somehow
+- how the fuck did i diverge onto master from trash network. master has no history in common with mistress so failed to make pr. what in the world. did its indexeddb get wiped?
 - sync on visible, content notes, edits, queue ordering and filtering
+- make series/sequencing etc load separately
+- add consumption with note inline in series/sequencing view on button
+- make series/sequencing cache common per root qid across all content pages of that series
+- make cache forever and only update in background ("verifying..."). possibly put in heavier cache.json instead of manual indexeddb tbh (device should always have a clone so it should only be the background verify to fetch re-query and update whenever, but otherwise should be used as existing indexeddb is)
 - fix visiting content not pushing the commit leading to almost inevitable diverge on refresh (also doesn't make any sense indexeddb changing in the background but the commit living... somewhere??? well maybe the diverge is purely from two devices which is fair)
 - make wikidata cache live forever until manual refresh (if success cause internet). few things aren't well in the past
+- make favicon be you finger, maybe nice black and white monospace ish font
 - fix queues and consumptions pages (queues?queue=books doesn't only load books. consumptions seems to work. both are missing notes and number of votes and probably sorting)
 - add edit buttons to notes and timestamps for queue votes and consumptions
 - make queues page allow reordering queues for the add new queue vote ui, and deleting queues (and optionally purging all queue votes of that deleted queue from all media)
