@@ -72,7 +72,7 @@ def update_refs(rolled_files, sha):
             rel = path.relative_to(SITE_DIR).as_posix()
             stem, ext = rel.rsplit(".", 1)
             ext = "." + ext
-            pattern = re.compile(rf'"{re.escape(strip_existing_sha(stem))}.*?{re.escape(ext)}"')
+            pattern = re.compile(rf'"{re.escape(strip_existing_sha(stem))}[^"]*?{re.escape(ext)}"')
             replacement = f'"{strip_existing_sha(stem)}.{sha}{ext}"'
             content = pattern.sub(replacement, content)
 
