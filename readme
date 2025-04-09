@@ -13,6 +13,10 @@ phase 0
 phase 1
 - merge remote into here i know i updated it on github
 - merge master into mistress. see if there's any logs for how that happened where trash internet got the repo re-initialized from nothing
+- make all queues show single table with all entries where one column is the queue but its all sorted in reverse chronological order
+- why the fuck is css broken -> deploy turns <link rel="stylesheet" href="styles.123abcd.css"> into <link rel="styles.dca3bc1.css"> amazing
+- probably half revert deploy back into just sticking ?v=N into all references in the htmls. should be able to navigate to the files by name. having the filenames change is cancerous and i don't really want even more commits to make it look and feel normal on dev
+- make sitemap or filemap or some index of the site's files somehow
 - how the fuck did i diverge onto master from trash network. master has no history in common with mistress so failed to make pr. what in the world. did its indexeddb get wiped?
     - it came from an auto commit pre-sync. somehow the files existed but we were still on master.. and then did something to force a push.. which probably kept us diverged. does the clone/fetch not always put us on mistress? how could we have files without being on a legit commit? i don't think we ever git init..
     - post-merge of master into mistress. what in the fucking world. it did put my phone chrome back on mistress
