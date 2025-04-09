@@ -8,6 +8,8 @@ can use something like https://ueue.7ur.it/?id=Q5884621 for unknown uncategorize
 can enter note saying ep3 for stuff that doesn't have episodes yet
 
 phase 1
+- 
+- also deploy to github pages now that the repo is public. static site mirrors should work completely fine
 - set default branch to mattress so i dont keep committing readme changes to mistress...
 - why the fuck is css broken -> deploy turns <link rel="stylesheet" href="styles.123abcd.css"> into <link rel="styles.dca3bc1.css"> amazing
 - probably half revert deploy back into just sticking ?v=N into all references in the htmls. should be able to navigate to the files by name. having the filenames change is cancerous and i don't really want even more commits to make it look and feel normal on dev
