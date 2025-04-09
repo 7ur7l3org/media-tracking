@@ -1,0 +1,48 @@
+<<<<<<< HEAD
+    "http://www.wikidata.org/entity/Q130553563": {
+      "meta": {
+        "title": "The Unaware Atelier Master",
+        "description": "Japanese anime television series"
+      },
+      "notes": "",
+      "consumptions": [
+        {
+          "when": "2025-04-06T19:22:21.280Z",
+          "note": "ep1",
+          "rating": null
+        }
+      ],
+      "queue-votes": {
+        "watchlist": [
+          {
+            "when": "2025-04-06T19:22:24.275Z",
+=======
+    "http://www.wikidata.org/entity/Q487181": {
+      "meta": {
+        "title": "Requiem for a Dream",
+        "description": "2000 film by Darren Aronofsky"
+      },
+      "notes": "",
+      "consumptions": [],
+      "queue-votes": {
+        "watchlist": [
+          {
+            "when": "2025-04-05T02:26:00.365Z",
+>>>>>>> master
+            "note": ""
+          }
+        ]
+      }
+    },
+
+
+
+this shit keeps happening... it treats this
+
+            "note": ""
+          }
+        ]
+      }
+    },
+
+as common so just assumes you only need one of them or something

@@ -11,11 +11,26 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- merge remote into here i know i updated it on github
+- merge master into mistress. see if there's any logs for how that happened where trash internet got the repo re-initialized from nothing
+- how the fuck did i diverge onto master from trash network. master has no history in common with mistress so failed to make pr. what in the world. did its indexeddb get wiped?
+    - it came from an auto commit pre-sync. somehow the files existed but we were still on master.. and then did something to force a push.. which probably kept us diverged. does the clone/fetch not always put us on mistress? how could we have files without being on a legit commit? i don't think we ever git init..
+    - post-merge of master into mistress. what in the fucking world. it did put my phone chrome back on mistress
+        [3:59:53 AM] syncing repo
+        [3:59:53 AM] committing changes: Auto-commit pre-sync
+        [3:59:53 AM] Error committing changes: Could not find HEAD.
+        [3:59:53 AM] local repo exists – fetching updates...
+        [3:59:53 AM] cloning repo...
+        [3:59:54 AM mistress 9e09b28] repo cloned successfully
+        [3:59:54 AM mistress 9e09b28] remote already updated (skipping push)
+    - renamed master to master--TODO-DEBUG-HOW-THIS-HAPPENED on gitlab for future investigation
+    - possibly sync git operations log in every commit message if pushing to non-mistress?
+- sync on visible, emoji favicon, content notes, edits, queue ordering and filtering, pwa
+- make sure json always sorts all entries by key. merges should be better that way. it might just be append to the end currently which encourages diverges to conflict
+- make main ueue clickable
 - when very bad internet it hangs on fetch. should prompt to go offline or whatever (well it should just work fine and not hang... sync stuff is like.. background, right?) and should load
 - when airplane mode the site does the dinosaur game. time to pwa or otherwise make it always able to work
 - make sitemap or filemap or some index of the site's files somehow
-- how the fuck did i diverge onto master from trash network. master has no history in common with mistress so failed to make pr. what in the world. did its indexeddb get wiped?
-- sync on visible, content notes, edits, queue ordering and filtering
 - make series/sequencing etc load separately
 - probably half revert deploy back into just sticking ?v=N into all references in the htmls. should be able to navigate to the files by name. having the filenames change is cancerous and i don't really want even more commits to make it look and feel normal on dev
 - add consumption with note inline in series/sequencing view on button
@@ -69,6 +84,8 @@ phase 1
 - make theme better
 - make theme changing ux to call setTheme light or dark or nothing to be sustem preference
 - happy `remote already updated (skipping push)` on `[1:42:13 AM mistress cdf11c8] cloneOrFetchUpdates: Error cloning repo: http is not defined` should not be possible. both cause i should load http correctly but also because i'm not detecting clone failures
+- figure out how to make `ue <tab>` take me to the "search ueue" thing
+- move search into header
 
 phase 2
 - fetching 
