@@ -66,6 +66,7 @@ phase 1
 - make theme changing ux to call setTheme light or dark or nothing to be sustem preference
 - probably move the theme logic back into theme.js now that the phone's css cache is updated by visiting it manually and spam refreshing
 - happy `remote already updated (skipping push)` on `[1:42:13 AM mistress cdf11c8] cloneOrFetchUpdates: Error cloning repo: http is not defined` should not be possible. both cause i should load http correctly but also because i'm not detecting clone failures
+- routes and 404 redirect hack for cleaner api urls https://chatgpt.com/c/67f69c0b-0d70-800c-9791-415a32b7832b
 
 phase 2
 - fetching 
