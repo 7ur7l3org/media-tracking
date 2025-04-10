@@ -8,6 +8,7 @@ can use something like https://ueue.7ur.it/?id=Q5884621 for unknown uncategorize
 can enter note saying ep3 for stuff that doesn't have episodes yet
 
 phase 1
+- put :hyphenated-title-description-slug in wikidata qid urls https://chatgpt.com/c/67f7203c-1730-800c-b1be-9e840d2c7807
 - minify json to not have empty fields also put jsonp schema in the meta. then use .? everywhere
 - share links via url read only token that hijacks the site ui ig
 - eli says shared repo lists are desired. maybe each list is tied to a repo and the single token is granted perms to push to all repos? or share edit tokens? user data repo? overlay views that merge multiple with view only pats? actually probably each user's main repo is private and just holds all repos and pats that they have access to and then the client uses those pats to write to those repo/lists
