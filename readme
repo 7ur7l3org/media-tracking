@@ -13,7 +13,7 @@ phase 0
 phase 1
 - make load by external url or generic external id esp if unique, else search. both on page in search and in url
 - add publication date and start time and end time to table of all things in json. in fact add table query page where you can add whatever columns you wanna see across all media. matrix view of all creative works properties and custom other properties
-- if publication date and start time and end time are reliable get those in the url slug and in the search results
+- if publication date and start time and end time are reliable get those in the url slug and in the search results and in series sequencing view
 - dynamically update urls with human readable part https://ueue.7ur.it/qid/Q550555(gravity-falls~american-animated-television-series)
 - merge remote into here i know i updated it on github
 - merge master into mistress. see if there's any logs for how that happened where trash internet got the repo re-initialized from nothing
