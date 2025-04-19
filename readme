@@ -11,6 +11,26 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make page title pluck out sNeM if it can from the description or series/sequencing, in addition to year at the end and year at the start of the slug
+- make there be a sync at the end of all content load. i think that's what we're missing cause the data changes at the end of the content load or some shit
+- make series/sequencing show and sum duration
+- opened two tabs at once. looks like this one lost the push race? refresh was totally happy. weird
+    - [9:19:44 PM mistress 707f302] syncing repo
+    - [9:19:44 PM mistress 707f302] committing changes: Auto-commit pre-sync
+    - [9:19:44 PM mistress 89161a7] committed changes: Auto-commit pre-sync
+    - [9:19:44 PM mistress 89161a7] local repo exists – fetching updates...
+    - [9:19:46 PM mistress 89161a7] repo fetched successfully
+    - [9:19:46 PM mistress 89161a7] local HEAD (89161a7) has extra commits
+    - [9:19:46 PM mistress 89161a7] comparing local HEAD (89161a7) to fetched origin/mistress (707f302)
+    - [9:19:46 PM mistress 89161a7] local HEAD (89161a7) has extra commits
+    - [9:19:46 PM mistress 89161a7] pushing changes to GitHub...
+    - [9:19:49 PM mistress 3773f81] pushOrDivergeAndPush: Error pushing changes: One or more branches were not updated: 
+    -   - refs/heads/mistress: cannot lock ref 'refs/heads/mistress': is at 3773f81affd65cd687019f35d61c480c0ef99a82 but expected 707f302d4d800921ae8f5057a2de9acee4a32ad6
+- bro wtf are the search results for faouzia. google hits immediately. wtf
+- searching my hero academia vigilantes shows `My Hero Academia: Vigilantes (Q131534559) [sqid] [wikidata] – [anime television series]` looking jacked compared to e.g. `My Hero Academia: Vigilantes (Q106091435) [sqid] [wikidata] – Japanese manga series [manga series, spin-off]`
+- make queues page filter work and show queue vote notes and content notes
+- make edit buttons for stuff
+- eventually make site work over file:// with hash routing as an alternative to spa routes
 - persistent dynamic notes for all pages from private repo that links to e.g. s1e1 via tmdb id of the streaming sites
 - make load by external url or generic external id esp if unique, else search. both on page in search and in url
 - add publication date and start time and end time to table of all things in json. in fact add table query page where you can add whatever columns you wanna see across all media. matrix view of all creative works properties and custom other properties
