@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make direct buttons to add queue votes to each queue without having to dropdown e.g. the queue button submits to that queue
 - https://ueue.7ur.it/?id=Q105105219 lmao series/sequencing isn't merged somehow
 - persistent dynamic notes for all pages from private repo that links to e.g. s1e1 via tmdb id of the streaming sites
 - make load by external url or generic external id esp if unique, else search. both on page in search and in url
