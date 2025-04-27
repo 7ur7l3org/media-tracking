@@ -11,6 +11,9 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- auto resolve all queue votes on consume
+- eventually can suggest queue votes to resolve from series sequencing completion
+- make queue vote page for all content segregated into a tree by wikidata media type, then i dont need to manually track books and movies separately etc (then queue is more like just timestamped tags for filtering)
 - make page title pluck out sNeM if it can from the description or series/sequencing, in addition to year at the end and year at the start of the slug
 - make there be a sync at the end of all content load. i think that's what we're missing cause the data changes at the end of the content load or some shit
 - make series/sequencing show and sum duration
