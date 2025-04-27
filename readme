@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- give focus to search on index.html main page load so you can directly type the search (if not doing url tab search whenever i get that working)
 - add a resolve to queue votes so they stay but just are closed, instead of deleting them. should never have to remove a queue vote when watched, you'd want the history of the votes and the lag in watching. should show in the page info, and not on the queue votes page
 - update grab-updated-prompt.py to exclude site/external (or tree-sitter or something them into what api is available); try aider copy paste mode with gemini https://aistudio.google.com/app/prompts/new_chat?model=gemini-2.5-pro-exp-03-25 , 
 - turn current query parameter url format of index.html into api-style sha routing with /qid/<qid>(=title~desc) human eye metadata in the url for betteer ctrl+shift+a etc (initially before full api routing) e.g. `https://ueue.7ur.it/#/qid/Q114481439(=a-brisket-voodoo-and-cannonball-run~episode-of-young-sheldon-s1-e7)`. also /#/search?q=blah . eventually /qid/<qid>(=[s3e7|2014]title~desc) depending on if we can extract the season/episode number or year from the description else series/sequencing
