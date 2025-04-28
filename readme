@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- actually remove all sha routing and api style urls. i'm too trakt pilled. google has used query parameters for everything forever and they're fine. id=blah is the most generic anyway if my backend data only has one id key. we want something that looks like https://ueue.7ur.it/?id=Q114481439&~=~(young-sheldon~s1e7~2017~a-brisket-voodoo-and-cannonball-run~episode-of-young-sheldon-s1-e7)~#seriesContainer i think (also the seriesContainer should exist on page load to scroll to it surely...)
 - make token mostly not visible unless you click
 - add whatever type this is to list of search result emphasises https://ueue.7ur.it/?id=Q99955255 . maybe grab the whole type hierarchy at some point and see what it looks like
 - give focus to search on index.html main page load so you can directly type the search (if not doing url tab search whenever i get that working)
