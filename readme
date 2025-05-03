@@ -11,6 +11,8 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make it default to the cursor in the search
+- make queue table have the queue votes listed inline as a column so you can edit which queue a vote is on
 - implement list resolution and public lists!
 - make global notes that are rendered on every page in addition to per content. make them support property templates the same as wikidata url templates, so e.g. the tmdb id and series episode ordinals can directly populate links and such
 - add https://myanimelist.net/anime.php?id=48736 style url match pattern to https://www.wikidata.org/wiki/Property:P4086 (when i have enough cred? seems like https://www.wikidata.org/wiki/Wikidata:Requests_for_comment/General_semi_protection_for_all_property_pages it's semi protected and i just need 50 edits https://www.wikidata.org/wiki/Wikidata:Autoconfirmed_users lmao)
