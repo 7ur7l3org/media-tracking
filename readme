@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- implement list resolution and public lists!
 - make global notes that are rendered on every page in addition to per content. make them support property templates the same as wikidata url templates, so e.g. the tmdb id and series episode ordinals can directly populate links and such
 - add https://myanimelist.net/anime.php?id=48736 style url match pattern to https://www.wikidata.org/wiki/Property:P4086 (when i have enough cred? seems like https://www.wikidata.org/wiki/Wikidata:Requests_for_comment/General_semi_protection_for_all_property_pages it's semi protected and i just need 50 edits https://www.wikidata.org/wiki/Wikidata:Autoconfirmed_users lmao)
 - actually remove all sha routing and api style urls. i'm too trakt pilled. google has used query parameters for everything forever and they're fine. id=blah is the most generic anyway if my backend data only has one id key. we want something that looks like https://ueue.7ur.it/?id=Q114481439&~=~(young-sheldon~s1e7~2017~a-brisket-voodoo-and-cannonball-run~episode-of-young-sheldon-s1-e7)~#seriesContainer
