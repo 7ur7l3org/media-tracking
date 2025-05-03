@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make most recent consumptions on the top and the add consumption at the top too
 - make it default to the cursor in the search
 - make queue table have the queue votes listed inline as a column so you can edit which queue a vote is on
 - implement list resolution and public lists!
