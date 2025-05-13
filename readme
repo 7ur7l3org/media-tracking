@@ -11,6 +11,8 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make consumptions show notes
+- add ics broadcasting information ics calendar dynamic url feeds to wikidata pages. those are super useful. I'm sure some content things track that stuff already
 - add about page with deeper explanation and somehow embed current git sha in the site somewhere automatically on commit maybe unless it's weird that being a commit behind or something
 - make consume on the last episode of a season auto-epxand the next season
 - make most recent consumptions on the top and the add consumption at the top too
