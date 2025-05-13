@@ -11,7 +11,8 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
-- make consumptions show notes
+- make consumptions and queue votes show notes
+- make queue vote resolution
 - make favicon and title and url
 - add ics broadcasting information ics calendar dynamic url feeds to wikidata pages. those are super useful. I'm sure some content things track that stuff already
 - add about page with deeper explanation and somehow embed current git sha in the site somewhere automatically on commit maybe unless it's weird that being a commit behind or something
