@@ -11,6 +11,13 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make the queues each have a colour and highlight differently
+- make search result hover and content pages show cover picture of thing
+- add persistent https://tvmaze-to-ical.7ur.workers.dev/ pattern link whenever tvmaze or imdb or thetvdb id's are available to add dynamic ics feed of show broadcasts to calendars
+- make consumptions and queue votes show notes
+- make queue vote resolution
+- make favicon and title and url
+- add ics broadcasting information ics calendar dynamic url feeds to wikidata pages. those are super useful. I'm sure some content things track that stuff already. https://chatgpt.com/c/68229d11-08a4-800c-9ca7-23a432aaa16b
 - add about page with deeper explanation and somehow embed current git sha in the site somewhere automatically on commit maybe unless it's weird that being a commit behind or something
 - make consume on the last episode of a season auto-epxand the next season
 - make most recent consumptions on the top and the add consumption at the top too
