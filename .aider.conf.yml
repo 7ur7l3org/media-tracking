@@ -18,7 +18,7 @@
 # Main model:
 
 ## Specify the model to use for the main chat
-#model: xxx
+model: cp:o3
 
 ########################
 # API Keys and settings:
@@ -96,10 +96,10 @@
 #edit-format: xxx
 
 ## Use architect edit format for the main chat
-#architect: false
+architect: true
 
 ## Enable/disable automatic acceptance of architect changes (default: True)
-#auto-accept-architect: true
+auto-accept-architect: true
 
 ## Specify the model to use for commit messages and chat history summarization (default depends on --model)
 #weak-model: xxx
@@ -132,7 +132,7 @@ editor-model: openrouter/deepseek/deepseek-chat-v3-0324:free
 # Repomap settings:
 
 ## Suggested number of tokens to use for repo map, use 0 to disable
-# map-tokens: 8192
+map-tokens: 0
 
 ## Control how often the repo map is refreshed. Options: auto, always, files, manual (default: auto)
 #map-refresh: auto
@@ -332,7 +332,7 @@ copy-paste: true
 #apply: xxx
 
 ## Apply clipboard contents as edits using the main model's editor format
-#apply-clipboard-edits: false
+# apply-clipboard-edits: true
 
 ## Do all startup activities then exit before accepting user input (debug)
 #exit: false
