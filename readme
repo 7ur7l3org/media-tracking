@@ -11,6 +11,8 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make the queues each have a colour and highlight differently
+- make search result hover and content pages show cover picture of thing
 - add persistent https://tvmaze-to-ical.7ur.workers.dev/ pattern link whenever tvmaze or imdb or thetvdb id's are available to add dynamic ics feed of show broadcasts to calendars
 - make consumptions and queue votes show notes
 - make queue vote resolution
