@@ -15,8 +15,8 @@ phase 1
 - make search result hover and content pages show cover picture of thing
 - add persistent https://tvmaze-to-ical.7ur.workers.dev/ pattern link whenever tvmaze or imdb or thetvdb id's are available to add dynamic ics feed of show broadcasts to calendars
 - make consumptions and queue votes show notes
-- make queue vote resolution
-- make title and url
+- make queue vote resolution (possibly default to ordering where consumptions resolve prior votes and then future votes count as votes.. implicit resolve. but probably do need some kind of explicit resolve for series completion idk esp if i'm abusing consumptions of the main show when episodes are missing but i need to retain the queue vote. actually yeah for now definitely just add queue vote resolution)
+- make title and url (and url either updating fast or get it in the link from the series/sequencing. probably the former)
 - add ics broadcasting information ics calendar dynamic url feeds to wikidata pages. those are super useful. I'm sure some content things track that stuff already. https://chatgpt.com/c/68229d11-08a4-800c-9ca7-23a432aaa16b
 - add about page with deeper explanation and somehow embed current git sha in the site somewhere automatically on commit maybe unless it's weird that being a commit behind or something
 - make consume on the last episode of a season auto-epxand the next season
@@ -30,6 +30,8 @@ phase 1
 - make token mostly not visible unless you click
 - add whatever type this is to list of search result emphasises https://ueue.7ur.it/?id=Q99955255 . maybe grab the whole type hierarchy at some point and see what it looks like
 - make url tab search work
+- make separate file that is media information cache that holds all wikidata response information for all the things you've ever visited, but that doesn't as obviously get mixed in with your actual data. alternatively for now rip out all existing "visited" pages from the json since they are pretty worthless (like what you hadn't yet decided to put on watchlist and you remember when you lose internet? lol)
+- condense json
 - add a resolve to queue votes so they stay but just are closed, instead of deleting them. should never have to remove a queue vote when watched, you'd want the history of the votes and the lag in watching. should show in the page info, and not on the queue votes page
 - update grab-updated-prompt.py to exclude site/external (or tree-sitter or something them into what api is available); try aider copy paste mode with gemini https://aistudio.google.com/app/prompts/new_chat?model=gemini-2.5-pro-exp-03-25 , 
 - turn current query parameter url format of index.html into api-style sha routing with /qid/<qid>(=title~desc) human eye metadata in the url for betteer ctrl+shift+a etc (initially before full api routing) e.g. `https://ueue.7ur.it/#/qid/Q114481439(=a-brisket-voodoo-and-cannonball-run~episode-of-young-sheldon-s1-e7)`. also /#/search?q=blah . eventually /qid/<qid>(=[s3e7|2014]title~desc) depending on if we can extract the season/episode number or year from the description else series/sequencing
