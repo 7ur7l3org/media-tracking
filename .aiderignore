@@ -1,0 +1,6 @@
+# Ignore everything by default
+*
+# Include all top-level files and folders under site/
+!site
+# Exclude everything in site/external/
+site/external

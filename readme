@@ -7,7 +7,67 @@ thanks https://chatgpt.com/c/67e1015d-38c4-800c-9eaf-ac5ea8796807 (cloudflare pa
 can use something like https://ueue.7ur.it/?id=Q5884621 for unknown uncategorized everything
 can enter note saying ep3 for stuff that doesn't have episodes yet
 
+phase 0
+- TODO move things here. phase 1 got fucked
+
 phase 1
+- make the queues each have a colour and highlight differently
+- make search result hover and content pages show cover picture of thing
+- add persistent https://tvmaze-to-ical.7ur.workers.dev/ pattern link whenever tvmaze or imdb or thetvdb id's are available to add dynamic ics feed of show broadcasts to calendars
+- make consumptions and queue votes show notes
+- make queue vote resolution (possibly default to ordering where consumptions resolve prior votes and then future votes count as votes.. implicit resolve. but probably do need some kind of explicit resolve for series completion idk esp if i'm abusing consumptions of the main show when episodes are missing but i need to retain the queue vote. actually yeah for now definitely just add queue vote resolution)
+- make title and url (and url either updating fast or get it in the link from the series/sequencing. probably the former)
+- add ics broadcasting information ics calendar dynamic url feeds to wikidata pages. those are super useful. I'm sure some content things track that stuff already. https://chatgpt.com/c/68229d11-08a4-800c-9ca7-23a432aaa16b
+- add about page with deeper explanation and somehow embed current git sha in the site somewhere automatically on commit maybe unless it's weird that being a commit behind or something
+- make consume on the last episode of a season auto-epxand the next season
+- make most recent consumptions on the top and the add consumption at the top too
+- make queue table have the queue votes listed inline as a column so you can edit which queue a vote is on
+- implement list resolution and public lists!
+- make global notes that are rendered on every page in addition to per content. make them support property templates the same as wikidata url templates, so e.g. the tmdb id and series episode ordinals can directly populate links and such
+- add https://myanimelist.net/anime.php?id=48736 style url match pattern to https://www.wikidata.org/wiki/Property:P4086 (when i have enough cred? seems like https://www.wikidata.org/wiki/Wikidata:Requests_for_comment/General_semi_protection_for_all_property_pages it's semi protected and i just need 50 edits https://www.wikidata.org/wiki/Wikidata:Autoconfirmed_users lmao)
+- actually remove all sha routing and api style urls. i'm too trakt pilled. google has used query parameters for everything forever and they're fine. id=blah is the most generic anyway if my backend data only has one id key. we want something that looks like https://ueue.7ur.it/?id=Q114481439&~=~(young-sheldon~s1e7~2017~a-brisket-voodoo-and-cannonball-run~episode-of-young-sheldon-s1-e7)~#seriesContainer
+- call e.g. document.getElementById(location.hash.slice(1))?.scrollIntoView(); after (all) content loads so that it scrolls to the right place
+- make token mostly not visible unless you click
+- add whatever type this is to list of search result emphasises https://ueue.7ur.it/?id=Q99955255 . maybe grab the whole type hierarchy at some point and see what it looks like
+- make url tab search work
+- make separate file that is media information cache that holds all wikidata response information for all the things you've ever visited, but that doesn't as obviously get mixed in with your actual data. alternatively for now rip out all existing "visited" pages from the json since they are pretty worthless (like what you hadn't yet decided to put on watchlist and you remember when you lose internet? lol)
+- condense json
+- add a resolve to queue votes so they stay but just are closed, instead of deleting them. should never have to remove a queue vote when watched, you'd want the history of the votes and the lag in watching. should show in the page info, and not on the queue votes page
+- update grab-updated-prompt.py to exclude site/external (or tree-sitter or something them into what api is available); try aider copy paste mode with gemini https://aistudio.google.com/app/prompts/new_chat?model=gemini-2.5-pro-exp-03-25 , 
+- turn current query parameter url format of index.html into api-style sha routing with /qid/<qid>(=title~desc) human eye metadata in the url for betteer ctrl+shift+a etc (initially before full api routing) e.g. `https://ueue.7ur.it/#/qid/Q114481439(=a-brisket-voodoo-and-cannonball-run~episode-of-young-sheldon-s1-e7)`. also /#/search?q=blah . eventually /qid/<qid>(=[s3e7|2014]title~desc) depending on if we can extract the season/episode number or year from the description else series/sequencing
+- auto resolve all queue votes on consume
+- eventually can suggest queue votes to resolve from series sequencing completion
+- make queue vote page for all content segregated into a tree by wikidata media type, then i dont need to manually track books and movies separately etc (then queue is more like just timestamped tags for filtering)
+- make page title pluck out sNeM if it can from the description or series/sequencing, in addition to year at the end and year at the start of the slug
+- make there be a sync at the end of all content load. i think that's what we're missing cause the data changes at the end of the content load or some shit
+- make series/sequencing show and sum duration
+- opened two tabs at once. looks like this one lost the push race? refresh was totally happy. weird
+    - [9:19:44 PM mistress 707f302] syncing repo
+    - [9:19:44 PM mistress 707f302] committing changes: Auto-commit pre-sync
+    - [9:19:44 PM mistress 89161a7] committed changes: Auto-commit pre-sync
+    - [9:19:44 PM mistress 89161a7] local repo exists – fetching updates...
+    - [9:19:46 PM mistress 89161a7] repo fetched successfully
+    - [9:19:46 PM mistress 89161a7] local HEAD (89161a7) has extra commits
+    - [9:19:46 PM mistress 89161a7] comparing local HEAD (89161a7) to fetched origin/mistress (707f302)
+    - [9:19:46 PM mistress 89161a7] local HEAD (89161a7) has extra commits
+    - [9:19:46 PM mistress 89161a7] pushing changes to GitHub...
+    - [9:19:49 PM mistress 3773f81] pushOrDivergeAndPush: Error pushing changes: One or more branches were not updated: 
+    -   - refs/heads/mistress: cannot lock ref 'refs/heads/mistress': is at 3773f81affd65cd687019f35d61c480c0ef99a82 but expected 707f302d4d800921ae8f5057a2de9acee4a32ad6
+- bro wtf are the search results for faouzia. google hits immediately. wtf
+- searching my hero academia vigilantes shows `My Hero Academia: Vigilantes (Q131534559) [sqid] [wikidata] – [anime television series]` looking jacked compared to e.g. `My Hero Academia: Vigilantes (Q106091435) [sqid] [wikidata] – Japanese manga series [manga series, spin-off]`
+- make queues page filter work and show queue vote notes and content notes
+- make edit buttons for stuff
+- eventually make site work over file:// with hash routing as an alternative to spa routes
+- make direct buttons to add queue votes to each queue without having to dropdown e.g. the queue button submits to that queue
+- https://ueue.7ur.it/?id=Q105105219 lmao series/sequencing isn't merged somehow
+- persistent dynamic notes for all pages from private repo that links to e.g. s1e1 via tmdb id of the streaming sites
+- make load by external url or generic external id esp if unique, else search. both on page in search and in url
+- add publication date and start time and end time to table of all things in json. in fact add table query page where you can add whatever columns you wanna see across all media. matrix view of all creative works properties and custom other properties
+- if publication date and start time and end time are reliable get those in the url slug and in the search results and in series sequencing view
+- dynamically update urls with human readable part https://ueue.7ur.it/qid/Q550555(gravity-falls~american-animated-television-series) or https://ueue.7ur.it/qid/Q114481439(=a-brisket-voodoo-and-cannonball-run~episode-of-young-sheldon-s1-e7)?type=show&sort=desc#results
+- merge remote into here i know i updated it on github
+- merge master into mistress. see if there's any logs for how that happened where trash internet got the repo re-initialized from nothing
+- make all queues show single table with all entries where one column is the queue but its all sorted in reverse chronological order
 - put :hyphenated-title-description-slug in wikidata qid urls https://chatgpt.com/c/67f7203c-1730-800c-b1be-9e840d2c7807
 - minify json to not have empty fields also put jsonp schema in the meta. then use .? everywhere
 - share links via url read only token that hijacks the site ui ig
@@ -19,14 +79,30 @@ phase 1
 - probably half revert deploy back into just sticking ?v=N into all references in the htmls. should be able to navigate to the files by name. having the filenames change is cancerous and i don't really want even more commits to make it look and feel normal on dev
 - make sitemap or filemap or some index of the site's files somehow
 - how the fuck did i diverge onto master from trash network. master has no history in common with mistress so failed to make pr. what in the world. did its indexeddb get wiped?
-- sync on visible, content notes, edits, queue ordering and filtering
+    - it came from an auto commit pre-sync. somehow the files existed but we were still on master.. and then did something to force a push.. which probably kept us diverged. does the clone/fetch not always put us on mistress? how could we have files without being on a legit commit? i don't think we ever git init..
+    - post-merge of master into mistress. what in the fucking world. it did put my phone chrome back on mistress
+        [3:59:53 AM] syncing repo
+        [3:59:53 AM] committing changes: Auto-commit pre-sync
+        [3:59:53 AM] Error committing changes: Could not find HEAD.
+        [3:59:53 AM] local repo exists – fetching updates...
+        [3:59:53 AM] cloning repo...
+        [3:59:54 AM mistress 9e09b28] repo cloned successfully
+        [3:59:54 AM mistress 9e09b28] remote already updated (skipping push)
+    - renamed master to master--TODO-DEBUG-HOW-THIS-HAPPENED on gitlab for future investigation
+    - possibly sync git operations log in every commit message if pushing to non-mistress?
+- sync on visible, content notes, edits, queue ordering and filtering, pwa
+- make sure json always sorts all entries by key. merges should be better that way. it might just be append to the end currently which encourages diverges to conflict
+- make main ueue clickable
+- when very bad internet it hangs on fetch. should prompt to go offline or whatever (well it should just work fine and not hang... sync stuff is like.. background, right?) and should load
+- when airplane mode the site does the dinosaur game. time to pwa or otherwise make it always able to work
+- make sitemap or filemap or some index of the site's files somehow
 - make series/sequencing etc load separately
+- probably half revert deploy back into just sticking ?v=N into all references in the htmls. should be able to navigate to the files by name. having the filenames change is cancerous and i don't really want even more commits to make it look and feel normal on dev
 - add consumption with note inline in series/sequencing view on button
 - make series/sequencing cache common per root qid across all content pages of that series
 - make cache forever and only update in background ("verifying..."). possibly put in heavier cache.json instead of manual indexeddb tbh (device should always have a clone so it should only be the background verify to fetch re-query and update whenever, but otherwise should be used as existing indexeddb is)
 - fix visiting content not pushing the commit leading to almost inevitable diverge on refresh (also doesn't make any sense indexeddb changing in the background but the commit living... somewhere??? well maybe the diverge is purely from two devices which is fair)
 - make wikidata cache live forever until manual refresh (if success cause internet). few things aren't well in the past
-- make favicon be you finger, maybe nice black and white monospace ish font
 - fix queues and consumptions pages (queues?queue=books doesn't only load books. consumptions seems to work. both are missing notes and number of votes and probably sorting)
 - add edit buttons to notes and timestamps for queue votes and consumptions
 - make queues page allow reordering queues for the add new queue vote ui, and deleting queues (and optionally purging all queue votes of that deleted queue from all media)
@@ -71,8 +147,9 @@ phase 1
 - move all zip tools gpt bullshit into scratch-prototyping/dont-use-4o lol
 - make theme better
 - make theme changing ux to call setTheme light or dark or nothing to be sustem preference
-- probably move the theme logic back into theme.js now that the phone's css cache is updated by visiting it manually and spam refreshing
 - happy `remote already updated (skipping push)` on `[1:42:13 AM mistress cdf11c8] cloneOrFetchUpdates: Error cloning repo: http is not defined` should not be possible. both cause i should load http correctly but also because i'm not detecting clone failures
+- figure out how to make `ue <tab>` take me to the "search ueue" thing
+- move search into header
 - routes and 404 redirect hack for cleaner api urls https://chatgpt.com/c/67f69c0b-0d70-800c-9791-415a32b7832b
 
 phase 2
@@ -99,6 +176,12 @@ https://cors-proxy.m7ur7l3.workers.dev/github.com/7ur7l3org/tracking-repo/info/r
 ---
 
 done
+-- give focus to search on index.html main page load so you can directly type the search (if not doing url tab search whenever i get that working) -> yes!
+-- make it default to the cursor in the search -> yes!
+-- make favicon be you finger, maybe nice black and white monospace ish font -> nah just is the legit emoji!
+-- make emoji favicon
+-- probably move the theme logic back into theme.js now that the phone's css cache is updated by visiting it manually and spam refreshing -> this is done. also now doing some anti cache things on deploy
+-- why the fuck is css broken -> deploy turns <link rel="stylesheet" href="styles.123abcd.css"> into <link rel="styles.dca3bc1.css"> amazing -> regex is hard. the deploy script is kinda really shitty
 -- make all files roll to -vN or -firmmmmmmmm or -firm32m so there can be no caching on merge into deploy -> yes
 -- make cloudflare-deploy branch to merge mistress into so i dont abuse their autobuilds unnecessarily -> mistress is deploy. mattress is dev
 -- made update-site-dependencies.py actually do as advertized

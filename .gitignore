@@ -4,3 +4,6 @@ cors-proxy
 server.pem
 gpt-inbox-site
 gpt-upload-outbox-site
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v4
