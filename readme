@@ -21,7 +21,6 @@ phase 1
 - add about page with deeper explanation and somehow embed current git sha in the site somewhere automatically on commit maybe unless it's weird that being a commit behind or something
 - make consume on the last episode of a season auto-epxand the next season
 - make most recent consumptions on the top and the add consumption at the top too
-- make it default to the cursor in the search
 - make queue table have the queue votes listed inline as a column so you can edit which queue a vote is on
 - implement list resolution and public lists!
 - make global notes that are rendered on every page in addition to per content. make them support property templates the same as wikidata url templates, so e.g. the tmdb id and series episode ordinals can directly populate links and such
@@ -30,7 +29,7 @@ phase 1
 - call e.g. document.getElementById(location.hash.slice(1))?.scrollIntoView(); after (all) content loads so that it scrolls to the right place
 - make token mostly not visible unless you click
 - add whatever type this is to list of search result emphasises https://ueue.7ur.it/?id=Q99955255 . maybe grab the whole type hierarchy at some point and see what it looks like
-- give focus to search on index.html main page load so you can directly type the search (if not doing url tab search whenever i get that working)
+- make url tab search work
 - add a resolve to queue votes so they stay but just are closed, instead of deleting them. should never have to remove a queue vote when watched, you'd want the history of the votes and the lag in watching. should show in the page info, and not on the queue votes page
 - update grab-updated-prompt.py to exclude site/external (or tree-sitter or something them into what api is available); try aider copy paste mode with gemini https://aistudio.google.com/app/prompts/new_chat?model=gemini-2.5-pro-exp-03-25 , 
 - turn current query parameter url format of index.html into api-style sha routing with /qid/<qid>(=title~desc) human eye metadata in the url for betteer ctrl+shift+a etc (initially before full api routing) e.g. `https://ueue.7ur.it/#/qid/Q114481439(=a-brisket-voodoo-and-cannonball-run~episode-of-young-sheldon-s1-e7)`. also /#/search?q=blah . eventually /qid/<qid>(=[s3e7|2014]title~desc) depending on if we can extract the season/episode number or year from the description else series/sequencing
@@ -175,6 +174,8 @@ https://cors-proxy.m7ur7l3.workers.dev/github.com/7ur7l3org/tracking-repo/info/r
 ---
 
 done
+-- give focus to search on index.html main page load so you can directly type the search (if not doing url tab search whenever i get that working) -> yes!
+-- make it default to the cursor in the search -> yes!
 -- make favicon be you finger, maybe nice black and white monospace ish font -> nah just is the legit emoji!
 -- make emoji favicon
 -- probably move the theme logic back into theme.js now that the phone's css cache is updated by visiting it manually and spam refreshing -> this is done. also now doing some anti cache things on deploy
