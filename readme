@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- import trakt. it's right there. just clean up the one thing
 - add common templating thing to pages, that only shows if it hits, and for art probably. https://chatgpt.com/c/682bcd20-ec2c-800c-bdf2-83de6b27f8c4
 - make the queues each have a colour and highlight differently
 - make search result hover and content pages show cover picture of thing
