@@ -16,6 +16,7 @@ phase 1
 - import trakt. it's right there. just clean up the one thing
 - add common templating thing to pages, that only shows if it hits, and for art probably. https://chatgpt.com/c/682bcd20-ec2c-800c-bdf2-83de6b27f8c4
 - make the queues each have a colour and highlight differently
+- make sparql json api stuff on site maybe as data explorer page or about page linking to all sparql queries used
 - make search result hover and content pages show cover picture of thing
 - add persistent https://tvmaze-to-ical.7ur.workers.dev/ pattern link whenever tvmaze or imdb or thetvdb id's are available to add dynamic ics feed of show broadcasts to calendars
 - make consumptions and queue votes show notes
