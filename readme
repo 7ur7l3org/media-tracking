@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- implicit resolution of queue votes
 - make it default to a date inout field of current time (e.g. page load time) that is editable but with a now button to set it to now for all consumptions
 - integrate optimized partonomy for series/sequencing. thanks https://chatgpt.com/c/682d1e01-eef8-800c-8a00-a12cf11d2eca holy shit this is way better
 - integrate external url resolver via P8966 url patterns https://chatgpt.com/c/680f9094-e8a8-800c-91e1-28bd23e1afa5 resolveWikidataEntityFromUrl
