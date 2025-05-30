@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- add smol "copy" buttons to all property values (and maybe everything everywhere lol)
 - add link to the good wikidata search in the search results pane (even better if it retains the failed query). likewise for wikidata google search minimally to grab some sort of uri for the id. even better maybe to get the closest match on wikidata e.g. the author or something maybe via google? well or just best to have form to more easily make the thing
 - implicit resolution of queue votes and explicit cause i dont want to deal with aggregation implicit yet
 - make it default to a date inout field of current time (e.g. page load time) that is editable but with a now button to set it to now for all consumptions
