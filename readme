@@ -11,7 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
-- add link to the good wikidata search in the search results pane (even better if it retains the failed query). likewise for wikidata google search minimally to grab some sort of uri for the id
+- add link to the good wikidata search in the search results pane (even better if it retains the failed query). likewise for wikidata google search minimally to grab some sort of uri for the id. even better maybe to get the closest match on wikidata e.g. the author or something maybe via google? well or just best to have form to more easily make the thing
 - implicit resolution of queue votes and explicit cause i dont want to deal with aggregation implicit yet
 - make it default to a date inout field of current time (e.g. page load time) that is editable but with a now button to set it to now for all consumptions
 - integrate optimized partonomy for series/sequencing. thanks https://chatgpt.com/c/682d1e01-eef8-800c-8a00-a12cf11d2eca holy shit this is way better
