@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- expose all useful js functions that give data under /api?blah that return the actual json that the site uses to work out the stuff. maybe even make the site itself use that if it isn't too slow so the network tab looks good. probably allow https auth tokens in query parameters (look up safety of that) so other tools can easily grab equivalent stuff that ueue does
 - make series/sequencing rendering more reflective of the actual data being rendered e.g. flat-collection reverse links (P?) vs P527* hierarchies. e.g. P179 is probably just a lie at this point
 - move follows / followed by out of the collapsible series. those statements are universal, not specific to any series
 - add ancestry rendering alongside follows / followed by. add P?'s to ancestry/follows/followed by and probably always render it even if those statements don't exist. (no statement) should be good to see for those three navigational claims and more uniform rendering is better
