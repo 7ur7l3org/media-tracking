@@ -1,8 +1,5 @@
 /* js/series.js */
 
-// In-memory cache for series parts, keyed by series QID.
-const seriesPartsCache = {};
-
 /**
  * Formats a Date object as a short string: "YYYY-MM-DD"
  */
@@ -39,196 +36,403 @@ function toggleDate(el) {
   el.innerText = (current === short ? long : short);
 }
 
-/**
- * Returns an object with two properties:
- * - statsHTML: a snippet of HTML with consumption and queue vote stats
- * - isQueued: a boolean that is true if the entry has any queue votes.
- */
-function getBackendStatsForQid(qid) {
-  console.log("Entering getBackendStatsForQid with qid:", qid);
-  return loadBackendData().then(backendData => {
-    const key = "http://www.wikidata.org/entity/" + qid;
-    // Updated: look inside backendData.media
-    const entry = backendData.media ? backendData.media[key] : null;
-    let consumptionHTML = "";
-    let queueHTML = "";
-    let isQueued = false;
-    if (entry) {
-      if (entry.consumptions && entry.consumptions.length > 0) {
-        const consumptions = entry.consumptions.map(c => {
-          const d = new Date(c.when);
-          return { short: formatDateShort(d), long: formatDateLong(d) };
-        });
-        if (consumptions.length === 1) {
-          consumptionHTML = `consumed <span class="toggle-date" data-short="${consumptions[0].short}" data-long="${consumptions[0].long}" title="${consumptions[0].long}" onclick="toggleDate(this)">${consumptions[0].short}</span>`;
-        } else {
-          const datesHTML = consumptions.map(d => `<span class="toggle-date" data-short="${d.short}" data-long="${d.long}" title="${d.long}" onclick="toggleDate(this)">${d.short}</span>`).join(", ");
-          consumptionHTML = `consumed x${consumptions.length} (${datesHTML})`;
-        }
-      }
-      if (entry["queue-votes"] && Object.keys(entry["queue-votes"]).length > 0) {
-        isQueued = true;
-        let categoriesHTML = [];
-        for (const category in entry["queue-votes"]) {
-          const votes = entry["queue-votes"][category];
-          if (votes.length > 0) {
-            const voteDates = votes.map(v => {
-              const d = new Date(v.when);
-              return { short: formatDateShort(d), long: formatDateLong(d) };
-            });
-            if (voteDates.length === 1) {
-              categoriesHTML.push(`${category} <span class="toggle-date" data-short="${voteDates[0].short}" data-long="${voteDates[0].long}" title="${voteDates[0].long}" onclick="toggleDate(this)">${voteDates[0].short}</span>`);
-            } else {
-              const datesHTML = voteDates.map(d => `<span class="toggle-date" data-short="${d.short}" data-long="${d.long}" title="${d.long}" onclick="toggleDate(this)">${d.short}</span>`).join(", ");
-              categoriesHTML.push(`${category} x${voteDates.length} (${datesHTML})`);
-            }
-          }
-        }
-        if (categoriesHTML.length > 0) {
-          queueHTML = categoriesHTML.join(" ");
-        }
-      }
-    }
-    let finalHTML = "";
-    if (consumptionHTML) {
-      finalHTML += `<span class="backend-stat consumed">${consumptionHTML}</span>`;
-    }
-    if (queueHTML) {
-      finalHTML += ` <span class="backend-stat queued">${queueHTML}</span>`;
-    }
-    return { statsHTML: finalHTML, isQueued };
-  }).catch(err => {
-    console.error(err);
-    return { statsHTML: "", isQueued: false };
-  });
+function safeLabel(edgeOrMember, fallbackId) {
+  return edgeOrMember.child     // edge object from P527 tree
+      ?? edgeOrMember.label     // flat-collection member
+      ?? edgeOrMember.childLabel // older code path
+      ?? fallbackId;            // always have *something*
 }
 
-/**
- * Batch fetch series parts for multiple QIDs.
- * Returns a promise resolving to a mapping from QID to an array of parts.
- *
- * This function uses a combined SPARQL query (with a VALUES clause) to request parts
- * for all provided QIDs in one go. It prints a simple log message with the QIDs being requested.
- */
-function batchFetchSeriesParts(qidArray) {
-  // console.log("Entering batchFetchSeriesParts with QID array:", qidArray);
-  // Filter out QIDs that are already cached.
-  const toRequest = qidArray.filter(qid => !(qid in seriesPartsCache));
-  let cachedResults = {};
-  qidArray.forEach(qid => {
-    if (seriesPartsCache[qid]) {
-      cachedResults[qid] = seriesPartsCache[qid];
-    }
-  });
-  if (toRequest.length === 0) {
-    console.log("batchFetchSeriesParts: Using cached results for QIDs:", qidArray);
-    return Promise.resolve(cachedResults);
-  }
-  console.log("batchFetchSeriesParts [SPARQL REQUEST]: Fetching parts for uncached QIDs:", toRequest);
-  const valuesStr = toRequest.map(qid => "wd:" + qid).join(" ");
+// =============================================
+// EFFICIENT DATA API IMPLEMENTATION
+// =============================================
+async function fetchSPARQL(query) {
+  const endpoint = 'https://query.wikidata.org/sparql';
+  const url = endpoint + '?query=' + encodeURIComponent(query);
+  const headers = { 'Accept': 'application/sparql-results+json' };
+  const res = await fetch(url, { headers });
+  if (!res.ok) throw new Error(`SPARQL request failed: ${res.status}`);
+  const data = await res.json();
+  return data.results.bindings;
+}
+
+async function fetchASK(query) {
+  const endpoint = 'https://query.wikidata.org/sparql';
+  const url = endpoint + '?query=' + encodeURIComponent(query);
+  const headers = { 'Accept': 'application/sparql-results+json' };
+  const res = await fetch(url, { headers });
+  if (!res.ok) throw new Error(`SPARQL ASK failed: ${res.status}`);
+  const data = await res.json();
+  return data.boolean;
+}
+
+async function getSequence(id) {
   const query = `
-    SELECT DISTINCT ?qid ?part ?source ?partLabel ?partDescription ?ordinal WHERE {
-      VALUES ?qid { ${valuesStr} }
+    SELECT ?rel ?item ?itemLabel WHERE {
+      VALUES ?id { wd:${id} }
       {
-        ?qid p:P527 ?stmt.
-        ?stmt ps:P527 ?part.
-        OPTIONAL { ?stmt pq:P1545 ?ordinal. }
-        BIND("P527" AS ?source)
-      }
-      UNION
-      {
-        ?item p:P179 ?stmt.
-        ?stmt ps:P179 ?qid.
-        OPTIONAL { ?stmt pq:P1545 ?ordinal. }
-        BIND(?item AS ?part)
-        BIND("P179" AS ?source)
+        ?id wdt:P155 ?item .
+        BIND("previous" AS ?rel)
+      } UNION {
+        ?id wdt:P156 ?item .
+        BIND("next" AS ?rel)
       }
       SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
     }
-    ORDER BY ?qid ?ordinal
   `;
-  return persistentCachedJSONFetch("https://query.wikidata.org/sparql?query=" + encodeURIComponent(query) + "&format=json")
-    .then(data => {
-      const mapping = {};
-      data.results.bindings.forEach(binding => {
-        let qidFull = binding.qid.value;
-        let currentQid = qidFull.split("/").pop();
-        let partFull = binding.part.value;
-        let partId = partFull.split("/").pop();
-        let partLabel = binding.partLabel ? binding.partLabel.value : partId;
-        let partDescription = binding.partDescription ? binding.partDescription.value : "";
-        let ordinal = binding.ordinal ? parseInt(binding.ordinal.value, 10) : null;
-        let source = binding.source ? binding.source.value : null;
-        if (!mapping[currentQid]) {
-          mapping[currentQid] = [];
-        }
-        mapping[currentQid].push({ id: partId, label: partLabel, description: partDescription, ordinal, source });
-      });
-      // For each QID, if any binding is from P527, use only those; otherwise, use all.
-      Object.keys(mapping).forEach(qid => {
-        const parts = mapping[qid];
-        const hasP527 = parts.some(part => part.source === "P527");
-        if (hasP527) {
-          mapping[qid] = parts.filter(part => part.source === "P527");
-        }
-        mapping[qid].sort((a, b) => {
-          if (a.ordinal !== null && b.ordinal !== null) return a.ordinal - b.ordinal;
-          return a.label.localeCompare(b.label);
-        });
-      });
-      // Update cache for requested QIDs.
-      toRequest.forEach(qid => {
-        seriesPartsCache[qid] = mapping[qid] || [];
-      });
-      const result = Object.assign({}, cachedResults, mapping);
-      return result;
-    })
-    .catch(err => {
-      console.error("Error in batchFetchSeriesParts for QIDs:", toRequest, err);
-      toRequest.forEach(qid => {
-        seriesPartsCache[qid] = [];
-      });
-      return Object.assign({}, cachedResults);
-    });
-}
-
-/**
- * Fetch series parts for a single QID.
- * This wraps the batchFetchSeriesParts function.
- */
-function fetchSeriesParts(qid) {
-  return batchFetchSeriesParts([qid]).then(mapping => mapping[qid] || []);
-}
-
-/**
- * Recursively aggregates consumption statistics for all descendant leaf nodes
- * of a given series QID. This version now looks under backendData.media[...] for consumptions.
- * Returns a promise that resolves to an object { total, consumed }.
- */
-async function aggregateDescendantConsumptionStats(qid, visited = new Set(), counted = new Set(), backend = null) {
-  if (!backend) {
-    backend = await loadBackendData();
+  const results = await fetchSPARQL(query);
+  const out = {};
+  for (const row of results) {
+    out[row.rel.value] = {
+      id: row.item.value.split('/').pop(),
+      label: row.itemLabel?.value,
+    };
   }
+  return out;
+}
+
+async function getAncestry(id) {
+  const query = `
+    SELECT ?ancestor ?ancestorLabel WHERE {
+      wd:${id} (wdt:P361|wdt:P179)* ?ancestor .
+      FILTER(?ancestor != wd:${id})
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+    }
+  `;
+  const results = await fetchSPARQL(query);
+  return results.map(r => ({
+    id: r.ancestor.value.split('/').pop(),
+    label: r.ancestorLabel?.value,
+  }));
+}
+
+async function getP527Roots(id) {
+  const query = `
+    SELECT ?parent WHERE {
+      ?parent p:P527 ?stmt .
+      ?stmt ps:P527 wd:${id} .
+    }
+  `;
+  const results = await fetchSPARQL(query);
+
+  if (results.length === 0) return [id]; // Treat self as root if no parent
+
+  const roots = new Set();
+  const visited = new Set();
+  const queue = results.map(r => r.parent.value.split('/').pop());
+
+  while (queue.length > 0) {
+    const current = queue.pop();
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    const parents = await fetchSPARQL(`
+      SELECT ?parent WHERE {
+        ?parent p:P527 ?stmt .
+        ?stmt ps:P527 wd:${current} .
+      }
+    `);
+
+    if (parents.length === 0) {
+      roots.add(current);
+    } else {
+      queue.push(...parents.map(p => p.parent.value.split('/').pop()));
+    }
+  }
+
+  return Array.from(roots);
+}
+
+async function getP527Tree(rootId) {
+  const query = `
+    SELECT ?parent ?parentLabel ?child ?childLabel ?ordinal WHERE {
+      wd:${rootId} wdt:P527* ?parent .
+      ?parent p:P527 ?stmt .
+      ?stmt ps:P527 ?child .
+      OPTIONAL { ?stmt pq:P1545 ?ordinal. }
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+    }
+    ORDER BY ?parent (xsd:integer(?ordinal)) ?childLabel
+  `;
+  const results = await fetchSPARQL(query);
+  return results.map(r => ({
+    parent: r.parentLabel?.value,
+    child: r.childLabel?.value,
+    ordinal: r.ordinal?.value || null,
+    parentId: r.parent.value.split('/').pop(),
+    childId: r.child.value.split('/').pop(),
+  }));
+}
+
+async function getFlatGroup(id) {
+  const containerQuery = `
+    SELECT ?container ?containerLabel WHERE {
+      {
+        wd:${id} wdt:P361 ?container .
+      } UNION {
+        wd:${id} wdt:P179 ?container .
+      }
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+    }
+  `;
+  const containers = await fetchSPARQL(containerQuery);
+  if (containers.length === 0) return null;
+
+  const container = containers[0].container.value.split('/').pop();
+
+  const hasParts = await fetchASK(`ASK { wd:${container} wdt:P527 ?x }`);
+  if (hasParts) return null;
+
+  const membersQuery = `
+    SELECT ?item ?itemLabel ?ordinal WHERE {
+      {
+        ?item wdt:P361 wd:${container} .
+      } UNION {
+        ?item wdt:P179 wd:${container} .
+      }
+      OPTIONAL {
+        {
+          ?item p:P361 ?stmt .
+          ?stmt ps:P361 wd:${container} ;
+                 pq:P1545 ?ordinal.
+        } UNION {
+          ?item p:P179 ?stmt .
+          ?stmt ps:P179 wd:${container} ;
+                 pq:P1545 ?ordinal.
+        }
+      }
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+    }
+    ORDER BY (xsd:integer(?ordinal)) ?itemLabel
+  `;
+  const results = await fetchSPARQL(membersQuery);
+  return {
+    container,
+    containerLabel: containers[0].containerLabel?.value,
+    members: results.map(r => ({
+      id: r.item.value.split('/').pop(),
+      label: r.itemLabel?.value,
+      ordinal: r.ordinal?.value || null,
+    })),
+  };
+}
+
+async function exploreWikidataHierarchy(entityId) {
+  console.log("calling exploreWikidataHierarchy for", entityId);
+  const [sequence, ancestry, roots, flatGroup] = await Promise.all([
+    getSequence(entityId),
+    getAncestry(entityId),
+    getP527Roots(entityId),
+    getFlatGroup(entityId),
+  ]);
+
+  const structure = { trees: [] };
+
+  for (const root of roots) {
+    const tree = await getP527Tree(root);
+    if (tree.length > 0) {
+      structure.trees.push({
+        type: "hierarchy",
+        root,
+        edges: tree,
+      });
+    }
+  }
+
+  if (flatGroup) {
+    structure.trees.push({
+      type: "flat-collection",
+      container: flatGroup.container,
+      containerLabel: flatGroup.containerLabel,
+      members: flatGroup.members,
+    });
+  }
+
+  const result = {
+    entity: entityId,
+    sequence,
+    ancestry,
+    structure,
+  };
+
+  console.log("exploreWikidataHierarchy for", entityId, "returning", result);
+  return result;
+}
+
+/**
+ * Build an adjacency map from a hierarchy object so look-ups are O(1)
+ * {
+ *   parents: { parentId → [childId, …] },
+ *   children: { childId  → [parentId, …] }   // (rarely used but handy)
+ * }
+ */
+function buildAdjacency(hierarchy) {
+  const parents = Object.create(null);
+  const children = Object.create(null);
+
+  for (const tree of hierarchy.structure.trees) {
+    if (tree.type !== "hierarchy") continue;
+    for (const e of tree.edges) {
+      (parents[e.parentId]  ??= []).push(e.childId);
+      (children[e.childId]  ??= []).push(e.parentId);
+    }
+  }
+  return { parents, children };
+}
+
+// ── simple in-memory cache ──────────────────────────────────────────────
+const hierarchyCache = new Map();               // QID → Promise<Hierarchy>
+
+function getHierarchyMemoised(qid) {
+  if (hierarchyCache.has(qid)) return hierarchyCache.get(qid);
+
+  const p = exploreWikidataHierarchy(qid).then(h => {
+    // Build adjacency once and stick it on the object
+    h._adjacency ??= buildAdjacency(h);
+    return h;
+  });
+  hierarchyCache.set(qid, p);
+  return p;
+}
+
+
+// =============================================
+// DATA API IMPLEMENTATION
+// =============================================
+const SeriesDataAPI = {
+  /**
+   * Get hierarchical structure for an entity
+   */
+  async getHierarchyForEntity(qid) {
+    return getHierarchyMemoised(qid);
+  },
+
+  /**
+   * Get backend consumption/stats for an entity
+   */
+  async getBackendStatsForQid(qid) {
+      return loadBackendData().then(backendData => {
+      const key = "http://www.wikidata.org/entity/" + qid;
+      const entry = backendData.media ? backendData.media[key] : null;
+      let consumptionHTML = "";
+      let queueHTML = "";
+      let isQueued = false;
+      if (entry) {
+        if (entry.consumptions && entry.consumptions.length > 0) {
+          const consumptions = entry.consumptions.map(c => {
+            const d = new Date(c.when);
+            return { short: formatDateShort(d), long: formatDateLong(d) };
+          });
+          if (consumptions.length === 1) {
+            consumptionHTML = `consumed <span class="toggle-date" data-short="${consumptions[0].short}" data-long="${consumptions[0].long}" title="${consumptions[0].long}" onclick="toggleDate(this)">${consumptions[0].short}</span>`;
+          } else {
+            const datesHTML = consumptions.map(d => `<span class="toggle-date" data-short="${d.short}" data-long="${d.long}" title="${d.long}" onclick="toggleDate(this)">${d.short}</span>`).join(", ");
+            consumptionHTML = `consumed x${consumptions.length} (${datesHTML})`;
+          }
+        }
+        if (entry["queue-votes"] && Object.keys(entry["queue-votes"]).length > 0) {
+          isQueued = true;
+          let categoriesHTML = [];
+          for (const category in entry["queue-votes"]) {
+            const votes = entry["queue-votes"][category];
+            if (votes.length > 0) {
+              const voteDates = votes.map(v => {
+                const d = new Date(v.when);
+                return { short: formatDateShort(d), long: formatDateLong(d) };
+              });
+              if (voteDates.length === 1) {
+                categoriesHTML.push(`${category} <span class="toggle-date" data-short="${voteDates[0].short}" data-long="${voteDates[0].long}" title="${voteDates[0].long}" onclick="toggleDate(this)">${voteDates[0].short}</span>`);
+              } else {
+                const datesHTML = voteDates.map(d => `<span class="toggle-date" data-short="${d.short}" data-long="${d.long}" title="${d.long}" onclick="toggleDate(this)">${d.short}</span>`).join(", ");
+                categoriesHTML.push(`${category} x${voteDates.length} (${datesHTML})`);
+              }
+            }
+          }
+          if (categoriesHTML.length > 0) {
+            queueHTML = categoriesHTML.join(" ");
+          }
+        }
+      }
+      let finalHTML = "";
+      if (consumptionHTML) {
+        finalHTML += `<span class="backend-stat consumed">${consumptionHTML}</span>`;
+      }
+      if (queueHTML) {
+        finalHTML += ` <span class="backend-stat queued">${queueHTML}</span>`;
+      }
+      return { statsHTML: finalHTML, isQueued };
+    }).catch(err => {
+      console.error(err);
+      return { statsHTML: "", isQueued: false };
+    });
+  }
+};
+
+// =============================================
+// RENDERING FUNCTIONS (unchanged)
+// =============================================
+
+/**
+ * Recursively aggregates consumption statistics
+ */
+async function aggregateDescendantConsumptionStats(rootQid,
+                                                   visited = new Set(),
+                                                   counted = new Set(),
+                                                   backend = null,
+                                                   hierarchyObj = null,
+                                                   adjacency = null) {
+  if (!hierarchyObj) {
+    // One trip for *this* root, never again inside the recursion
+    console.log("aggregateDescendantConsumptionStats grabbing hierarchy of rootQid", rootQid)
+    hierarchyObj = await SeriesDataAPI.getHierarchyForEntity(rootQid);
+    adjacency    = hierarchyObj._adjacency
+                ?? (hierarchyObj._adjacency = buildAdjacency(hierarchyObj));
+  }
+
+  if (!backend) backend = await loadBackendData();
+
   let total = 0;
   let consumed = 0;
-  const parts = await fetchSeriesParts(qid);
-  const childQids = parts.map(p => p.id).filter(id => !visited.has(id));
-  childQids.forEach(id => visited.add(id));
-  for (const part of parts) {
-    const partKey = "http://www.wikidata.org/entity/" + part.id;
-    const childParts = await fetchSeriesParts(part.id);
-    if (childParts.length === 0) {
-      if (!counted.has(part.id)) {
-        total += 1;
-        if (backend.media && backend.media[partKey] && backend.media[partKey].consumptions && backend.media[partKey].consumptions.length > 0) {
-          consumed += 1;
+
+  const stack = [rootQid];
+  while (stack.length) {
+    const parent = stack.pop();
+    const kids   = adjacency.parents[parent] ?? [];
+
+    if (adjacency.parents[parent] === undefined) {
+      // parent has *no* P527 children; check if it's a flat collection container
+      const fc = hierarchyObj.structure.trees.find(
+                  t => t.type === "flat-collection" && t.container === parent);
+      if (fc) {
+        for (const m of fc.members) {
+          if (!counted.has(m.id)) {
+            total++;
+            const key = `http://www.wikidata.org/entity/${m.id}`;
+            if (backend.media?.[key]?.consumptions?.length > 0) consumed++;
+            counted.add(m.id);
+          }
         }
-        counted.add(part.id);
+        continue;          // done with this branch
       }
-    } else {
-      const childAgg = await aggregateDescendantConsumptionStats(part.id, visited, counted, backend);
-      total += childAgg.total;
-      consumed += childAgg.consumed;
+    }
+
+    for (const kid of kids) {
+      if (visited.has(kid)) continue;
+      visited.add(kid);
+
+      const grandKids = adjacency.parents[kid] ?? [];
+      if (grandKids.length === 0) {
+        // leaf
+        if (!counted.has(kid)) {
+          total++;
+          const key = `http://www.wikidata.org/entity/${kid}`;
+          if (backend.media?.[key]?.consumptions?.length > 0) consumed++;
+          counted.add(kid);
+        }
+      } else {
+        // push once—NO network call
+        stack.push(kid);
+      }
     }
   }
   return { total, consumed };
@@ -236,115 +440,90 @@ async function aggregateDescendantConsumptionStats(qid, visited = new Set(), cou
 
 /**
  * Renders a parts tree for a given series QID.
- * Highlights the current entity and recursively renders nested parts.
- * Returns a promise that resolves to the HTML string for the parts tree.
+ * Fetches the hierarchy only once per root and re-uses it for all
+ * descendant nodes (zero extra network traffic).
+ *
+ * @param {string} qid        – the node we’re rendering
+ * @param {string} currentQid – the “current page” entity (for bolding)
+ * @param {object|null} hierarchy – (internal) pre-fetched hierarchy
  */
-function renderPartsTree(qid, currentQid, counted = new Set()) {
-  console.log("Entering renderPartsTree with qid:", qid, "and currentQid:", currentQid);
-  return fetchSeriesParts(qid).then(parts => {
-    if (parts.length === 0) return "";
-    let html = "<ul class='parts-tree'>";
-    const partPromises = parts.map(part => {
-      const arrow = " ⟵";
-      let markerStart = "";
-      let markerEnd = "";
-      if (part.id === currentQid) {
-        markerStart = "<strong class='current-entry'>";
-        markerEnd = arrow + "</strong>";
-      }
-      let ordinalPart = "";
-      if (part.ordinal !== null) {
-        ordinalPart = part.ordinal + ". ";
-      }
-      let mainPart = `<a href="index.html?id=${part.id}">${part.label}</a> <span class="small-id">(${part.id})</span><span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${part.id}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">wikidata</a>]</span>`;
-      return getBackendStatsForQid(part.id).then(statsObj => {
-        let statsHTML = statsObj.statsHTML;
-        let combinedMain = statsObj.isQueued ? `<span class="queued-line">${mainPart + statsHTML}</span>` : (mainPart + statsHTML);
-        const combinedLine = ordinalPart + combinedMain;
-        return renderPartsTree(part.id, currentQid, counted).then(childHtml => {
-          const openAttr = (part.id === currentQid || (childHtml && childHtml.indexOf(currentQid) !== -1)) ? " open" : "";
-          if (childHtml) {
-            return aggregateDescendantConsumptionStats(part.id, new Set(), new Set()).then(agg => {
-              let aggText = "";
-              if (agg.total > 0) {
-                let pct = ((agg.consumed / agg.total) * 100).toFixed(1);
-                aggText = `<span class="consumption-agg">consumed ${agg.consumed}/${agg.total} (${pct}%)</span>`;
-              }
-              return `<details class="parts-tree"${openAttr}><summary><span class="summary-left">${markerStart}${combinedLine}${markerEnd}</span>${aggText}</summary>${childHtml}</details>`;
-            });
-          } else {
-            return `<li>${markerStart}${combinedLine}${markerEnd}</li>`;
+async function renderPartsTree(qid, currentQid, hierarchy = null) {
+
+  // Only the very first call for this root touches the API
+  if (!hierarchy) {
+    console.log("renderPartsTree qid", qid, "currentQid", currentQid, "grabbing hierarchy of qid", qid, "and recursing over complete tree")
+    hierarchy = await SeriesDataAPI.getHierarchyForEntity(qid);
+  }
+
+  const adjacency = hierarchy._adjacency;    // already built by memoiser
+
+  let html = "";
+
+  for (const tree of hierarchy.structure.trees) {
+
+    // ────────────────────────────────────────────────
+    //   Hierarchical (P527*) branch
+    // ────────────────────────────────────────────────
+    if (tree.type === "hierarchy") {
+      const children = tree.edges
+                          .filter(e => e.parentId === qid)
+                          .sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0));
+
+      if (children.length === 0) continue;
+
+      html += "<ul class='parts-tree'>";
+      console.log("getting backend consumption stats for", children.length, "children of", qid);
+      for (const child of children) {
+        const isCurrent = child.childId === currentQid;
+        const ordinal   = child.ordinal ? `${child.ordinal}. ` : "";
+
+        const mainLink  = `<a href="index.html?id=${child.childId}">${child.child}</a>
+                           <span class="small-id">(${child.childId})</span>`;
+
+        const statsObj  = await SeriesDataAPI.getBackendStatsForQid(child.childId);
+        const lineBody  = statsObj.isQueued
+                          ? `<span class="queued-line">${mainLink}${statsObj.statsHTML}</span>`
+                          : mainLink + statsObj.statsHTML;
+
+        const lineText  = `${ordinal}${isCurrent ? "<strong class='current-entry'>" : ""}${lineBody}${isCurrent ? " ⟵</strong>" : ""}`;
+
+        const childHtml = await renderPartsTree(child.childId, currentQid, hierarchy);
+
+        let aggText = "";
+        if (childHtml) {                     // node has descendants
+          const openAttr = isCurrent || childHtml.includes("current-entry") ? " open" : "";
+          const agg = await aggregateDescendantConsumptionStats(
+                        child.childId,
+                        new Set(), new Set(),
+                        null, hierarchy, adjacency);
+          if (agg.total > 0) {
+            const pct = ((agg.consumed / agg.total) * 100).toFixed(1);
+            aggText = `<span class="consumption-agg">consumed ${agg.consumed}/${agg.total} (${pct}%)</span>`;
           }
-        });
-      });
-    });
-    return Promise.all(partPromises).then(results => {
-      html += results.join("");
-      html += "</ul>";
-      return html;
-    });
-  });
-}
-
-/**
- * Returns a promise that resolves to the QID of the parent series of the given entity, if any.
- */
-function getParentSeries(qid) {
-  console.log("Entering getParentSeries with qid:", qid);
-  const query = `
-      SELECT ?series WHERE {
-        ?series wdt:P527 wd:${qid}.
-      } LIMIT 1
-    `;
-  const url = "https://query.wikidata.org/sparql?query=" + encodeURIComponent(query) + "&format=json";
-  return persistentCachedJSONFetch(url)
-    .then(data => {
-      if (data.results.bindings.length > 0) {
-        return data.results.bindings[0].series.value.split("/").pop();
+          html += `<details class="parts-tree"${openAttr}>
+                    <summary>${lineText}${aggText}</summary>${childHtml}
+                  </details>`;
+        } else {
+          html += `<li>${lineText}</li>`;
+        }
       }
-      return null;
-    })
-    .catch(err => {
-      console.error("Error fetching parent series for qid:", qid, err);
-      return null;
-    });
-}
+      html += "</ul>";
+    }
 
-/**
- * Extracts sequencing information from a Wikidata entity.
- */
-function extractSequencingInfo(entity) {
-  console.log("Entering extractSequencingInfo with entity id:", entity.id || "unknown");
-  const sequencing = { follows: [], followedBy: [], hasParts: [], partOf: [] };
-  if (entity.claims) {
-    if (entity.claims.P155) {
-      entity.claims.P155.forEach(claim => {
-        if (claim.mainsnak && claim.mainsnak.datavalue && claim.mainsnak.datavalue.value.id) {
-          sequencing.follows.push(claim.mainsnak.datavalue.value.id);
-        }
-      });
-    }
-    if (entity.claims.P156) {
-      entity.claims.P156.forEach(claim => {
-        if (claim.mainsnak && claim.mainsnak.datavalue && claim.mainsnak.datavalue.value.id) {
-          sequencing.followedBy.push(claim.mainsnak.datavalue.value.id);
-        }
-      });
-    }
-    if (entity.claims.P527) {
-      entity.claims.P527.forEach(claim => {
-        if (claim.mainsnak && claim.mainsnak.datavalue && claim.mainsnak.datavalue.value.id) {
-          sequencing.hasParts.push(claim.mainsnak.datavalue.value.id);
-        }
-      });
-    }
-    if (entity.claims.P179) {
-      entity.claims.P179.forEach(claim => {
-        if (claim.mainsnak && claim.mainsnak.datavalue && claim.mainsnak.datavalue.value.id) {
-          sequencing.partOf.push(claim.mainsnak.datavalue.value.id);
-        }
-      });
+    // ────────────────────────────────────────────────
+    //   Flat collection branch
+    // ────────────────────────────────────────────────
+    else if (tree.type === "flat-collection" && (tree.container === qid || tree.members.some(m => m.id === qid))) {
+      html += `<div class="flat-collection"><ul>`;
+      for (const m of tree.members) {
+        const isCurrent = m.id === currentQid;
+        const ordinal   = m.ordinal ? `${m.ordinal}. ` : "";
+        const link      = `<a href="index.html?id=${m.id}">${safeLabel(m, m.id)}</a>`;
+        html += `<li>${isCurrent ? "<strong class='current-entry'>" : ""}${ordinal}${link}${isCurrent ? "</strong>" : ""}</li>`;
+      }
+      html += "</ul></div>";
     }
   }
-  return sequencing;
+
+  return html;
 }
