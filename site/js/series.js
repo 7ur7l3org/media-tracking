@@ -39,12 +39,65 @@ function toggleDate(el) {
   el.innerText = (current === short ? long : short);
 }
 
-/**
- * Returns an object with two properties:
- * - statsHTML: a snippet of HTML with consumption and queue vote stats
- * - isQueued: a boolean that is true if the entry has any queue votes.
- */
-function getBackendStatsForQid(qid) {
+// =============================================
+// ABSTRACT DATA API (designed for efficient future implementation)
+// =============================================
+const SeriesDataAPI = {
+  /**
+   * Get hierarchical structure for an entity
+   * @returns {Promise<{entity: string, sequence: {previous: string|null, next: string|null}, structure: {trees: Array<{type: string, [key: string]: any}>}}>}
+   */
+  async getHierarchyForEntity(qid) {
+    // This will be implemented by your efficient code later
+    // For now, we'll wrap the existing implementation
+    return LegacyDataAdapter.getHierarchyForEntity(qid);
+  },
+
+  /**
+   * Get backend consumption/stats for an entity
+   * @returns {Promise<{statsHTML: string, isQueued: boolean}>}
+   */
+  async getBackendStatsForQid(qid) {
+    // This will be implemented by your efficient code later
+    return LegacyDataAdapter.getBackendStatsForQid(qid);
+  }
+};
+
+// =============================================
+// LEGACY ADAPTER (implements abstract API using current implementation)
+// =============================================
+const LegacyDataAdapter = {
+  async getHierarchyForEntity(qid) {
+    // Build hierarchy structure from existing functions
+    const children = await fetchSeriesParts(qid);
+    const sequence = extractSequencingInfo({id: qid});
+    const parent = await getParentSeries(qid);
+    
+    return {
+      entity: qid,
+      sequence: {
+        previous: sequence.follows[0] || null,
+        next: sequence.followedBy[0] || null
+      },
+      structure: {
+        trees: [{
+          type: "hierarchy",
+          root: qid,
+          edges: children.map(child => ({
+            parentId: qid,
+            childId: child.id,
+            childLabel: child.label,
+            ordinal: child.ordinal
+          }))
+        }]
+      }
+    };
+  },
+
+  async getBackendStatsForQid(qid) {
+    // Original implementation
+    return loadBackendData().then(backendData => {
+      const key = "http://www.wikidata.org/entity/" + qid;
   console.log("Entering getBackendStatsForQid with qid:", qid);
   return loadBackendData().then(backendData => {
     const key = "http://www.wikidata.org/entity/" + qid;
@@ -101,7 +154,13 @@ function getBackendStatsForQid(qid) {
     console.error(err);
     return { statsHTML: "", isQueued: false };
   });
-}
+    });
+  }
+};
+
+// =============================================
+// REFACTORED RENDERING (uses abstract API)
+// =============================================
 
 /**
  * Batch fetch series parts for multiple QIDs.
@@ -201,90 +260,144 @@ function fetchSeriesParts(qid) {
 }
 
 /**
- * Recursively aggregates consumption statistics for all descendant leaf nodes
- * of a given series QID. This version now looks under backendData.media[...] for consumptions.
- * Returns a promise that resolves to an object { total, consumed }.
+ * Recursively aggregates consumption statistics
  */
 async function aggregateDescendantConsumptionStats(qid, visited = new Set(), counted = new Set(), backend = null) {
-  if (!backend) {
-    backend = await loadBackendData();
-  }
+  if (!backend) backend = await loadBackendData();
+  
+  const hierarchy = await SeriesDataAPI.getHierarchyForEntity(qid);
   let total = 0;
   let consumed = 0;
-  const parts = await fetchSeriesParts(qid);
-  const childQids = parts.map(p => p.id).filter(id => !visited.has(id));
-  childQids.forEach(id => visited.add(id));
-  for (const part of parts) {
-    const partKey = "http://www.wikidata.org/entity/" + part.id;
-    const childParts = await fetchSeriesParts(part.id);
-    if (childParts.length === 0) {
-      if (!counted.has(part.id)) {
-        total += 1;
-        if (backend.media && backend.media[partKey] && backend.media[partKey].consumptions && backend.media[partKey].consumptions.length > 0) {
-          consumed += 1;
+  
+  // Process all children from all trees
+  for (const tree of hierarchy.structure.trees) {
+    const children = [];
+    
+    if (tree.type === "hierarchy") {
+      // Get direct children for this tree
+      children.push(...tree.edges
+        .filter(edge => edge.parentId === qid)
+        .map(edge => ({id: edge.childId}))
+      );
+    }
+    else if (tree.type === "flat-collection" && tree.container === qid) {
+      // Get members of flat collection
+      children.push(...tree.members.map(m => ({id: m.id})));
+    }
+    
+    for (const child of children) {
+      const childId = child.id;
+      if (visited.has(childId)) continue;
+      visited.add(childId);
+      
+      // Check if child has its own children
+      const childHierarchy = await SeriesDataAPI.getHierarchyForEntity(childId);
+      const hasChildren = childHierarchy.structure.trees.some(t => 
+        (t.type === "hierarchy" && t.edges.length > 0) ||
+        (t.type === "flat-collection" && t.members.length > 0)
+      );
+      
+      if (!hasChildren) {
+        if (!counted.has(childId)) {
+          total += 1;
+          const key = "http://www.wikidata.org/entity/" + childId;
+          if (backend.media?.[key]?.consumptions?.length > 0) {
+            consumed += 1;
+          }
+          counted.add(childId);
         }
-        counted.add(part.id);
+      } else {
+        const childAgg = await aggregateDescendantConsumptionStats(childId, visited, counted, backend);
+        total += childAgg.total;
+        consumed += childAgg.consumed;
       }
-    } else {
-      const childAgg = await aggregateDescendantConsumptionStats(part.id, visited, counted, backend);
-      total += childAgg.total;
-      consumed += childAgg.consumed;
     }
   }
-  return { total, consumed };
+  
+  return {total, consumed};
 }
 
 /**
- * Renders a parts tree for a given series QID.
- * Highlights the current entity and recursively renders nested parts.
- * Returns a promise that resolves to the HTML string for the parts tree.
+ * Renders a parts tree for a given series QID
  */
-function renderPartsTree(qid, currentQid, counted = new Set()) {
-  console.log("Entering renderPartsTree with qid:", qid, "and currentQid:", currentQid);
-  return fetchSeriesParts(qid).then(parts => {
-    if (parts.length === 0) return "";
-    let html = "<ul class='parts-tree'>";
-    const partPromises = parts.map(part => {
-      const arrow = " ⟵";
-      let markerStart = "";
-      let markerEnd = "";
-      if (part.id === currentQid) {
-        markerStart = "<strong class='current-entry'>";
-        markerEnd = arrow + "</strong>";
-      }
-      let ordinalPart = "";
-      if (part.ordinal !== null) {
-        ordinalPart = part.ordinal + ". ";
-      }
-      let mainPart = `<a href="index.html?id=${part.id}">${part.label}</a> <span class="small-id">(${part.id})</span><span class="extra-link">[<a href="https://sqid.toolforge.org/#/view?id=${part.id}" target="_blank">sqid</a>][<a href="https://www.wikidata.org/wiki/${part.id}" target="_blank">wikidata</a>]</span>`;
-      return getBackendStatsForQid(part.id).then(statsObj => {
-        let statsHTML = statsObj.statsHTML;
-        let combinedMain = statsObj.isQueued ? `<span class="queued-line">${mainPart + statsHTML}</span>` : (mainPart + statsHTML);
+async function renderPartsTree(qid, currentQid) {
+  const hierarchy = await SeriesDataAPI.getHierarchyForEntity(qid);
+  let html = "";
+  
+  for (const tree of hierarchy.structure.trees) {
+    if (tree.type === "hierarchy") {
+      // Get direct children for this tree
+      const children = tree.edges
+        .filter(edge => edge.parentId === qid)
+        .sort((a, b) => (a.ordinal || 0) - (b.ordinal || 0));
+      
+      if (children.length === 0) continue;
+      
+      html += "<ul class='parts-tree'>";
+      for (const child of children) {
+        const isCurrent = child.childId === currentQid;
+        const arrow = " ⟵";
+        const marker = isCurrent ? `<strong class='current-entry'>` : "";
+        const endMarker = isCurrent ? `${arrow}</strong>` : "";
+        
+        const ordinalPart = child.ordinal ? `${child.ordinal}. ` : "";
+        
+        let mainPart = `<a href="index.html?id=${child.childId}">${child.childLabel}</a> <span class="small-id">(${child.childId})</span>`;
+        
+        const statsObj = await SeriesDataAPI.getBackendStatsForQid(child.childId);
+        const statsHTML = statsObj.statsHTML;
+        const combinedMain = statsObj.isQueued ? 
+          `<span class="queued-line">${mainPart + statsHTML}</span>` : 
+          (mainPart + statsHTML);
+        
         const combinedLine = ordinalPart + combinedMain;
-        return renderPartsTree(part.id, currentQid, counted).then(childHtml => {
-          const openAttr = (part.id === currentQid || (childHtml && childHtml.indexOf(currentQid) !== -1)) ? " open" : "";
-          if (childHtml) {
-            return aggregateDescendantConsumptionStats(part.id, new Set(), new Set()).then(agg => {
-              let aggText = "";
-              if (agg.total > 0) {
-                let pct = ((agg.consumed / agg.total) * 100).toFixed(1);
-                aggText = `<span class="consumption-agg">consumed ${agg.consumed}/${agg.total} (${pct}%)</span>`;
-              }
-              return `<details class="parts-tree"${openAttr}><summary><span class="summary-left">${markerStart}${combinedLine}${markerEnd}</span>${aggText}</summary>${childHtml}</details>`;
-            });
-          } else {
-            return `<li>${markerStart}${combinedLine}${markerEnd}</li>`;
+        const childHtml = await renderPartsTree(child.childId, currentQid);
+        
+        if (childHtml) {
+          const openAttr = (isCurrent || childHtml.includes(currentQid)) ? " open" : "";
+          const agg = await aggregateDescendantConsumptionStats(child.childId, new Set(), new Set());
+          let aggText = "";
+          
+          if (agg.total > 0) {
+            const pct = ((agg.consumed / agg.total) * 100).toFixed(1);
+            aggText = `<span class="consumption-agg">consumed ${agg.consumed}/${agg.total} (${pct}%)</span>`;
           }
-        });
-      });
-    });
-    return Promise.all(partPromises).then(results => {
-      html += results.join("");
+          
+          html += `<details class="parts-tree"${openAttr}><summary><span class="summary-left">${marker}${combinedLine}${endMarker}</span>${aggText}</summary>${childHtml}</details>`;
+        } else {
+          html += `<li>${marker}${combinedLine}${endMarker}</li>`;
+        }
+      }
       html += "</ul>";
-      return html;
-    });
-  });
+    }
+    else if (tree.type === "flat-collection") {
+      // Render flat collection
+      html += `<div class="flat-collection"><h3>${tree.containerLabel}</h3><ul>`;
+      for (const member of tree.members) {
+        const isCurrent = member.id === currentQid;
+        const marker = isCurrent ? `<strong class='current-entry'>` : "";
+        const endMarker = isCurrent ? `</strong>` : "";
+        
+        const ordinalPart = member.ordinal ? `${member.ordinal}. ` : "";
+        let mainPart = `<a href="index.html?id=${member.id}">${member.label}</a>`;
+        
+        html += `<li>${marker}${ordinalPart}${mainPart}${endMarker}</li>`;
+      }
+      html += "</ul></div>";
+    }
+  }
+  
+  return html;
 }
+
+// =============================================
+// ORIGINAL IMPLEMENTATIONS (keep as-is for now)
+// =============================================
+
+// ... (keep all your original functions: 
+//      batchFetchSeriesParts, fetchSeriesParts, 
+//      getParentSeries, extractSequencingInfo, 
+//      formatDateShort, formatDateLong, toggleDate) ...
 
 /**
  * Returns a promise that resolves to the QID of the parent series of the given entity, if any.

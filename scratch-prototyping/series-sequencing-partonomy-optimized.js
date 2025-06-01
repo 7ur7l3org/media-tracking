@@ -215,5 +215,6 @@ async function exploreWikidataHierarchy(entityId) {
 
 // 🧪 Try it with any Wikidata Q-ID:
 exploreWikidataHierarchy("Q23558");  // House
-// exploreWikidataHierarchy("Q208269");  // Eternal Sunshine
-// exploreWikidataHierarchy("Q4174738"); // House episode
+exploreWikidataHierarchy("Q208269");  // Eternal Sunshine
+exploreWikidataHierarchy("Q4174738"); // House episode
+exploreWikidataHierarchy("Q210311"); // American Dad
