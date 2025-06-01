@@ -11,6 +11,14 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make series/sequencing rendering more reflective of the actual data being rendered e.g. flat-collection reverse links (P?) vs P527* hierarchies. e.g. P179 is probably just a lie at this point
+- move follows / followed by out of the collapsible series. those statements are universal, not specific to any series
+- add ancestry rendering alongside follows / followed by. add P?'s to ancestry/follows/followed by and probably always render it even if those statements don't exist. (no statement) should be good to see for those three navigational claims and more uniform rendering is better
+- add follows / followed by / ancestry to the top in addition to the bottom of the series/sequencing
+- add arrow rendering to flat-collection series rendering for which one we're on
+- add qid rendering to flat-collection entries (e.g. series/sequencing of ?id=Q208269) and sqid/wikidata to all series/sequencing
+- `if (instanceIds.includes("Q7725310") || instanceIds.includes("Q24856")) { // TODO what the fuck is this` figure out what the fuck this is in rendering.js
+- test that multiple series/sequencing still work and add to test cases at the bottom of the partonomy prototype code
 - add smol "copy" buttons to all property values (and maybe everything everywhere lol)
 - add link to the good wikidata search in the search results pane (even better if it retains the failed query). likewise for wikidata google search minimally to grab some sort of uri for the id. even better maybe to get the closest match on wikidata e.g. the author or something maybe via google? well or just best to have form to more easily make the thing
 - implicit resolution of queue votes and explicit cause i dont want to deal with aggregation implicit yet
