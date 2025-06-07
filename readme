@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- add profiling to every function and show it at the bottom near the git operations log. should be easy to figure out what's slow
 - ability to move/send consumptions or queue votes to different (q)id's
 - when there arent episode information and i am adding consumption s01e12 it should autosuggest s01e13 as the next consumption 
 - change it so that instead of focusing the search, the search is a single tab away
