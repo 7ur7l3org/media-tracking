@@ -13,6 +13,10 @@ phase 0
 phase 1
 - make search better. seinfelt should work even if smol typo
 - search is now the slow part of the site. this takes 12 seconds `SELECT ?itemId WHERE {      SERVICE wikibase:mwapi {        bd:serviceParam wikibase:api "Search" .        bd:serviceParam wikibase:endpoint "www.wikidata.org" .        bd:serviceParam mwapi:srsearch "friends" .        bd:serviceParam mwapi:srlimit "20" .        bd:serviceParam mwapi:sroffset "0" .        ?itemId wikibase:apiOutput mwapi:title .      }    }    LIMIT 20    OFFSET 0`
+- add profiling to every function and show it at the bottom near the git operations log. should be easy to figure out what's slow
+- ability to move/send consumptions or queue votes to different (q)id's
+- when there arent episode information and i am adding consumption s01e12 it should autosuggest s01e13 as the next consumption 
+- change it so that instead of focusing the search, the search is a single tab away
 - expose all useful js functions that give data under /api?blah that return the actual json that the site uses to work out the stuff. maybe even make the site itself use that if it isn't too slow so the network tab looks good. probably allow https auth tokens in query parameters (look up safety of that) so other tools can easily grab equivalent stuff that ueue does. same for ui components under /components. they should all be able to work fine if given the right context parameters
 - theoretically private git repo should be able to hold additional js api and html components that can be composed on the site. like extensions/plugins. not sure how to load web stuff from indexeddb files but if i make some kinda /local-repo i think i could just hit those for html/js
 - make /local-repo that shows http folder structure and all files in repo. branch query parameter and ui dropdown
