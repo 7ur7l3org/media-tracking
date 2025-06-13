@@ -140,9 +140,9 @@
   const tests = [
     'gatsby','re zero','spider man','fate stay night','steins gate',
     'seinfelt','drive my car','good will','alien movie','lotr',
-    'star war','friends','house','house show','pokemon','black mirror',
+    'star war','friends','house','house show','pokemon','pokemon anime','black mirror',
     'maid','maid tv','faouzia','my hero academia vigilantes',
-    'one piece','stagnetti','pirates 2 stagnetti','queen'
+    'one piece','stagnetti','pirates 2 stagnetti','queen',"queen's gambit"
   ];
 
   for (const q of tests) {

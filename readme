@@ -11,6 +11,11 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make ue<tab>search url tab search work
+- make search use google api if given (just add to indexeddb for now or maybe <account-settings-repo>/account-settings-secrets.json)
+- make search use other better search backends with buttons <load google search (default), load mediawiki search, load blah search, google did you mean / completions> where they cascade if no or few hits for the first ones
+- address crazy-behavior.txt
+- make private repo hold secrets and settings such as other github tokens for other repos and google search api/site and cors proxy and stuff. also holds extensions and such. or has token for public repo that holds extensions. then login is pure token/ueue-account-settings-repo
 - make search better. seinfelt should work even if smol typo
 - search is now the slow part of the site. this takes 12 seconds `SELECT ?itemId WHERE {      SERVICE wikibase:mwapi {        bd:serviceParam wikibase:api "Search" .        bd:serviceParam wikibase:endpoint "www.wikidata.org" .        bd:serviceParam mwapi:srsearch "friends" .        bd:serviceParam mwapi:srlimit "20" .        bd:serviceParam mwapi:sroffset "0" .        ?itemId wikibase:apiOutput mwapi:title .      }    }    LIMIT 20    OFFSET 0`
 - add profiling to every function and show it at the bottom near the git operations log. should be easy to figure out what's slow
