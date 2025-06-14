@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- what in the world bugged series/sequencing https://ueue.7ur.it/?id=Q22712210
 - make series/sequencing show descriptions in addition to titles in collapsible nodes e.g. https://ueue.7ur.it/?id=Q14566553 just shows three different qid's with the same name
 - make url tilde metadata thing
 - make page load fast probably by caching wikidata data in repo and only updating that after first render with loading icon..
