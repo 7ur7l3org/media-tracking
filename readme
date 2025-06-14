@@ -11,7 +11,8 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
-- make ue<tab>search url tab search work
+- make url tilde metadata thing
+- make page load fast probably by caching wikidata data in repo and only updating that after first render with loading icon..
 - make search use google api if given (just add to indexeddb for now or maybe <account-settings-repo>/account-settings-secrets.json)
 - make search use other better search backends with buttons <load google search (default), load mediawiki search, load blah search, google did you mean / completions> where they cascade if no or few hits for the first ones
 - address crazy-behavior.txt
@@ -61,7 +62,6 @@ phase 1
 - call e.g. document.getElementById(location.hash.slice(1))?.scrollIntoView(); after (all) content loads so that it scrolls to the right place
 - make token mostly not visible unless you click
 - add whatever type this is to list of search result emphasises https://ueue.7ur.it/?id=Q99955255 . maybe grab the whole type hierarchy at some point and see what it looks like
-- make url tab search work
 - make separate file that is media information cache that holds all wikidata response information for all the things you've ever visited, but that doesn't as obviously get mixed in with your actual data. alternatively for now rip out all existing "visited" pages from the json since they are pretty worthless (like what you hadn't yet decided to put on watchlist and you remember when you lose internet? lol)
 - condense json
 - add a resolve to queue votes so they stay but just are closed, instead of deleting them. should never have to remove a queue vote when watched, you'd want the history of the votes and the lag in watching. should show in the page info, and not on the queue votes page
@@ -180,7 +180,6 @@ phase 1
 - make theme better
 - make theme changing ux to call setTheme light or dark or nothing to be sustem preference
 - happy `remote already updated (skipping push)` on `[1:42:13 AM mistress cdf11c8] cloneOrFetchUpdates: Error cloning repo: http is not defined` should not be possible. both cause i should load http correctly but also because i'm not detecting clone failures
-- figure out how to make `ue <tab>` take me to the "search ueue" thing
 - move search into header
 - routes and 404 redirect hack for cleaner api urls https://chatgpt.com/c/67f69c0b-0d70-800c-9791-415a32b7832b
 
@@ -208,6 +207,10 @@ https://cors-proxy.m7ur7l3.workers.dev/github.com/7ur7l3org/tracking-repo/info/r
 ---
 
 done
+-- make page titles be ascii-fied title and description
+-- make ue<tab>search url tab search work
+-- make url tab search work
+-- figure out how to make `ue <tab>` take me to the "search ueue" thing -> opensearch link rel search
 -- give focus to search on index.html main page load so you can directly type the search (if not doing url tab search whenever i get that working) -> yes!
 -- make it default to the cursor in the search -> yes!
 -- make favicon be you finger, maybe nice black and white monospace ish font -> nah just is the legit emoji!

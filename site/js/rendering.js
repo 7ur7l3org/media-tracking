@@ -134,7 +134,10 @@ async function renderEntity(entity, qid, updateHistory = true) {
   if (updateHistory) {
     window.history.pushState({}, '', "?id=" + qid);
   }
-  document.title = label + " (" + qid + ") - ueue🫵 - Wikidata Media Tracker";
+  var pageTitle = label + " - " + entity.descriptions.en.value + " - ueue🫵";
+  pageTitle = pageTitle.normalize('NFKD')                   // Decompose accented letters
+                       .replace(/[\u0300-\u036f]/g, '');    // Remove diacritics
+  document.title = pageTitle;
 
   // Get sequencing info from hierarchy API instead of extractSequencingInfo
   console.log("getHierarchyForEntity qid", qid, "for renderEntity");
