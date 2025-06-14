@@ -23,6 +23,11 @@
   <script src="js/backend.js" defer></script>
   <script src="js/search.js" defer></script>
   <script src="js/main.js" defer></script>
+
+  <!-- ①  Browser discovery – OpenSearch -->
+  <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="ueue.7ur.it search">
+  <!-- ②  SearchAction for Google/Bing -->
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","url":"https://ueue.7ur.it/","potentialAction":{"@type":"SearchAction","target":"https://ueue.7ur.it/?q={searchTerms}","query-input":"required name=q"}}</script>
 </head>
 <body>
   <!-- Header with navigation -->
