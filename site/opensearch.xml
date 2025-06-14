@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+
+  <!-- Visible name in browser UI -->
+  <ShortName>UEUE Search</ShortName>
+  <Description>Search the UEUE knowledge index</Description>
+
+  <!-- Optional favicon / 16×16 icon (change URL or data-URI to your own) -->
+  <Image width="16" height="16" type="image/svg+xml">
+    data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20x='50'%20y='75'%20font-size='75'%20text-anchor='middle'%3E🫵%3C/text%3E%3C/svg%3E
+  </Image>
+
+  <!-- Core template that browsers plug %s or {searchTerms} into -->
+  <Url type="text/html"
+       method="get"
+       template="https://ueue.7ur.it/?q={searchTerms}"/>
+
+  <!-- (Optional) live suggestion API – omit if you don’t have one
+  <Url type="application/x-suggestions+json"
+       template="https://ueue.7ur.it/api/suggest?q={searchTerms}"/>
+  -->
+
+  <InputEncoding>UTF-8</InputEncoding>
+  <OutputEncoding>UTF-8</OutputEncoding>
+</OpenSearchDescription>
