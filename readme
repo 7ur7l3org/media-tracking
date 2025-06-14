@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make series/sequencing show descriptions in addition to titles in collapsible nodes e.g. https://ueue.7ur.it/?id=Q14566553 just shows three different qid's with the same name
 - make url tilde metadata thing
 - make page load fast probably by caching wikidata data in repo and only updating that after first render with loading icon..
 - make search use google api if given (just add to indexeddb for now or maybe <account-settings-repo>/account-settings-secrets.json)
