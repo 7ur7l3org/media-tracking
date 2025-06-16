@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script type="module">
+  const params = Object.fromEntries(new URLSearchParams(location.search).entries());
+
+  async function run() {
+    await new Promise(r => setTimeout(r, 5000)); // simulate delay
+
+    const result = {
+      source: 'iframe',
+      params,
+      timestamp: Date.now()
+    };
+
+    console.log('[Iframe API] Done:', result);
+    document.body.innerText = JSON.stringify(result, null, 2);
+
+    // Notify parent
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'api-complete', result }, '*');
+    }
+  }
+
+  run();
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+thanks https://chatgpt.com/c/684f7480-9d9c-800c-b197-b8e650e321d4
+
+makes client app js make fetch network requests to profile and make visible api calls to sw.js
+
+---
+
+
+[cfe4267e-66c6-418b-b471-7778ae45a9fb] api_fetch to /api/func1?x=abc from http://localhost:8000/:54
+sw.js:31 [SW] [cfe4267e-66c6-418b-b471-7778ae45a9fb] From http://localhost:8000/:54 → {caller: 'http://localhost:8000/:54', requestId: 'cfe4267e-66c6-418b-b471-7778ae45a9fb', isManual: false, initiator: 'http://localhost:8000/', serviceWorker: 'http://localhost:8000/sw.js'}
+func1.js:48 [getCallerInfo] Selected: http://localhost:8000/api/func1.js:64
+func1.js:4 [func1.js] >>> [cfe4267e-66c6-418b-b471-7778ae45a9fb] Function started
+func1.js:5 [func1.js] Defined at: http://localhost:8000/api/func1.js:63
+func1.js:6 [func1.js] Context: {caller: 'http://localhost:8000/:54', requestId: 'cfe4267e-66c6-418b-b471-7778ae45a9fb', isManual: false, initiator: 'http://localhost:8000/', serviceWorker: 'http://localhost:8000/sw.js'}
+(index):47 [cfe4267e-66c6-418b-b471-7778ae45a9fb] Handled by: http://localhost:8000/api/func1.js:63 (via http://localhost:8000/sw.js)
+(index):56 [cfe4267e-66c6-418b-b471-7778ae45a9fb] Response: {source: 'service-worker', function: 'http://localhost:8000/api/func1.js:63', params: {…}, timestamp: '2025-06-16T06:54:01.049Z'}
+
+
+---
+
+┏[ 7UR7L3 from  LAPTOP-GOPI63LV][ 5.113s][ RAM: 28/63GB][ Monday at 12:32:30 AM][ mattress ≡  ?2  4]
+┖[D:\7ur-home\dev\ueue\scratch-prototyping\api-client-side\sw-api-enhanced]
+└─Δ curl http://localhost:8000/api/func1.js | bun-profile.exe - x=abcd
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  2958  100  2958    0     0   215k      0 --:--:-- --:--:-- --:--:--  222k
+[getCallerInfo] Selected: D:\7ur-home\dev\ueue\scratch-prototyping\api-client-side\sw-api-enhanced\[stdin]:2
+[func1.js] >>> [toghlikvaa] Function started
+[func1.js] Defined at: D:\7ur-home\dev\ueue\scratch-prototyping\api-client-side\sw-api-enhanced\[stdin]:1
+[func1.js] Context: {
+  caller: "standalone",
+  requestId: "toghlikvaa",
+  isManual: true,
+  initiator: "stdin-or-direct",
+  serviceWorker: "none",
+}
+{
+  "source": "service-worker",
+  "function": "D:\\7ur-home\\dev\\ueue\\scratch-prototyping\\api-client-side\\sw-api-enhanced\\[stdin]:1",
+  "params": {
+    "x": "abcd"
+  },
+  "timestamp": "2025-06-16T06:32:38.374Z"
+}
+┏[ 7UR7L3 from  LAPTOP-GOPI63LV][ 5.083s][ RAM: 28/63GB][ Monday at 12:32:38 AM][ mattress ≡  ?2  4]
+┖[D:\7ur-home\dev\ueue\scratch-prototyping\api-client-side\sw-api-enhanced]
+└─Δ ll
+Mode  Size Date Modified                  Git Name
+d----    - 2025-06-15  Jun 15  9:10:37 pm  -N  api/
+-a--- 2.2k 2025-06-15  Jun 15 11:47:24 pm  -N  index.html
+d----    - 2025-06-15  Jun 15 11:23:28 pm  -N  lib/
+-a--- 1.6k 2025-06-15  Jun 15 11:25:02 pm  -N  sw.js
+┏[ 7UR7L3 from  LAPTOP-GOPI63LV][ 0.037s][ RAM: 28/63GB][ Monday at 12:36:03 AM][ mattress ≡  ?2  4]
+┖[D:\7ur-home\dev\ueue\scratch-prototyping\api-client-side\sw-api-enhanced]
+└─Δ bun-profile.exe .\api\func1.js x=abcd
+[getCallerInfo] Selected: D:\7ur-home\dev\media-tracking\scratch-prototyping\api-client-side\sw-api-enhanced\api\func1.js:64
+[func1.js] >>> [b3mkvv69fd] Function started
+[func1.js] Defined at: D:\7ur-home\dev\media-tracking\scratch-prototyping\api-client-side\sw-api-enhanced\api\func1.js:63
+[func1.js] Context: {
+  caller: "standalone",
+  requestId: "b3mkvv69fd",
+  isManual: true,
+  initiator: "stdin-or-direct",
+  serviceWorker: "none",
+}
+{
+  "source": "service-worker",
+  "function": "D:\\7ur-home\\dev\\media-tracking\\scratch-prototyping\\api-client-side\\sw-api-enhanced\\api\\func1.js:63",
+  "params": {
+    "x": "abcd"
+  },
+  "timestamp": "2025-06-16T06:36:22.658Z"
+}

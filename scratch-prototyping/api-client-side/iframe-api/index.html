@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Iframe API Test</title>
+</head>
+<body>
+  <h1>Iframe-based Client API</h1>
+  <button onclick="callAPI()">Call API</button>
+  <pre id="output"></pre>
+
+  <script>
+    function callAPI() {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = `./api/func1.html?x=123&y=456`;
+
+      // Listen for completion signal from iframe
+      window.addEventListener('message', function handler(event) {
+        if (event.data?.type === 'api-complete') {
+          document.getElementById('output').textContent =
+            `Got from iframe API:\n${JSON.stringify(event.data.result, null, 2)}`;
+          window.removeEventListener('message', handler);
+        }
+      });
+
+      document.body.appendChild(iframe);
+    }
+  </script>
+</body>
+</html>

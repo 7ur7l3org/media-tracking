@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SW API with Generic Traced Fetch</title>
+  <script type="module">
+    import { getCallerInfo } from './lib/caller-info.js';
+
+    navigator.serviceWorker.register('./sw.js', { type: 'module' });
+
+    async function ensureControlled() {
+      const reg = await navigator.serviceWorker.ready;
+      if (!navigator.serviceWorker.controller) {
+        await new Promise(resolve =>
+          navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true })
+        );
+      }
+    }
+
+    function makeRequestId() {
+      return crypto.randomUUID?.() || Math.random().toString(36).slice(2, 10);
+    }
+
+    async function api_fetch(url, options = {}) {
+      await ensureControlled();
+
+      const caller = getCallerInfo({ functionName: 'api_fetch', depthAbove: 1 });
+      const rid = makeRequestId();
+
+      const headers = {
+        ...(options.headers || {}),
+        'X-Caller': caller,
+        'X-Request-ID': rid
+      };
+
+      console.log(`[${rid}] api_fetch to ${url} from ${caller}`);
+      // console.log(`[${rid}] Headers:`, headers);
+
+      const response = await fetch(url, {
+        ...options,
+        headers
+      });
+
+      const json = await response.json();
+
+      const handlerRef = response.headers.get('X-API-Location');
+      if (handlerRef) {
+        console.log(`[${rid}] Handled by: ${handlerRef}`);
+      }
+
+      return { json, requestId: rid };
+    }
+
+    async function callAPI() {
+      const { json, requestId } = await api_fetch('/api/func1?x=abc');
+
+      console.log(`[${requestId}] Response:`, json);
+
+      document.getElementById('output').textContent =
+        `Response (request ID: ${requestId}):\n${JSON.stringify(json, null, 2)}`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('trigger').addEventListener('click', () => {
+        callAPI(); // <-- source of traceable call
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>SW API (via api_fetch with trace headers)</h1>
+  <button id="trigger">Call API</button>
+  <pre id="output"></pre>
+</body>
+</html>
