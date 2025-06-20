@@ -1,0 +1,65 @@
+```
+LOGIC API PROTOTYPE — README
+
+Modular JavaScript functions usable as:
+
+  • Client-side Service Worker APIs
+  • Network-visible fetch endpoints
+  • Bun CLI scripts
+  • Cloudflare Workers (per function or unified router)
+
+Ref: chat.openai.com/c/6854ee46-4a54-800c-bf40-357cdbb17d19
+
+-------------------------------------------------------------------------------
+
+TEST LOCALLY
+
+-- 1. HTML + Service Worker (with visible /api/*.js calls) --
+
+  python3 -m http.server
+  open http://localhost:8000
+
+  -> click "Run" to test
+  -> inspect DevTools > Network tab for /api/add.js, etc.
+
+
+-- 2. CLI (Bun) --
+
+  bun run api/add.js --a=1 --b=2
+  bun run api/calculateArea.js --width=4 --height=3 --margin=1
+
+
+-- 3. Cloudflare Worker (Per Function) --
+
+  wrangler dev api/add.js
+  curl "http://127.0.0.1:8787/?a=1&b=2"
+
+  # change wrangler.toml 'main' as needed
+
+
+-- 4. Cloudflare Worker (All APIs via api/index.js router) --
+
+  wrangler dev api/index.js
+  curl "http://127.0.0.1:8787/api/multiply.js?x=3&y=4"
+  curl "http://127.0.0.1:8787/api/calculateArea.js?width=3&height=3&margin=1"
+
+  # wrangler.toml:
+  #   main = "api/index.js"
+
+
+-- 5. Remote Usage (Other Origin / DevTools Console) --
+
+  fetch("https://yourhost.com/api/add.js?a=5&b=10").then(r => r.json())
+
+
+-------------------------------------------------------------------------------
+
+USAGE NOTES
+
+- Logic modules are in /api/*.js and export named functions
+- /lib/ contains shared CLI + Worker helpers
+- Supports: fetch(), Bun, and Cloudflare natively
+- Static imports in Service Worker = spec-compliant + visible
+
+-------------------------------------------------------------------------------
+```

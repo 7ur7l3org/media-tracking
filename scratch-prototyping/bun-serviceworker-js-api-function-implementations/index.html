@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Logic API Test</title>
+  <style>
+    #status { width: 1em; height: 1em; display: inline-block; border-radius: 50%; margin-left: 0.5em; }
+    .red { background: red; }
+    .green { background: green; }
+  </style>
+</head>
+<body>
+  <h1>Logic API</h1>
+  <p>Service Worker status: <span id="status" class="red"></span></p>
+  <button id="run">Run API calls</button>
+  <pre id="output"></pre>
+
+  <script>
+    const status = document.getElementById('status');
+    const pollSW = async () => {
+      if (navigator.serviceWorker.controller) {
+        status.classList.replace('red', 'green');
+        return;
+      }
+      status.classList.replace('green', 'red');
+      setTimeout(pollSW, 500);
+    };
+
+    navigator.serviceWorker.register('service-worker.js', { type: 'module' }).then(pollSW);
+    pollSW();
+
+    document.getElementById('run').onclick = async () => {
+      const output = document.getElementById('output');
+      try {
+        const add = await fetch('/api/add.js?a=5&b=3').then(r => r.json());
+        const mult = await fetch('/api/multiply.js?x=2&y=4').then(r => r.json());
+        const area = await fetch('/api/calculateArea.js?width=3&height=4&margin=1').then(r => r.json());
+
+        output.textContent =
+          'Add: ' + JSON.stringify(add) + '\n' +
+          'Mult: ' + JSON.stringify(mult) + '\n' +
+          'Area: ' + JSON.stringify(area);
+      } catch (err) {
+        output.textContent = 'Error: ' + err;
+      }
+    };
+  </script>
+</body>
+</html>
