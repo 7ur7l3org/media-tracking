@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make queues page be tick box for which queues to show by url and update page title
 - make https://ueue.7ur.it/?id=Q823422 show back parts like https://ueue.7ur.it/?id=Q189505 does. make the latter show jaws 2 outside of those back link siblings
 - update all formatter url P1630 uses to lowkey dodge https://toolhub.wikimedia.org/tools/toolforge-wikidata-externalid-url by preferring `applies if regular expression matches (P8460)` formatter urls. should always use/provide all formatter urls that match but sorted by explicit match first and then alt urls are provided with maybe [1] or [2]
 - what in the world bugged series/sequencing https://ueue.7ur.it/?id=Q22712210
