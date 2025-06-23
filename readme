@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- get duration on the queue votes page
 - make queue votes column have a copy button to copy as list
 - fix https://ueue.7ur.it/?id=Q131534559 my hero academia vigilantes being completely broken somehow
 - add `https://ueue.7ur.it/?id=Q63615353 Seishun Buta Yarō - Japanese anime television series` text to page to more easily copy url and description (would be slightly better than the url hint in general for copy pasting to e.g. here)
