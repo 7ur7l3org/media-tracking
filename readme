@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- add search for "i am sam" to test cases. super slow and bad
 - get duration on the queue votes page
 - make queue votes column have a copy button to copy as list
 - fix https://ueue.7ur.it/?id=Q131534559 my hero academia vigilantes being completely broken somehow
