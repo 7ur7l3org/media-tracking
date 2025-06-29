@@ -11,6 +11,8 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- add accessibility key web thing to jump to search input
+- consider partial expanding properties sections to the first one or two.. might be ugly tho
 - could possibly make primary token create submodule repos that are more restrictively scoped and tag queues with that sub-repo and have things be mirrored (or explicitly maintained) in those repos, then visibility of those repos can be controlled and opened up / shared with people. e.g. goal is "make equeue public/shareable with a link" by either authing on github and having the login ux have her log in with github to the repo with a scoped token (somehow..) or just by sharing the more restrictive token in the url
 - add search for "i am sam" to test cases. super slow and bad
 - get duration on the queue votes page
