@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- could possibly make primary token create submodule repos that are more restrictively scoped and tag queues with that sub-repo and have things be mirrored (or explicitly maintained) in those repos, then visibility of those repos can be controlled and opened up / shared with people. e.g. goal is "make equeue public/shareable with a link" by either authing on github and having the login ux have her log in with github to the repo with a scoped token (somehow..) or just by sharing the more restrictive token in the url
 - add search for "i am sam" to test cases. super slow and bad
 - get duration on the queue votes page
 - make queue votes column have a copy button to copy as list
