@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- add actual descriptions for things with imdb or tvdb id's where possible
 - add monogatari and monagatari to search test cases
 - add the handmaid's tale to ueue search tests that have crazy results
 - make searches write to tab history and url and make back and forward go between them
