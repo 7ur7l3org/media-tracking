@@ -11,9 +11,44 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
-- oh the whole site broke wow https://ueue.7ur.it/?id=Q97585868 equeue
-- https://ueue.7ur.it/?id=Q653753 this is broken
-- https://ueue.7ur.it/?id=Q133252244 this is broken and never loads :/
+- 22ee09bd23e5e62da28130b6ba8183d3ca7f5dd8 is a bad commit that reverted the change that another had committed :/ shouldn't be possible cause should at least merge conflict but i guess sharing the repo makes it fucked. writing the file is not safe if the file has changed (by another tab) ffs
+- broken site. i inspected the tab from chrome://inspect/#devices and it randomly started working. but i caught these errors:
+    GitSyncStatus: syncing repo
+    backend.js:19 ueue-media-tracking.json not found – initializing new file.
+    loadBackendData @ backend.js:19Understand this warning
+    main.js:7 Sync failed: Error: Mutex timeout
+        at @isomorphic-git_lightning-fs@4.6.1_dist_lightning-fs.min.js:1:11786
+    (anonymous) @ main.js:7Understand this error
+    @isomorphic-git_lightning-fs@4.6.1_dist_lightning-fs.min.js:1 Uncaught (in promise) AbortError: signal is aborted without reason
+        at @isomorphic-git_lightning-fs@4.6.1_dist_lightning-fs.min.js:1:11776Understand this error
+    3@isomorphic-git_lightning-fs@4.6.1_dist_lightning-fs.min.js:1 Uncaught (in promise) Error: Mutex timeout
+        at @isomorphic-git_lightning-fs@4.6.1_dist_lightning-fs.min.js:1:11786
+    then it magically started working after refresh...
+        [1:44:32 PM mistress f0f3439] syncing repo
+        [1:44:32 PM mistress f0f3439] committing changes: Auto-commit pre-sync
+        [1:44:32 PM mistress 5a45fc3] committed changes: Auto-commit pre-sync
+        [1:44:32 PM mistress 5a45fc3] local repo exists – fetching updates...
+        [1:44:33 PM mistress 5a45fc3] repo fetched successfully
+        [1:44:33 PM mistress 5a45fc3] local HEAD (5a45fc3) has extra commits
+        [1:44:33 PM mistress 5a45fc3] comparing local HEAD (5a45fc3) to fetched origin/mistress (11fa5a3)
+        [1:44:34 PM mistress 5a45fc3] local HEAD (5a45fc3) has extra commits
+        [1:44:34 PM mistress 5a45fc3] pushing changes to GitHub...
+        [1:44:34 PM mistress 5a45fc3] pushOrDivergeAndPush: Push rejected due to non-fast-forward. Creating session branch...
+        [1:44:34 PM mistress 5a45fc3] pushOrDivergeAndPush: Creating and switching to branch: mistress-session-1752525874964
+        [1:44:34 PM mistress-session-1752525874964 5a45fc3] pushOrDivergeAndPush: Switched to branch: mistress-session-1752525874964
+        [1:44:41 PM mistress-session-1752525874964 5a45fc3] pushOrDivergeAndPush: Sync complete: diverged changes are now pushed to branch mistress-session-1752525874964.
+        [1:44:42 PM mistress-session-1752525874964 5a45fc3] Creating PR for branch mistress-session-1752525874964...
+        [1:44:42 PM mistress-session-1752525874964 5a45fc3] Creating PR for branch mistress-session-1752525874964...
+        [1:44:42 PM mistress-session-1752525874964 5a45fc3] PR already exists for branch mistress-session-1752525874964. Trying again to retrieve it.
+        [1:44:43 PM mistress-session-1752525874964 5a45fc3] PR created for branch mistress-session-1752525874964.
+- when on a diverted branch it attempts a push because it compares to the wrong branch head (fine ish cause the push fails)..
+    [1:48:33 PM mistress-session-1752525874964 38617c4] local repo exists – fetching updates...
+    [1:48:34 PM mistress-session-1752525874964 38617c4] repo fetched successfully
+    [1:48:34 PM mistress-session-1752525874964 38617c4] local mistress-session-1752525874964 already matches fetched origin/mistress-session-1752525874964
+    [1:48:34 PM mistress-session-1752525874964 38617c4] comparing local HEAD (38617c4) to fetched origin/mistress (11fa5a3)
+    [1:48:35 PM mistress-session-1752525874964 38617c4] local HEAD (38617c4) has extra commits
+    [1:48:35 PM mistress-session-1752525874964 38617c4] remote already updated (skipping push)
+- maybe make clicking links not always open in new tabs
 - add `My Dress-Up Darling` to search tests
 - add actual descriptions for things with imdb or tvdb id's where possible
 - add monogatari and monagatari to search test cases
@@ -229,6 +264,9 @@ https://cors-proxy.m7ur7l3.workers.dev/github.com/7ur7l3org/tracking-repo/info/r
 ---
 
 done
+-- oh the whole site broke wow https://ueue.7ur.it/?id=Q97585868 equeue
+-- https://ueue.7ur.it/?id=Q653753 this is broken
+-- https://ueue.7ur.it/?id=Q133252244 this is broken and never loads :/ -> no idea what broke it but probably mutex timeout that randomly stopped happening when debugged from laptop
 -- make page titles be ascii-fied title and description
 -- make ue<tab>search url tab search work
 -- make url tab search work
