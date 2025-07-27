@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- test site a lot with trash slow internet connections e.g. shinkansen and maybe give a "go offline" button tbh and visibly indicate the struggle and progress of all network stuff
 - "chasing secrets" quoted has error in search
 - 22ee09bd23e5e62da28130b6ba8183d3ca7f5dd8 is a bad commit that reverted the change that another had committed :/ shouldn't be possible cause should at least merge conflict but i guess sharing the repo makes it fucked. writing the file is not safe if the file has changed (by another tab) ffs
 - broken site. i inspected the tab from chrome://inspect/#devices and it randomly started working. but i caught these errors:
