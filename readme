@@ -11,6 +11,8 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- possibly support older versions of all web components somehow when one doesn't work cause i broke something. that way i never break anything and can implement prototypes slightly easier and probably encourages compartmentalization 
+- add nathan for you and "nathan for you" quoted to search tests. it's so broken now
 - site is crazy slow in japan. can probably replicste with vpn. maybe just wikidata sites?
 - could add a rating or multiplier or something onto queue votes if someone says you really gotta watch something. possibly note is sufficient idk. kinda nice to know what other people rated stuff but again note.. perhaps reasonable to make a x20 vote tho esp if manually ranking or sorting stuff idk
 - test site a lot with trash slow internet connections e.g. shinkansen and maybe give a "go offline" button tbh and visibly indicate the struggle and progress of all network stuff
