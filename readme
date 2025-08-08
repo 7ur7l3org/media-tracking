@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make all text the same font size and possibly even all in a grid with the ui elements sized properly..
 - hitting login doesn't actually do anything about the sync until you manually reload...
 - possibly support older versions of all web components somehow when one doesn't work cause i broke something. that way i never break anything and can implement prototypes slightly easier and probably encourages compartmentalization 
 - add nathan for you and "nathan for you" quoted to search tests. it's so broken now
