@@ -13,7 +13,7 @@ phase 0
 phase 1
 - make all text the same font size and possibly even all in a grid with the ui elements sized properly..
 - hitting login doesn't actually do anything about the sync until you manually reload...
-- possibly support older versions of all web components somehow when one doesn't work cause i broke something. that way i never break anything and can implement prototypes slightly easier and probably encourages compartmentalization 
+- possibly support older versions of all web components somehow when one doesn't work cause i broke something. that way i never break anything and can implement prototypes slightly easier and probably encourages compartmentalization https://chatgpt.com/c/68940ad5-fa00-8331-ae5b-8e7b691f879e
 - add nathan for you and "nathan for you" quoted to search tests. it's so broken now
 - site is crazy slow in japan. can probably replicste with vpn. maybe just wikidata sites?
 - could add a rating or multiplier or something onto queue votes if someone says you really gotta watch something. possibly note is sufficient idk. kinda nice to know what other people rated stuff but again note.. perhaps reasonable to make a x20 vote tho esp if manually ranking or sorting stuff idk
