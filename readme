@@ -11,7 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
-- add dr stone to search tests. wtf lol
+- add dr stone to search tests. wtf lol (dr stone anime worked with version i used for a while)
 - make all text the same font size and possibly even all in a grid with the ui elements sized properly..
 - hitting login doesn't actually do anything about the sync until you manually reload...
 - possibly support older versions of all web components somehow when one doesn't work cause i broke something. that way i never break anything and can implement prototypes slightly easier and probably encourages compartmentalization https://chatgpt.com/c/68940ad5-fa00-8331-ae5b-8e7b691f879e
