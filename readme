@@ -11,7 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
-- can't figure out what the literal fuck is happening but i made a manual edit that fucked up the json syntax which caused the site to perma fucking nuke all data even when it should have recovered cause i fixed the repo such that mistress is updated and ahead of the diverged branch
+- can't figure out what the literal fuck is happening but i made a manual edit that fucked up the json syntax which caused the site to perma fucking nuke all data every refresh even when it should have recovered cause i fixed the repo such that mistress is updated and ahead of the diverged branch. it was tripping // Initialize with the new structure. in the err of loadBackendData in backend.js with the syntax error somehow as if the local clone reset didn't actually fix the files somehow
     [3:41:08 AM mistress-session-1756373310614 77aba25] Deleted remote branch mistress-session-1756373310614 via GitHub API.
     [3:41:08 AM unknown 77aba25] Deleted local branch mistress-session-1756373310614.
     [3:41:08 AM mistress 3813d10] local clone reset: HEAD updated from 77aba25 to 3813d10.
@@ -24,6 +24,18 @@ phase 1
     [3:41:08 AM mistress ff09259] local HEAD (ff09259) has extra commits
     [3:41:08 AM mistress ff09259] pushing changes to GitHub...
     [3:41:09 AM mistress ff09259] push complete.
+    ... i had to delete repoFS and force push to mistress a good state of the file (no syntax errors) and only then would a refresh trigger a clone that made the site work again...
+    [4:01:39 AM] syncing repo
+    [4:01:39 AM] no changes to commit
+    [4:01:39 AM] local repo exists – fetching updates...
+    [4:01:39 AM] cloning repo...
+    [4:01:39 AM] committing changes: Initial commit: Created ueue-media-tracking.json
+    [4:01:39 AM master 5ec7667] committed changes: Initial commit: Created ueue-media-tracking.json
+    [4:01:39 AM master 5ec7667] syncing repo
+    [4:01:39 AM master 5ec7667] no changes to commit
+    [4:01:41 AM mistress 3c0a8f9] repo cloned successfully
+    [4:01:41 AM mistress 3c0a8f9] remote already updated (skipping push)
+    [4:01:41 AM mistress 3c0a8f9] remote already updated (skipping push)
 - andor doesn't show sequencing e.g. relative to rogue one
 - add scar face and scarface to search tests
 - rascal santa claus is still broken somehow? https://ueue.7ur.it/?id=Q133252244
