@@ -11,6 +11,19 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- can't figure out what the literal fuck is happening but i made a manual edit that fucked up the json syntax which caused the site to perma fucking nuke all data even when it should have recovered cause i fixed the repo such that mistress is updated and ahead of the diverged branch
+    [3:41:08 AM mistress-session-1756373310614 77aba25] Deleted remote branch mistress-session-1756373310614 via GitHub API.
+    [3:41:08 AM unknown 77aba25] Deleted local branch mistress-session-1756373310614.
+    [3:41:08 AM mistress 3813d10] local clone reset: HEAD updated from 77aba25 to 3813d10.
+    [3:41:08 AM mistress 3813d10] remote already updated (skipping push)
+    [3:41:08 AM mistress 3813d10] committing changes: Initial commit: Created ueue-media-tracking.json
+    [3:41:08 AM mistress ff09259] committed changes: Initial commit: Created ueue-media-tracking.json
+    [3:41:08 AM mistress ff09259] syncing repo
+    [3:41:08 AM mistress ff09259] no changes to commit
+    [3:41:08 AM mistress ff09259] comparing local HEAD (ff09259) to fetched origin/mistress (3813d10)
+    [3:41:08 AM mistress ff09259] local HEAD (ff09259) has extra commits
+    [3:41:08 AM mistress ff09259] pushing changes to GitHub...
+    [3:41:09 AM mistress ff09259] push complete.
 - andor doesn't show sequencing e.g. relative to rogue one
 - add scar face and scarface to search tests
 - rascal santa claus is still broken somehow? https://ueue.7ur.it/?id=Q133252244
