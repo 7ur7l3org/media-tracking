@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- add direct uncategorized link somewhere
 - can't figure out what the literal fuck is happening but i made a manual edit that fucked up the json syntax which caused the site to perma fucking nuke all data every refresh even when it should have recovered cause i fixed the repo such that mistress is updated and ahead of the diverged branch. it was tripping // Initialize with the new structure. in the err of loadBackendData in backend.js with the syntax error somehow as if the local clone reset didn't actually fix the files somehow
     [3:41:08 AM mistress-session-1756373310614 77aba25] Deleted remote branch mistress-session-1756373310614 via GitHub API.
     [3:41:08 AM unknown 77aba25] Deleted local branch mistress-session-1756373310614.
