@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ueue.app/schemas/ueue-media-tracking.json",
+  "title": "ueue-media-tracking",
+  "type": "object",
+  "properties": {
+    "media": {
+      "type": "object",
+      "patternProperties": {
+        "^https?://www\\.wikidata\\.org/entity/Q[0-9]+$": { "type": "object" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["media"],
+  "additionalProperties": false
+}
