@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- see what bots are used to make wikidata for e.g. `Sozai Saishuka no Isekai Ryokouki` where it's always the three things of it probably from mal
 - this took 26 seconds to respond for https://ueue.7ur.it/?id=Q28856068 and appeared totally lagged out (no status/progress) `https://query.wikidata.org/sparql?query=%0A%20%20%20%20SELECT%20%3Fancestor%20%3FancestorLabel%20WHERE%20%7B%0A%20%20%20%20%20%20wd%3AQ28856068%20(wdt%3AP361%7Cwdt%3AP179)*%20%3Fancestor%20.%0A%20%20%20%20%20%20FILTER(%3Fancestor%20!%3D%20wd%3AQ28856068)%0A%20%20%20%20%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22en%22.%20%7D%0A%20%20%20%20%7D%0A%20%20`
 - add tom brady to search tests
 - look into making it have a preview bubble thing in e.g. discord. not sure what makes a site have that
