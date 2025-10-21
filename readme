@@ -11,6 +11,9 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make queue page allow copying list of just names (or copying any single column's values) for e.g. pasting into discord
+- add search matrix that takes a list and multi-searches or something to batch add to a certain queue or something
+- make default queue vote remember the last queue added to sorta like yt music
 - https://ueue.7ur.it/?id=Q662 series sequencing is duped for some reason
 - add link to subs by imdb id https://rest.opensubtitles.org/search/imdbid-0113089/sublanguageid-eng
 - see what bots are used to make wikidata for e.g. `Sozai Saishuka no Isekai Ryokouki` where it's always the three things of it probably from mal
