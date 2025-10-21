@@ -11,6 +11,9 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- really gotta fix pushing when visiting new ones instead of having to refresh. it's real broken/sketchy for divergence
+- make search do one-shot search where it directly goes to the page of the first result as well as showing all other results to e.g. get imdb id directly visible
+- in addition to custom links and stuff, could add custom url metadata like always putting imdb id in a query param
 - make queue page allow copying list of just names (or copying any single column's values) for e.g. pasting into discord
 - add search matrix that takes a list and multi-searches or something to batch add to a certain queue or something
 - make default queue vote remember the last queue added to sorta like yt music
