@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make .json for site and basic server side rendering that returns small html with simple stuff and the json that the app inits with before syncing/hydrating to actual 3rd parties, and generate sitemap https://chatgpt.com/c/68f1e7b5-b144-8326-8ba0-bd26928a1a63 . not sure if all api stuff is fast enough to dump to page on load, but maybe
 - second time recently ive seen "already up to date" (i think after fast forwarding from being behind) with empty data in the queue vote consumptions pane when there definitely should have been and appeared there on refresh
 - when typing in search box every space typed is expanding/collapsing the results pane furiously for some reason
 - really gotta fix pushing when visiting new ones instead of having to refresh. it's real broken/sketchy for divergence
