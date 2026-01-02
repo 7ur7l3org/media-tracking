@@ -11,7 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
-- there is a bug where i get logged out (kinda weird) and i log in and it re clones and then pages load but dont have the queue vote history. idk if they would fill if i waited longer but pretty wtf
+- there is a bug where i get logged out (kinda weird) and i log in and it re clones and then pages load but dont have the queue vote history. idk if they would fill if i waited longer but pretty wtf. refreshing works fastest
 - add selfie series to search tests
 - add https://ueue.7ur.it/?id=Q127367 to seeies sequencing tests (and fix..?)
 - add spy game to search tests
