@@ -12,6 +12,7 @@ phase 0
 
 phase 1
 
+- remove all root commits from repo probably
 - crazy first commit full history diverge bug see "no history in common" bug logs below
 - seriously make git log be full log of all git info maybe collapsed or something
 
@@ -19,6 +20,7 @@ phase 1
 somehow it diverged to a branch with a single commit: ueue sync Auto-commit pre-sync a53d1a5 · 1 hour ago (1 commit)
 somehow it loaded the file from the repo into memory.. nuked the repo.. and then made a commit?? makes no sense
 and the push error doesn't get into the git log. the git log really does need to be exact
+this happened before apr 4 2025 (see `git log --all --max-parents=0`)
 [9:05:52 PM] syncing repo
 [9:05:52 PM] committing changes: Auto-commit pre-sync
 [9:05:52 PM mistress a53d1a5] committed changes: Auto-commit pre-sync
