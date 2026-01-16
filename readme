@@ -11,6 +11,24 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+
+[WARNING: You are on diverged branch: mistress-session-1768539954972 (primary: mistress)] - Failed to create PR (check PAT): Error: Failed to create PR: { "message": "Validation Failed", "errors": [ { "resource": "PullRequest", "code": "custom", "message": "The mistress-session-1768539954972 branch has no history in common with mistress" } ], "documentation_url": "https://docs.github.com/rest/pulls/pulls#create-a-pull-request", "status": "422" } (check PAT)
+[9:05:52 PM] syncing repo
+[9:05:52 PM] committing changes: Auto-commit pre-sync
+[9:05:52 PM mistress a53d1a5] committed changes: Auto-commit pre-sync
+[9:05:52 PM mistress a53d1a5] local repo exists – fetching updates...
+[9:05:54 PM mistress a53d1a5] repo fetched successfully
+[9:05:54 PM mistress a53d1a5] local HEAD (a53d1a5) has extra commits
+[9:05:54 PM mistress a53d1a5] comparing local HEAD (a53d1a5) to fetched origin/mistress (67c0c84)
+[9:05:54 PM mistress a53d1a5] local HEAD (a53d1a5) has extra commits
+[9:05:54 PM mistress a53d1a5] pushing changes to GitHub...
+[9:05:54 PM mistress a53d1a5] pushOrDivergeAndPush: Push rejected due to non-fast-forward. Creating session branch...
+[9:05:54 PM mistress a53d1a5] pushOrDivergeAndPush: Creating and switching to branch: mistress-session-1768539954972
+[9:05:54 PM mistress-session-1768539954972 a53d1a5] pushOrDivergeAndPush: Switched to branch: mistress-session-1768539954972
+[9:05:55 PM mistress-session-1768539954972 a53d1a5] pushOrDivergeAndPush: Sync complete: diverged changes are now pushed to branch mistress-session-1768539954972.
+[9:05:56 PM mistress-session-1768539954972 a53d1a5] Creating PR for branch mistress-session-1768539954972...
+[9:05:56 PM mistress-session-1768539954972 a53d1a5] Creating PR for branch mistress-session-1768539954972...
+
 - there is a bug where i get logged out (kinda weird) and i log in and it re clones and then pages load but dont have the queue vote history. idk if they would fill if i waited longer but pretty wtf. refreshing works fastest
 - add selfie series to search tests
 - add https://ueue.7ur.it/?id=Q127367 to seeies sequencing tests (and fix..?)
