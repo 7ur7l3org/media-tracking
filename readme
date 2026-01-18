@@ -11,7 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
-
+- https://ueue.7ur.it/?id=Q137766758 this doesn't load
 - remove all root commits from repo probably
 - crazy first commit full history diverge bug see "no history in common" bug logs below
 - seriously make git log be full log of all git info maybe collapsed or something
