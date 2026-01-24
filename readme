@@ -11,6 +11,82 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make git log timestamps be datetimestamps
+- https://ueue.7ur.it/?id=Q137766758 this doesn't load
+- remove all root commits from repo probably
+- crazy first commit full history diverge bug see "no history in common" bug logs below
+- seriously make git log be full log of all git info maybe collapsed or something
+
+[WARNING: You are on diverged branch: mistress-session-1768539954972 (primary: mistress)] - Failed to create PR (check PAT): Error: Failed to create PR: { "message": "Validation Failed", "errors": [ { "resource": "PullRequest", "code": "custom", "message": "The mistress-session-1768539954972 branch has no history in common with mistress" } ], "documentation_url": "https://docs.github.com/rest/pulls/pulls#create-a-pull-request", "status": "422" } (check PAT)
+somehow it diverged to a branch with a single commit: ueue sync Auto-commit pre-sync a53d1a5 · 1 hour ago (1 commit)
+somehow it loaded the file from the repo into memory.. nuked the repo.. and then made a commit?? makes no sense
+and the push error doesn't get into the git log. the git log really does need to be exact
+this happened before apr 4 2025 (see `git log --all --max-parents=0`)
+ohhh it's probably when mistress is updated from another device, and then you load a fresh page that tries to autocommit the memory thing (the normal double new page load autocommit bug where it doesn't push the new content automatically), but it commits on top of nothing cause mistress was yoinked and diverge got tripped.. or some shit
+actually no there were zero changes at all in the diverged branch it just makes no damn sense lmao
+[9:05:52 PM] syncing repo
+[9:05:52 PM] committing changes: Auto-commit pre-sync
+[9:05:52 PM mistress a53d1a5] committed changes: Auto-commit pre-sync
+[9:05:52 PM mistress a53d1a5] local repo exists – fetching updates...
+[9:05:54 PM mistress a53d1a5] repo fetched successfully
+[9:05:54 PM mistress a53d1a5] local HEAD (a53d1a5) has extra commits
+[9:05:54 PM mistress a53d1a5] comparing local HEAD (a53d1a5) to fetched origin/mistress (67c0c84)
+[9:05:54 PM mistress a53d1a5] local HEAD (a53d1a5) has extra commits
+[9:05:54 PM mistress a53d1a5] pushing changes to GitHub...
+[9:05:54 PM mistress a53d1a5] pushOrDivergeAndPush: Push rejected due to non-fast-forward. Creating session branch...
+[9:05:54 PM mistress a53d1a5] pushOrDivergeAndPush: Creating and switching to branch: mistress-session-1768539954972
+[9:05:54 PM mistress-session-1768539954972 a53d1a5] pushOrDivergeAndPush: Switched to branch: mistress-session-1768539954972
+[9:05:55 PM mistress-session-1768539954972 a53d1a5] pushOrDivergeAndPush: Sync complete: diverged changes are now pushed to branch mistress-session-1768539954972.
+[9:05:56 PM mistress-session-1768539954972 a53d1a5] Creating PR for branch mistress-session-1768539954972...
+[9:05:56 PM mistress-session-1768539954972 a53d1a5] Creating PR for branch mistress-session-1768539954972...
+
+- there is a bug where i get logged out (kinda weird) and i log in and it re clones and then pages load but dont have the queue vote history. idk if they would fill if i waited longer but pretty wtf. refreshing works fastest
+- add selfie series to search tests
+- add https://ueue.7ur.it/?id=Q127367 to seeies sequencing tests (and fix..?)
+- add spy game to search tests
+- add i love la to search tests
+- i guess for below the real solution is to proxy to wikidata directly/manually or otherwise provide alt ways to load the different things semi-manually e.g. authority controls sparql in playground thing. idk. or to go to main wikidata pages at least. and to record github stuff which should work fine without wikidata loading. probably the whole site should work fine even if different pieces fail like this. or even run my own wikidata instance to fall back to?
+- getting 500 Internal Server Error on https://ueue.7ur.it/?id=Q50650165 for https://query.wikidata.org/sparql?query=%0A%20%20%20%20SELECT%20%3Fcontainer%20%3FcontainerLabel%20WHERE%20%7B%0A%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20wd%3AQ50650165%20wdt%3AP361%20%3Fcontainer%20.%0A%20%20%20%20%20%20%7D%20UNION%20%7B%0A%20%20%20%20%20%20%20%20wd%3AQ50650165%20wdt%3AP179%20%3Fcontainer%20.%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22en%22.%20%7D%0A%20%20%20%20%7D%0A%20%20 . just shows as pending for about exactly 1min and then fails. for this too https://query.wikidata.org/sparql?query=%0A%20%20%20%20%20%20SELECT%20%3Fparent%20WHERE%20%7B%0A%20%20%20%20%20%20%20%20%3Fparent%20p%3AP527%20%3Fstmt%20.%0A%20%20%20%20%20%20%20%20%3Fstmt%20ps%3AP527%20wd%3AQ120382889%20.%0A%20%20%20%20%20%20%7D%0A%20%20%20%20 which appears to be a different query. idk. on refresh they both instantly gave 503 Service Unavailable . oh damn visiting them in browser shows Service load too high, please come back later. welp. hm. troubling making a site that relies on wikidata lol
+- make .json for site and basic server side rendering that returns small html with simple stuff and the json that the app inits with before syncing/hydrating to actual 3rd parties. not sure if all api stuff is fast enough to dump to page on load, but maybe. https://chatgpt.com/c/68f1e7b5-b144-8326-8ba0-bd26928a1a63
+- refactor components to use lit or webcomponents like it. they're pretty damn crisp. maybe can diy what lit does even and just do that kind of component style that seems hype. probably want the reactive controller sync stuff to just behave nicely though https://chatgpt.com/c/68f1e7b5-b144-8326-8ba0-bd26928a1a63
+- and generate sitemap https://chatgpt.com/c/68f1e7b5-b144-8326-8ba0-bd26928a1a63
+- second time recently ive seen "already up to date" (i think after fast forwarding from being behind) with empty data in the queue vote consumptions pane when there definitely should have been and appeared there on refresh
+- when typing in search box every space typed is expanding/collapsing the results pane furiously for some reason
+- really gotta fix pushing when visiting new ones instead of having to refresh. it's real broken/sketchy for divergence
+- make search do one-shot search where it directly goes to the page of the first result as well as showing all other results to e.g. get imdb id directly visible
+- in addition to custom links and stuff, could add custom url metadata like always putting imdb id in a query param
+- make queue page allow copying list of just names (or copying any single column's values) for e.g. pasting into discord
+- add search matrix that takes a list and multi-searches or something to batch add to a certain queue or something
+- make default queue vote remember the last queue added to sorta like yt music
+- https://ueue.7ur.it/?id=Q662 series sequencing is duped for some reason
+- add link to subs by imdb id https://rest.opensubtitles.org/search/imdbid-0113089/sublanguageid-eng
+- see what bots are used to make wikidata for e.g. `Sozai Saishuka no Isekai Ryokouki` where it's always the three things of it probably from mal
+- this took 26 seconds to respond for https://ueue.7ur.it/?id=Q28856068 and appeared totally lagged out (no status/progress) `https://query.wikidata.org/sparql?query=%0A%20%20%20%20SELECT%20%3Fancestor%20%3FancestorLabel%20WHERE%20%7B%0A%20%20%20%20%20%20wd%3AQ28856068%20(wdt%3AP361%7Cwdt%3AP179)*%20%3Fancestor%20.%0A%20%20%20%20%20%20FILTER(%3Fancestor%20!%3D%20wd%3AQ28856068)%0A%20%20%20%20%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22en%22.%20%7D%0A%20%20%20%20%7D%0A%20%20`
+- add tom brady to search tests
+- look into making it have a preview bubble thing in e.g. discord. not sure what makes a site have that
+- add love kennedy to search tests
+
+maybe went to severance, then ep1, then mark consume, and idk maybe it hadnt pushed the first seen of sev or something idk
+[10:41:20 PM mistress b2ad8cc] syncing repo
+[10:41:20 PM mistress b2ad8cc] no changes to commit
+[10:41:20 PM mistress b2ad8cc] local repo exists – fetching updates...
+[10:41:24 PM mistress b2ad8cc] committing changes: Added new consumption for Q112245852
+[10:41:24 PM mistress 5bf4cbb] committed changes: Added new consumption for Q112245852
+[10:41:24 PM mistress 5bf4cbb] syncing repo
+[10:41:24 PM mistress 5bf4cbb] no changes to commit
+[10:41:27 PM mistress 5bf4cbb] cloning repo...
+[10:41:29 PM mistress 5bf4cbb] repo cloned successfully
+[10:41:29 PM mistress 5bf4cbb] comparing local HEAD (5bf4cbb) to fetched origin/mistress (b2ad8cc)
+[10:41:29 PM mistress 5bf4cbb] comparing local HEAD (5bf4cbb) to fetched origin/mistress (b2ad8cc)
+[10:41:29 PM mistress 5bf4cbb] local HEAD (5bf4cbb) has extra commits
+[10:41:29 PM mistress 5bf4cbb] local HEAD (5bf4cbb) has extra commits
+[10:41:29 PM mistress 5bf4cbb] pushing changes to GitHub...
+[10:41:29 PM mistress 5bf4cbb] pushing changes to GitHub...
+[10:41:30 PM mistress 5bf4cbb] push complete.
+[10:41:31 PM mistress 5bf4cbb] pushOrDivergeAndPush: Error pushing changes: One or more branches were not updated: 
+  - refs/heads/mistress: cannot lock ref 'refs/heads/mistress': is at 5bf4cbb3622d7fbb6618e869fa0bb48f4c48ec72 but expected b2ad8cce4c698753a1c56ece29675efe06c6df52
+[10:41:31 PM mistress 5bf4cbb] New consumption added and synced.
+
 - add imdb links to search results
 - add direct uncategorized link somewhere
 - can't figure out what the literal fuck is happening but i made a manual edit that fucked up the json syntax which caused the site to perma fucking nuke all data every refresh even when it should have recovered cause i fixed the repo such that mistress is updated and ahead of the diverged branch. it was tripping // Initialize with the new structure. in the err of loadBackendData in backend.js with the syntax error somehow as if the local clone reset didn't actually fix the files somehow
