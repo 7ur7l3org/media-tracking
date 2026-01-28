@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- make all internal urls (esp. search results) strip /index.html because that is getting in the chrome://omnibox/ suggestions as HistoryQuick as a duplicate of the regular form of the url. probably put /index.html->/ as 301 redirect in cloudflare too
 - make git log timestamps be datetimestamps
 - https://ueue.7ur.it/?id=Q137766758 this doesn't load
 - remove all root commits from repo probably
