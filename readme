@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+- add padding below git log so that selecting or copying the full log is easier (maybe add copy button too) on android where the stupid bottom pixels switch apps and shit
 - on log out and log in and search result load wtf
 [11:15:10 AM] syncing repo
 [11:15:10 AM] committing changes: Auto-commit pre-sync
