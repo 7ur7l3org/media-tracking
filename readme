@@ -27,7 +27,7 @@ but recovers on refresh
 [11:18:35 AM] cloning repo...
 [11:18:37 AM mistress 2d34517] repo cloned successfully
 [11:18:37 AM mistress 2d34517] remote already updated (skipping push)
-- seemingly for no reason at all it decided to cook a pr for presumably a nuked/fresh repo... apparently 646 was cooked 3 days ago and yeah it's the single commit situation `[WARNING: You are on diverged branch: mistress-session-1769749332646 (primary: mistress)] - Failed to create PR (check PAT): Error: Failed to create PR: { "message": "Validation Failed", "errors": [ { "resource": "PullRequest", "code": "custom", "message": "The mistress-session-1769749332646 branch has no history in common with mistress" } ], "documentation_url": "https://docs.github.com/rest/pulls/pulls#create-a-pull-request", "status": "422" } (check PAT)`
+- seemingly for no reason at all it decided to cook a pr for presumably a nuked/fresh repo... apparently 646 was cooked 3 days ago and yeah it's the single commit situation (happened when adding a consumption maybe when remote had added a queue vote? unsure) `[WARNING: You are on diverged branch: mistress-session-1769749332646 (primary: mistress)] - Failed to create PR (check PAT): Error: Failed to create PR: { "message": "Validation Failed", "errors": [ { "resource": "PullRequest", "code": "custom", "message": "The mistress-session-1769749332646 branch has no history in common with mistress" } ], "documentation_url": "https://docs.github.com/rest/pulls/pulls#create-a-pull-request", "status": "422" } (check PAT)`
 [12:58:13 PM mistress-session-1769749332646 57e594f] syncing repo
 [12:58:13 PM mistress-session-1769749332646 57e594f] no changes to commit
 [12:58:13 PM mistress-session-1769749332646 57e594f] local repo exists – fetching updates...
