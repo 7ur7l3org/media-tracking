@@ -43,6 +43,60 @@ then on phone refresh:
 [7:13:39 PM mistress c3fd5df] repo cloned successfully
 [7:13:40 PM mistress c3fd5df] remote already updated (skipping push)
 wtf lol
+then later on laptop:
+Request URL
+https://ueue-cors-proxy.7ur.workers.dev/github.com/7ur7l3org/tracking-repo/info/refs?service=git-upload-pack
+Request Method
+GET
+Status Code
+429 Too Many Requests
+Remote Address
+[2606:4700:3036::6815:1fcd]:443
+Referrer Policy
+strict-origin-when-cross-origin
+
+access-control-allow-headers
+*
+access-control-allow-methods
+GET, POST, OPTIONS
+access-control-allow-origin
+*
+alt-svc
+h3=":443"; ma=86400
+cache-control
+no-cache
+cf-cache-status
+DYNAMIC
+cf-ray
+9d0320ec8f195389-LAX
+content-security-policy
+default-src 'none'; style-src 'unsafe-inline'
+content-type
+text/html; charset=utf-8
+date
+Thu, 19 Feb 2026 04:47:51 GMT
+nel
+{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+priority
+u=1,i
+report-to
+{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=YxHYEl86ASEfnq%2FVHvv8jtnpHc7z8XUiCUi%2BHj%2F4B2NKf3KYFyq2aohUSFpAVJUwShAxBa6alN2zZQm02%2BiXJyhJGvKojjrRkyxUM7mvAxvxh%2BXdAiBGVNENf3grmDjYLeet0AiwLOkGc%2Fw%3D"}]}
+retry-after
+300
+server
+cloudflare
+server-timing
+cfExtPri
+strict-transport-security
+max-age=31536000; includeSubDomains; preload
+x-content-type-options
+nosniff
+x-frame-options
+deny
+x-xss-protection
+0
+
+pretty strange
 - add padding below git log so that selecting or copying the full log is easier (maybe add copy button too) on android where the stupid bottom pixels switch apps and shit
 - on log out and log in and search result load wtf
 [11:15:10 AM] syncing repo
