@@ -96,6 +96,14 @@ deny
 x-xss-protection
 0
 
+and then
+[8:50:47 PM] syncing repo
+[8:50:47 PM] committing changes: Auto-commit pre-sync
+[8:50:47 PM] Error committing changes: Could not find HEAD.
+[8:50:47 PM] local repo exists – fetching updates...
+[8:50:47 PM] cloning repo...
+[8:50:48 PM mistress fbe9182] repo cloned successfully
+[8:50:48 PM mistress fbe9182] remote already updated (skipping push)
 pretty strange
 - add padding below git log so that selecting or copying the full log is easier (maybe add copy button too) on android where the stupid bottom pixels switch apps and shit
 - on log out and log in and search result load wtf
