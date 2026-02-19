@@ -11,6 +11,38 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+on phone added vote fine, then on laptop:
+[WARNING: You are on diverged branch: mistress-session-1771469309119 (primary: mistress)] - Failed to create PR (check PAT): Error: Failed to create PR: { "message": "Validation Failed", "errors": [ { "resource": "PullRequest", "code": "custom", "message": "The mistress-session-1771469309119 branch has no history in common with mistress" } ], "documentation_url": "https://docs.github.com/rest/pulls/pulls#create-a-pull-request", "status": "422" } (check PAT)
+[6:48:26 PM] syncing repo
+[6:48:26 PM] committing changes: Auto-commit pre-sync
+[6:48:26 PM mistress dbf0146] committed changes: Auto-commit pre-sync
+[6:48:26 PM mistress dbf0146] local repo exists – fetching updates...
+[6:48:28 PM mistress dbf0146] repo fetched successfully
+[6:48:28 PM mistress dbf0146] local HEAD (dbf0146) has extra commits
+[6:48:28 PM mistress dbf0146] comparing local HEAD (dbf0146) to fetched origin/mistress (c3fd5df)
+[6:48:28 PM mistress dbf0146] local HEAD (dbf0146) has extra commits
+[6:48:28 PM mistress dbf0146] pushing changes to GitHub...
+[6:48:29 PM mistress dbf0146] pushOrDivergeAndPush: Push rejected due to non-fast-forward. Creating session branch...
+[6:48:29 PM mistress dbf0146] pushOrDivergeAndPush: Creating and switching to branch: mistress-session-1771469309119
+[6:48:29 PM mistress-session-1771469309119 dbf0146] pushOrDivergeAndPush: Switched to branch: mistress-session-1771469309119
+[6:48:29 PM mistress-session-1771469309119 dbf0146] pushOrDivergeAndPush: Sync complete: diverged changes are now pushed to branch mistress-session-1771469309119.
+[6:48:30 PM mistress-session-1771469309119 dbf0146] Creating PR for branch mistress-session-1771469309119...
+[6:48:30 PM mistress-session-1771469309119 dbf0146] Creating PR for branch mistress-session-1771469309119...
+then on phone:
+[7:11:01 PM mistress c3fd5df] syncing repo
+[7:11:01 PM mistress c3fd5df] no changes to commit
+[7:11:01 PM mistress c3fd5df] local repo exists – fetching updates...
+[7:11:02 PM mistress c3fd5df] cloning repo...
+[7:11:02 PM] cloneOrFetchUpdates: Error cloning repo: HTTP Error: 429 
+then on phone refresh:
+[7:13:38 PM] syncing repo
+[7:13:38 PM] committing changes: Auto-commit pre-sync
+[7:13:38 PM] Error committing changes: Could not find HEAD.
+[7:13:38 PM] local repo exists – fetching updates...
+[7:13:38 PM] cloning repo...
+[7:13:39 PM mistress c3fd5df] repo cloned successfully
+[7:13:40 PM mistress c3fd5df] remote already updated (skipping push)
+wtf lol
 - add padding below git log so that selecting or copying the full log is easier (maybe add copy button too) on android where the stupid bottom pixels switch apps and shit
 - on log out and log in and search result load wtf
 [11:15:10 AM] syncing repo
