@@ -11,6 +11,15 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+[4:06:42 PM] syncing repo
+[4:06:42 PM] committing changes: Auto-commit pre-sync
+[4:06:42 PM] Error committing changes: Could not find HEAD.
+[4:06:42 PM] local repo exists – fetching updates...
+[4:06:42 PM] cloning repo...
+[4:06:43 PM] cloneOrFetchUpdates: Error cloning repo: HTTP Error: 429 
+unsure what to do about this shit ^
+
+
 on phone added vote fine, then on laptop:
 [WARNING: You are on diverged branch: mistress-session-1771469309119 (primary: mistress)] - Failed to create PR (check PAT): Error: Failed to create PR: { "message": "Validation Failed", "errors": [ { "resource": "PullRequest", "code": "custom", "message": "The mistress-session-1771469309119 branch has no history in common with mistress" } ], "documentation_url": "https://docs.github.com/rest/pulls/pulls#create-a-pull-request", "status": "422" } (check PAT)
 [6:48:26 PM] syncing repo
