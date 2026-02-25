@@ -16,6 +16,8 @@ var pageTitle = label + " - " + entity.descriptions.en.value + " - ueue🫵"; cr
 Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'value')    at renderEntity (rendering.js:137:58)
 stupid null check bug breaking the page completely. stupid unsafe code
 
+also here is stubbing to also bypass series/sequencing - https://claude.ai/chat/af8b58b2-cc91-466e-b81b-9ea4e3720945
+
 [4:06:42 PM] syncing repo
 [4:06:42 PM] committing changes: Auto-commit pre-sync
 [4:06:42 PM] Error committing changes: Could not find HEAD.
