@@ -11,11 +11,10 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
-Request URL https://ueue-cors-proxy.7ur.workers.dev/github.com/7ur7l3org/tracking-repo/info/refs?service=git-upload-pack
-Request Method GET Status Code 401 Unauthorized
-Repository not found.
-https://docs.github.com/en/rest/collaborators/collaborators?apiVersion=2022-11-28#get-repository-permissions-for-a-user
-i think my pat broke ?
+https://ueue.7ur.it/?id=Q131329005 
+var pageTitle = label + " - " + entity.descriptions.en.value + " - ueue🫵"; crashing 
+Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'value')    at renderEntity (rendering.js:137:58)
+stupid null check bug breaking the page completely. stupid unsafe code
 
 [4:06:42 PM] syncing repo
 [4:06:42 PM] committing changes: Auto-commit pre-sync
