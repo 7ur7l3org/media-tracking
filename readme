@@ -11,6 +11,12 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+Request URL https://ueue-cors-proxy.7ur.workers.dev/github.com/7ur7l3org/tracking-repo/info/refs?service=git-upload-pack
+Request Method GET Status Code 401 Unauthorized
+Repository not found.
+https://docs.github.com/en/rest/collaborators/collaborators?apiVersion=2022-11-28#get-repository-permissions-for-a-user
+i think my pat broke ?
+
 [4:06:42 PM] syncing repo
 [4:06:42 PM] committing changes: Auto-commit pre-sync
 [4:06:42 PM] Error committing changes: Could not find HEAD.
