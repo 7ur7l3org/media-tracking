@@ -11,7 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
-https://ueue.7ur.it/?id=Q131329005 
+fix sparql/safety for description and series/sequencing for https://ueue.7ur.it/?id=Q131329005 
 var pageTitle = label + " - " + entity.descriptions.en.value + " - ueue🫵"; crashing 
 Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'value')    at renderEntity (rendering.js:137:58)
 stupid null check bug breaking the page completely. stupid unsafe code
