@@ -11,6 +11,7 @@ phase 0
 - TODO move things here. phase 1 got fucked
 
 phase 1
+log out, refresh, log in, refresh doesn't nuke local repo either jesus. log out def should nuke i'm pretty sure. and there should be a re-clone/reset to mistress button..
 what the fuck how did i get on master.. i rolled the pat and the old one auth errored and i logged out and logged in with the new one and in re-cloned and then diverged me and then this [WARNING: You are on diverged branch: master (primary: mistress)] - Failed to create PR (check PAT): Error: Failed to create PR: { "message": "Validation Failed", "errors": [ { "resource": "PullRequest", "code": "custom", "message": "The master branch has no history in common with mistress" } ], "documentation_url": "https://docs.github.com/rest/pulls/pulls#create-a-pull-request", "status": "422" } (check PAT)
 [10:58:19 PM master 842994b] syncing repo
 [10:58:19 PM master 842994b] no changes to commit
